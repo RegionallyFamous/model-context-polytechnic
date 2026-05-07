@@ -1,0 +1,531 @@
+{
+    "schema_version": 1,
+    "pack_version": "0.1.0",
+    "slug": "wordpress-plugin-craft",
+    "name": "WordPress Plugin Craft",
+    "description": "A practical course that teaches LLMs to plan, build, review, and maintain high-quality WordPress plugins.",
+    "voice": {
+        "name": "The Plugin Workshop",
+        "tone": [
+            "precise",
+            "security-minded",
+            "pragmatic",
+            "warmly professorial"
+        ],
+        "style": [
+            "Prefer exact WordPress APIs over vague advice.",
+            "Ask for threat models, data shapes, permissions, and lifecycle behavior.",
+            "Treat every plugin as something real people may install on a real site."
+        ]
+    },
+    "instructions": "First call begin-course. Use the returned enrollment_key for attempt-exercise, get-next-work, get-progress, and get-learning-memory so the course can remember this learner.\nCall submit-feedback when a lesson, exercise, rubric, tool response, or next action is confusing, helpful, stale, or missing an example. Call get-course-improvement-signals before proposing course revisions.\nYou are attending WordPress Plugin Craft at Model Context Polytechnic.\nStudy with a working engineer posture: identify the plugin contract, choose the smallest WordPress API that fits, defend every write path, and verify with tooling.\nBefore producing plugin code, consult relevant lessons or references, then answer with concise implementation decisions and explicit safety checks.",
+    "modules": [
+        {
+            "position": 1,
+            "slug": "plugin-contract",
+            "title": "Plugin Contract and Lifecycle",
+            "summary": "Define what a plugin is, how WordPress discovers it, and what belongs in activation, deactivation, and uninstall paths.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "plugin-anatomy",
+                    "title": "Plugin Anatomy",
+                    "objectives": [
+                        "Identify a distributable plugin folder, main file, header, constants, text domain, and load guard.",
+                        "Separate bootstrap responsibilities from feature code."
+                    ],
+                    "file": "lessons/plugin-anatomy.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "lifecycle-hooks",
+                    "title": "Activation, Deactivation, and Uninstall",
+                    "objectives": [
+                        "Use activation for one-time setup, deactivation for temporary shutdown, and uninstall for data removal.",
+                        "Avoid destructive cleanup unless the operator explicitly expects it."
+                    ],
+                    "file": "lessons/lifecycle-hooks.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/design-plugin-bootstrap.json"
+                },
+                {
+                    "file": "exercises/lifecycle-cleanup-plan.json"
+                }
+            ]
+        },
+        {
+            "position": 2,
+            "slug": "architecture",
+            "title": "Architecture, Namespacing, and Hooks",
+            "summary": "Build plugins that are understandable, extensible, and unlikely to collide with other code.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "namespaces-and-prefixes",
+                    "title": "Namespaces, Prefixes, and Dependency Boundaries",
+                    "objectives": [
+                        "Use namespaces or disciplined prefixes to avoid global collisions.",
+                        "Keep WordPress-facing hooks at the boundary and domain logic behind them."
+                    ],
+                    "file": "lessons/namespaces-and-prefixes.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "hooks-as-contracts",
+                    "title": "Hooks as Contracts",
+                    "objectives": [
+                        "Use actions for events and filters for transformations.",
+                        "Design custom hooks with stable names, documented payloads, and useful timing."
+                    ],
+                    "file": "lessons/hooks-as-contracts.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/architecture-review.json"
+                },
+                {
+                    "file": "exercises/hook-contract-design.json"
+                }
+            ]
+        },
+        {
+            "position": 3,
+            "slug": "security",
+            "title": "Security: Input, Output, Permissions, and Intent",
+            "summary": "Make every write path prove who may act, what they meant to do, and how untrusted data is handled.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "validate-sanitize-escape",
+                    "title": "Validate, Sanitize, Escape",
+                    "objectives": [
+                        "Validate against expected shape before accepting data.",
+                        "Sanitize before storage when needed, and escape late at output."
+                    ],
+                    "file": "lessons/validate-sanitize-escape.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "capabilities-nonces-rest-permissions",
+                    "title": "Capabilities, Nonces, and REST Permissions",
+                    "objectives": [
+                        "Use capabilities to answer whether the current actor may do the action.",
+                        "Use nonces to verify intent for browser-submitted state changes.",
+                        "Use REST permission callbacks for every custom endpoint."
+                    ],
+                    "file": "lessons/capabilities-nonces-rest-permissions.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/secure-write-path.json"
+                },
+                {
+                    "file": "exercises/validate-sanitize-escape-review.json"
+                }
+            ]
+        },
+        {
+            "position": 4,
+            "slug": "data-storage",
+            "title": "Data Modeling and Storage",
+            "summary": "Choose options, metadata, custom post types, transients, cron, or custom tables based on the data shape and access pattern.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "storage-patterns",
+                    "title": "Choosing the Right Storage Pattern",
+                    "objectives": [
+                        "Use options for singleton configuration, metadata for object-attached values, CPTs for editorial records, and custom tables for high-volume relational data.",
+                        "Use transients for cache, not durable truth."
+                    ],
+                    "file": "lessons/storage-patterns.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "custom-tables-dbdelta",
+                    "title": "Custom Tables and dbDelta",
+                    "objectives": [
+                        "Use dbDelta for schema creation and updates when a plugin owns custom tables.",
+                        "Version schemas and write idempotent migrations."
+                    ],
+                    "file": "lessons/custom-tables-dbdelta.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/choose-storage.json"
+                },
+                {
+                    "file": "exercises/dbdelta-migration-review.json"
+                }
+            ]
+        },
+        {
+            "position": 5,
+            "slug": "rest-http-abilities",
+            "title": "REST, HTTP APIs, and Agent-Facing Interfaces",
+            "summary": "Expose safe interfaces with schemas, permission callbacks, response contracts, caching, and predictable errors.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "rest-route-design",
+                    "title": "REST Route Design",
+                    "objectives": [
+                        "Register custom REST routes with clear namespace, methods, args schema, and permission callback.",
+                        "Return structured data or WP_Error, not ad hoc echoes."
+                    ],
+                    "file": "lessons/rest-route-design.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "abilities-api-and-mcp",
+                    "title": "Abilities API and MCP Servers",
+                    "objectives": [
+                        "Understand abilities as schema-described callable units that can become MCP tools, resources, or prompts.",
+                        "Expose public learning interfaces while hiding authoring and write tools unless the host intentionally enables them."
+                    ],
+                    "file": "lessons/abilities-api-and-mcp.md"
+                },
+                {
+                    "position": 3,
+                    "slug": "http-api-caching",
+                    "title": "HTTP API and Upstream Caching",
+                    "objectives": [
+                        "Use WordPress HTTP APIs instead of raw transport code.",
+                        "Cache upstream API responses and handle failures explicitly."
+                    ],
+                    "file": "lessons/http-api-caching.md"
+                },
+                {
+                    "position": 4,
+                    "slug": "llm-native-plugin-interfaces",
+                    "title": "LLM-Native Plugin Interfaces",
+                    "objectives": [
+                        "Design MCP and REST surfaces that give models orientation, stable handles, next actions, retrieval paths, and recovery guidance.",
+                        "Avoid making the model infer workflow from a pile of tools."
+                    ],
+                    "file": "lessons/llm-native-plugin-interfaces.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/design-rest-endpoint.json"
+                },
+                {
+                    "file": "exercises/design-mcp-course-server.json"
+                },
+                {
+                    "file": "exercises/design-llm-native-interface.json"
+                },
+                {
+                    "file": "exercises/upstream-cache-failure-plan.json"
+                }
+            ]
+        },
+        {
+            "position": 6,
+            "slug": "admin-ux-i18n",
+            "title": "Admin UX, Accessibility, Privacy, and Internationalization",
+            "summary": "Make plugin interfaces understandable, translatable, accessible, and respectful of user data.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "admin-settings",
+                    "title": "Admin Screens and Settings",
+                    "objectives": [
+                        "Only add admin UI when it serves a real operator workflow.",
+                        "Use capabilities, Settings API patterns, notices, and accessible form labels."
+                    ],
+                    "file": "lessons/admin-settings.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "i18n-privacy",
+                    "title": "Internationalization and Privacy",
+                    "objectives": [
+                        "Prepare strings for translation with the plugin text domain.",
+                        "Explain what personal data is collected, exported, erased, or sent off-site."
+                    ],
+                    "file": "lessons/i18n-privacy.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/admin-screen-review.json"
+                },
+                {
+                    "file": "exercises/privacy-i18n-audit.json"
+                }
+            ]
+        },
+        {
+            "position": 7,
+            "slug": "javascript-blocks",
+            "title": "JavaScript, Blocks, and the Editor",
+            "summary": "Use modern WordPress JavaScript and block APIs without forgetting frontend cost, accessibility, or server-rendered fallbacks.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "block-json-and-registration",
+                    "title": "block.json and Block Registration",
+                    "objectives": [
+                        "Use block.json as the block contract.",
+                        "Understand editorScript, script, viewScript, style, render, attributes, supports, and variations."
+                    ],
+                    "file": "lessons/block-json-and-registration.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "interactivity-and-build-tools",
+                    "title": "Interactivity API and Build Tools",
+                    "objectives": [
+                        "Use @wordpress/scripts or current build tooling instead of hand-rolled bundles when it fits.",
+                        "Use the Interactivity API for frontend interactions that belong in WordPress block markup."
+                    ],
+                    "file": "lessons/interactivity-and-build-tools.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/block-plugin-plan.json"
+                },
+                {
+                    "file": "exercises/interactivity-build-review.json"
+                }
+            ]
+        },
+        {
+            "position": 8,
+            "slug": "performance-reliability",
+            "title": "Performance, Cron, Caching, and Reliability",
+            "summary": "Keep plugins fast under normal traffic and graceful under failure.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "performance-discipline",
+                    "title": "Performance Discipline",
+                    "objectives": [
+                        "Load assets only where needed.",
+                        "Avoid expensive queries on every request.",
+                        "Measure with debugging tools before guessing."
+                    ],
+                    "file": "lessons/performance-discipline.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "cron-background-work",
+                    "title": "Cron and Background Work",
+                    "objectives": [
+                        "Schedule recurring work explicitly and unschedule it on deactivation.",
+                        "Make cron callbacks idempotent and bounded."
+                    ],
+                    "file": "lessons/cron-background-work.md"
+                },
+                {
+                    "position": 3,
+                    "slug": "observability-and-diagnostics",
+                    "title": "Observability and Diagnostics",
+                    "objectives": [
+                        "Expose bounded support information without leaking secrets or sensitive data.",
+                        "Use admin notices, Site Health, logs, and status tools for the right operator workflow."
+                    ],
+                    "file": "lessons/observability-and-diagnostics.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/performance-audit.json"
+                },
+                {
+                    "file": "exercises/cron-unschedule-bug.json"
+                },
+                {
+                    "file": "exercises/diagnostics-support-plan.json"
+                }
+            ]
+        },
+        {
+            "position": 9,
+            "slug": "quality-tooling",
+            "title": "Testing, Static Analysis, and Quality Gates",
+            "summary": "Use tools and review habits that catch plugin mistakes before users do.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "plugin-check-quality",
+                    "title": "Plugin Check, PHPCS, and Review",
+                    "objectives": [
+                        "Run syntax checks, WordPress Coding Standards, Plugin Check, and focused tests.",
+                        "Review for security, performance, i18n, accessibility, and directory readiness."
+                    ],
+                    "file": "lessons/plugin-check-quality.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "automated-tests",
+                    "title": "Automated Tests and Local Environments",
+                    "objectives": [
+                        "Use PHPUnit for PHP behavior, wp-env for WordPress local environments, and browser tests for important flows.",
+                        "Keep tests proportional to risk and surface area."
+                    ],
+                    "file": "lessons/automated-tests.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/quality-gate.json"
+                },
+                {
+                    "file": "exercises/automated-test-matrix.json"
+                }
+            ]
+        },
+        {
+            "position": 10,
+            "slug": "distribution-maintenance",
+            "title": "Distribution, Licensing, Updates, and Maintenance",
+            "summary": "Prepare plugins for real-world installation, review, releases, support, and long-term compatibility.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "wordpress-org-readiness",
+                    "title": "WordPress.org Readiness",
+                    "objectives": [
+                        "Follow Plugin Directory guidelines, readme expectations, licensing, trademarks, and release rules.",
+                        "Make code readable and complete at submission time."
+                    ],
+                    "file": "lessons/wordpress-org-readiness.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "maintenance-compatibility",
+                    "title": "Maintenance and Compatibility",
+                    "objectives": [
+                        "Version database schemas and APIs.",
+                        "Test across supported WordPress/PHP versions.",
+                        "Handle deprecations and compatibility intentionally."
+                    ],
+                    "file": "lessons/maintenance-compatibility.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/release-readiness-review.json"
+                },
+                {
+                    "file": "exercises/compatibility-matrix-plan.json"
+                }
+            ]
+        },
+        {
+            "position": 11,
+            "slug": "advanced-php-js",
+            "title": "Advanced PHP and JavaScript Judgment",
+            "summary": "Use language features, packages, and frontend patterns where they make the plugin clearer, safer, or easier to maintain.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "php-81-craft",
+                    "title": "PHP 8.1+ Craft",
+                    "objectives": [
+                        "Use types, value objects, exceptions/WP_Error boundaries, and dependency injection thoughtfully.",
+                        "Do not let modern PHP style fight WordPress integration points."
+                    ],
+                    "file": "lessons/php-81-craft.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "javascript-state-and-accessibility",
+                    "title": "JavaScript State and Accessibility",
+                    "objectives": [
+                        "Use WordPress packages and browser APIs deliberately.",
+                        "Keep editor controls accessible and frontend behavior progressively enhanced where possible."
+                    ],
+                    "file": "lessons/javascript-state-and-accessibility.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/advanced-implementation-judgment.json"
+                },
+                {
+                    "file": "exercises/accessible-state-review.json"
+                }
+            ]
+        },
+        {
+            "position": 12,
+            "slug": "capstone",
+            "title": "Capstone: Build Like a Careful Maintainer",
+            "summary": "Combine architecture, security, storage, UI, REST, testing, and release thinking into one plugin plan.",
+            "lessons": [
+                {
+                    "position": 1,
+                    "slug": "plugin-planning-canvas",
+                    "title": "The Plugin Planning Canvas",
+                    "objectives": [
+                        "Before writing code, define actor, data, permissions, surfaces, lifecycle, dependencies, tests, and release path.",
+                        "Use the canvas to make omissions visible."
+                    ],
+                    "file": "lessons/plugin-planning-canvas.md"
+                },
+                {
+                    "position": 2,
+                    "slug": "plugin-review-cadence",
+                    "title": "Review Cadence",
+                    "objectives": [
+                        "Review a plugin in passes: contract, security, data, performance, UX, tests, distribution.",
+                        "Lead with material risks, not style preferences."
+                    ],
+                    "file": "lessons/plugin-review-cadence.md"
+                },
+                {
+                    "position": 3,
+                    "slug": "deliberate-practice-for-llms",
+                    "title": "Deliberate Practice for LLMs",
+                    "objectives": [
+                        "Design learning software that improves the model's next answer through retrieval, practice, feedback, and memory.",
+                        "Return stable fields that tell the model what to preserve and what to call next."
+                    ],
+                    "file": "lessons/deliberate-practice-for-llms.md"
+                }
+            ],
+            "exercises": [
+                {
+                    "file": "exercises/capstone-plugin-plan.json"
+                },
+                {
+                    "file": "exercises/review-cadence-findings.json"
+                },
+                {
+                    "file": "exercises/learning-loop-retrospective.json"
+                }
+            ]
+        }
+    ],
+    "references": [
+        {
+            "slug": "plugin-review-checklist",
+            "title": "Plugin Review Checklist",
+            "file": "references/plugin-review-checklist.md",
+            "mime_type": "text/markdown"
+        },
+        {
+            "slug": "planning-canvas",
+            "title": "Plugin Planning Canvas",
+            "file": "references/planning-canvas.md",
+            "mime_type": "text/markdown"
+        },
+        {
+            "slug": "course-pack-authoring",
+            "title": "Course Pack Authoring Checklist",
+            "file": "references/course-pack-authoring.md",
+            "mime_type": "text/markdown"
+        }
+    ]
+}

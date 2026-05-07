@@ -1,0 +1,83 @@
+{
+    "position": 1,
+    "slug": "choose-storage",
+    "lesson_slug": "storage-patterns",
+    "title": "Choose Storage",
+    "prompt": "For each data need, choose a storage pattern and justify it: one API key, 50,000 event logs per day, editorial \"case study\" records, cached remote API results, and per-user preferences.",
+    "hints": [
+        "The goal is not one storage answer for everything. Match shape to API."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "option",
+                    "custom table",
+                    "custom post type",
+                    "transient",
+                    "user meta",
+                    "index",
+                    "cache",
+                    "retention"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

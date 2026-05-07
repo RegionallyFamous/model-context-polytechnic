@@ -1,0 +1,3 @@
+WordPress JavaScript development has its own package ecosystem. @wordpress/scripts and wp-env reduce setup friction; the Interactivity API gives blocks a WordPress-native way to coordinate frontend state and behavior. Use these tools when they simplify the plugin, and avoid loading editor-only packages on the frontend without a reason. Sources: https://developer.wordpress.org/block-editor/getting-started/devenv/get-started-with-wp-scripts/, https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/, and https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/api-reference/
+
+A strong answer distinguishes editor behavior, saved content, server render, and frontend interaction.

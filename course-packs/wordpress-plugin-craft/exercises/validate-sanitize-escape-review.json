@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "validate-sanitize-escape-review",
+    "lesson_slug": "validate-sanitize-escape",
+    "title": "Validate, Sanitize, Escape Review",
+    "prompt": "Review a write path that accepts a title, URL, HTML description, and numeric display order. Explain what to validate, what to sanitize before storage, and what to escape at output.",
+    "hints": [
+        "Validate shape and permission first; sanitize for storage; escape late for the specific output context."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Names all three phases",
+                "points": 1,
+                "required_terms": [ "validate", "sanitize", "escape" ]
+            },
+            {
+                "name": "Uses WordPress APIs",
+                "points": 1,
+                "any_terms": [ "sanitize_text_field", "esc_html", "esc_url", "wp_kses_post", "absint" ]
+            },
+            {
+                "name": "Escapes by output context",
+                "points": 1,
+                "any_terms": [ "output context", "escape late", "attribute", "HTML", "URL" ]
+            },
+            {
+                "name": "Includes permission or intent check",
+                "points": 1,
+                "any_terms": [ "capability", "nonce", "permission_callback", "current_user_can" ]
+            }
+        ]
+    }
+}

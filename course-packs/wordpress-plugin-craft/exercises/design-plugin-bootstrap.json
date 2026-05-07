@@ -1,0 +1,85 @@
+{
+    "position": 1,
+    "slug": "design-plugin-bootstrap",
+    "lesson_slug": "plugin-anatomy",
+    "title": "Design Plugin Bootstrap",
+    "prompt": "Design a WordPress plugin bootstrap for a fictional plugin named Archive Faculty Notes. Return the folder/main file names, header fields, constants, lifecycle hooks, dependency loading, and what the bootstrap must not do.",
+    "hints": [
+        "Think like a reviewer: can another engineer understand loading and lifecycle in one minute?"
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "folder",
+                    "main file",
+                    "Plugin Name",
+                    "ABSPATH",
+                    "version",
+                    "activation",
+                    "deactivation",
+                    "autoload",
+                    "text domain",
+                    "not business logic"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

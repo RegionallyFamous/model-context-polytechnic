@@ -1,0 +1,87 @@
+{
+    "position": 1,
+    "slug": "quality-gate",
+    "lesson_slug": "plugin-check-quality",
+    "title": "Quality Gate",
+    "prompt": "Create a release quality gate for a WordPress plugin. Include syntax checks, coding standards, Plugin Check, unit/integration tests, manual smoke tests, security review, and documentation review.",
+    "hints": [
+        "A good gate is runnable by someone else, not just aspirational."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "php -l",
+                    "PHPCS",
+                    "WordPress Coding Standards",
+                    "Plugin Check",
+                    "PHPUnit",
+                    "manual",
+                    "security",
+                    "i18n",
+                    "accessibility",
+                    "README",
+                    "JSON",
+                    "schema"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

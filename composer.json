@@ -1,0 +1,29 @@
+{
+  "name": "model-context-polytechnic/model-context-polytechnic",
+  "type": "wordpress-plugin",
+  "description": "A public MCP learning and diagnostics server for WordPress.",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1",
+    "wordpress/mcp-adapter": "^0.5",
+    "automattic/jetpack-autoloader": "^5.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "automattic/jetpack-autoloader": true
+    }
+  },
+  "scripts": {
+    "course-packs:validate": "php bin/validate-course-packs.php",
+    "course-flow:simulate": "php bin/simulate-course-flow.php",
+    "course-lab": "php bin/course-lab.php --passes=6",
+    "foundation:check": "php bin/foundation-check.php",
+    "release:check": [
+      "composer validate --no-check-publish",
+      "@foundation:check",
+      "@course-packs:validate",
+      "@course-flow:simulate",
+      "@course-lab"
+    ]
+  }
+}

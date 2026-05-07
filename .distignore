@@ -1,0 +1,14 @@
+.DS_Store
+.git
+.gitignore
+.distignore
+node_modules
+tests
+tmp
+*.log
+*.zip
+composer.phar
+vendor/**/.git
+vendor/**/tests
+vendor/**/test
+vendor/**/.github

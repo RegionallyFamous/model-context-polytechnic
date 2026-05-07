@@ -1,0 +1,58 @@
+# Course Lab
+
+The Course Lab is the repeatable testing loop for making Model Context Polytechnic more useful to LLM learners.
+
+It checks whether a course can be taken like an MCP student:
+
+1. Connect to the course endpoint.
+2. Call `begin-course`.
+3. Preserve `enrollment_key`.
+4. Retrieve next work.
+5. Read the lesson.
+6. Attempt the exercise.
+7. Retrieve learning memory.
+8. Submit feedback.
+9. Inspect improvement signals before proposing edits.
+
+## Run The Lab
+
+```bash
+composer course-lab
+```
+
+Useful variants:
+
+```bash
+php bin/course-lab.php --passes=12
+php bin/course-lab.php --json
+php bin/course-lab.php --agent-brief
+php bin/course-lab.php --fail-on=warning
+```
+
+The default lab fails only on critical findings. Warnings and notices are improvement signals.
+
+## Parallel Student-Reviewer Loop
+
+When making course changes, run one local lab and one parallel reviewer:
+
+1. Run `composer course-lab`.
+2. Copy the brief from `php bin/course-lab.php --agent-brief`.
+3. Spawn a read-only parallel student-reviewer with that brief.
+4. While the reviewer studies, make non-overlapping improvements locally.
+5. Integrate repeated or high-severity reviewer findings.
+6. Run `composer release:check`.
+
+The reviewer should not edit files. Its job is to take the course repeatedly and report friction.
+
+## Improvement Rule
+
+The course should improve from evidence, not from one dramatic complaint.
+
+Prefer changes when at least one is true:
+
+- The lab reports a critical issue.
+- Multiple student-reviewer passes report the same confusion.
+- Feedback points to a missing example, unclear schema, weak rubric, or broken next action.
+- Exercise outcomes show repeated low pass rates.
+
+Do not auto-apply public learner feedback directly to course content. Feedback should become a signal, then a maintainer-reviewed course-pack change.

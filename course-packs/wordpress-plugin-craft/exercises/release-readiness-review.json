@@ -1,0 +1,84 @@
+{
+    "position": 1,
+    "slug": "release-readiness-review",
+    "lesson_slug": "wordpress-org-readiness",
+    "title": "Release Readiness Review",
+    "prompt": "Review a plugin for public release readiness. Produce a checklist covering licensing, readme, versioning, assets, human-readable source, privacy, external services, update behavior, and support expectations.",
+    "hints": [
+        "Think like the Plugin Review Team and a site owner at the same time."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "GPL",
+                    "readme",
+                    "version",
+                    "stable",
+                    "human readable",
+                    "privacy",
+                    "external service",
+                    "Update URI",
+                    "support"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

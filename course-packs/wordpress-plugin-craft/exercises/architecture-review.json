@@ -1,0 +1,84 @@
+{
+    "position": 1,
+    "slug": "architecture-review",
+    "lesson_slug": "namespaces-and-prefixes",
+    "title": "Architecture Review",
+    "prompt": "Review this architecture idea: \"Put every feature in functions.php-style global functions named save(), load(), render(), and register everything on init.\" Explain the risks and propose a cleaner plugin structure.",
+    "hints": [
+        "Name the collision risk directly. Then give a practical structure, not a lecture."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "namespace",
+                    "prefix",
+                    "collision",
+                    "hooks",
+                    "init",
+                    "bootstrap",
+                    "classes",
+                    "boundary",
+                    "test"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,5 @@
+Authorization is not the same as sanitization. A secure plugin checks capabilities before writes, verifies nonces for state-changing browser flows, and gives REST routes explicit permission callbacks. Nonces are not authentication; they help verify user intent and defend against CSRF in the right context. REST endpoints inherit WordPress authentication patterns, but custom endpoints still need precise permission decisions. Sources: https://developer.wordpress.org/apis/security/nonces/ and https://developer.wordpress.org/rest-api/
+
+Common failure: public REST endpoints that write because the callback sanitizes input. Sanitized unauthorized writes are still unauthorized writes.
+
+Public learning tools are a special case: they may intentionally store anonymous attempts, but they still need abuse boundaries. Rate-limit public write-like calls, cap payload size, store opaque hashes for handles such as enrollment keys, and return `WP_Error` for missing or invalid handles instead of inventing empty state. Public does not mean unlimited; it means no identity ceremony is required for the allowed action.

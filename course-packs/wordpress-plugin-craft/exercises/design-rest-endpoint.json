@@ -1,0 +1,84 @@
+{
+    "position": 1,
+    "slug": "design-rest-endpoint",
+    "lesson_slug": "rest-route-design",
+    "title": "Design Rest Endpoint",
+    "prompt": "Design a custom REST endpoint for a plugin that returns diagnostic status publicly and updates diagnostic settings privately. Include namespace, methods, schema, permission callbacks, response shape, and error behavior.",
+    "hints": [
+        "Split public reads from private writes. Do not make one callback guess the intent."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "namespace",
+                    "GET",
+                    "POST",
+                    "permission_callback",
+                    "schema",
+                    "WP_Error",
+                    "public",
+                    "private",
+                    "capability"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

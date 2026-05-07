@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "cron-unschedule-bug",
+    "lesson_slug": "cron-background-work",
+    "title": "Cron Unschedule Bug",
+    "prompt": "A plugin schedules a daily sync on activation but never clears it. Write the fix plan: scheduling guard, callback boundaries, deactivation cleanup, and checks that the job is idempotent.",
+    "hints": [
+        "Scheduled work should be bounded, repeat-safe, and removed when the plugin is deactivated."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Uses scheduling APIs",
+                "points": 1,
+                "any_terms": [ "wp_next_scheduled", "wp_schedule_event", "wp_clear_scheduled_hook", "cron" ]
+            },
+            {
+                "name": "Names deactivation cleanup",
+                "points": 1,
+                "required_terms": [ "deactivation" ]
+            },
+            {
+                "name": "Requires idempotent callback",
+                "points": 1,
+                "any_terms": [ "idempotent", "bounded", "lock", "batch" ]
+            },
+            {
+                "name": "Includes verification",
+                "points": 1,
+                "any_terms": [ "test", "verify", "WP-CLI", "smoke" ]
+            }
+        ]
+    }
+}

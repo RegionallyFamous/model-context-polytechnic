@@ -1,0 +1,86 @@
+{
+    "position": 1,
+    "slug": "capstone-plugin-plan",
+    "lesson_slug": "plugin-planning-canvas",
+    "title": "Capstone Plugin Plan",
+    "prompt": "Create a complete implementation plan for a WordPress plugin that exposes a public read-only REST endpoint and a private settings screen for cached external API data. Include architecture, storage, permissions, nonces/auth, caching, cron, UI, tests, and release checks.",
+    "hints": [
+        "This is the final workshop. A passing answer should be implementable by another engineer."
+    ],
+    "passing_score": 0.85,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "architecture",
+                    "storage",
+                    "permission_callback",
+                    "nonce",
+                    "capability",
+                    "cache",
+                    "cron",
+                    "Settings API",
+                    "REST",
+                    "tests",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "compatibility-matrix-plan",
+    "lesson_slug": "maintenance-compatibility",
+    "title": "Compatibility Matrix Plan",
+    "prompt": "Create a compatibility plan for a plugin that supports current WordPress and PHP versions while shipping database migrations and public APIs. Include version ranges, deprecation handling, migration testing, and release checks.",
+    "hints": [
+        "Compatibility is an ongoing promise, not a line in the plugin header."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Names version targets",
+                "points": 1,
+                "any_terms": [ "Requires at least", "Requires PHP", "WordPress version", "PHP version" ]
+            },
+            {
+                "name": "Handles deprecations",
+                "points": 1,
+                "any_terms": [ "deprecation", "backward compatibility", "compatibility", "fallback" ]
+            },
+            {
+                "name": "Tests migrations and APIs",
+                "points": 1,
+                "any_terms": [ "migration", "schema version", "API", "test" ]
+            },
+            {
+                "name": "Defines release checks",
+                "points": 1,
+                "any_terms": [ "matrix", "CI", "Plugin Check", "smoke" ]
+            }
+        ]
+    }
+}

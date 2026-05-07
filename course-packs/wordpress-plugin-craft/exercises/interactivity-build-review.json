@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "interactivity-build-review",
+    "lesson_slug": "interactivity-and-build-tools",
+    "title": "Interactivity Build Review",
+    "prompt": "Plan the JavaScript side of a small interactive block. Decide what belongs in block.json, what uses @wordpress/scripts, what can use the Interactivity API, and what should remain server-rendered.",
+    "hints": [
+        "Use build tooling and interactivity where it clarifies the block contract; avoid shipping a private framework for a tiny behavior."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Uses block metadata",
+                "points": 1,
+                "any_terms": [ "block.json", "editorScript", "viewScript", "render", "supports" ]
+            },
+            {
+                "name": "Uses WordPress build tooling",
+                "points": 1,
+                "any_terms": [ "@wordpress/scripts", "dependency extraction", "build", "package.json" ]
+            },
+            {
+                "name": "Considers Interactivity API",
+                "points": 1,
+                "any_terms": [ "Interactivity API", "data-wp", "store", "directive" ]
+            },
+            {
+                "name": "Keeps frontend cost bounded",
+                "points": 1,
+                "any_terms": [ "server-rendered", "progressive enhancement", "asset", "performance" ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "position": 4,
+    "slug": "upstream-cache-failure-plan",
+    "lesson_slug": "http-api-caching",
+    "title": "Upstream Cache Failure Plan",
+    "prompt": "Design an upstream API lookup path for a plugin that fetches remote records. Include the WordPress HTTP API call, transient caching, timeout/error behavior, cache key, and what the tool should return when the upstream service fails.",
+    "hints": [
+        "A remote API can be slow, down, or surprising. The plugin should stay polite under all three conditions."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Uses WordPress HTTP and caching APIs",
+                "points": 1,
+                "any_terms": [ "wp_remote_get", "wp_remote_post", "set_transient", "get_transient", "transient" ]
+            },
+            {
+                "name": "Handles failures explicitly",
+                "points": 1,
+                "any_terms": [ "WP_Error", "timeout", "status code", "fallback", "retry" ]
+            },
+            {
+                "name": "Designs cache key and lifetime",
+                "points": 1,
+                "any_terms": [ "cache key", "TTL", "expiration", "HOUR_IN_SECONDS" ]
+            },
+            {
+                "name": "Returns structured recoverable output",
+                "points": 1,
+                "any_terms": [ "structured", "error", "note", "recoverable", "status" ]
+            }
+        ]
+    }
+}

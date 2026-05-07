@@ -1,0 +1,84 @@
+{
+    "position": 1,
+    "slug": "advanced-implementation-judgment",
+    "lesson_slug": "php-81-craft",
+    "title": "Advanced Implementation Judgment",
+    "prompt": "A plugin proposal uses a service container, five interfaces, React on the frontend, and a custom router for one settings page and one shortcode. Review the engineering judgment and propose a simpler architecture.",
+    "hints": [
+        "The right answer is not anti-abstraction. It is pro-fit."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "PHP 8.1",
+                    "interface",
+                    "service container",
+                    "WordPress API",
+                    "shortcode",
+                    "REST",
+                    "JavaScript",
+                    "simpler",
+                    "maintainable"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

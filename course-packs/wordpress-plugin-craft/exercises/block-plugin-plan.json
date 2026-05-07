@@ -1,0 +1,84 @@
+{
+    "position": 1,
+    "slug": "block-plugin-plan",
+    "lesson_slug": "block-json-and-registration",
+    "title": "Block Plugin Plan",
+    "prompt": "Plan a dynamic block plugin that renders a searchable faculty directory. Include block.json responsibilities, PHP render callback, REST/data needs, assets, editor UX, frontend behavior, and performance concerns.",
+    "hints": [
+        "Do not make the editor do all production rendering unless that is truly the right contract."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "block.json",
+                    "render",
+                    "editorScript",
+                    "viewScript",
+                    "attributes",
+                    "REST",
+                    "performance",
+                    "accessibility",
+                    "namespace"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

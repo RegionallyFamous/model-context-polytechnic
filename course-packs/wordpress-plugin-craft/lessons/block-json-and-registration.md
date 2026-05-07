@@ -1,0 +1,3 @@
+Modern block plugins use block.json to declare the block contract and assets. Dynamic blocks can render on the server while the editor receives a predictable interface. Block Directory guidelines are stricter for block-only plugins, but the discipline is useful everywhere: keep blocks self-contained, namespaced, and independently testable. Sources: https://developer.wordpress.org/block-editor/reference-guides/block-api/ and https://developer.wordpress.org/plugins/wordpress-org/block-specific-plugin-guidelines/
+
+Common failure: JavaScript-heavy blocks that forget saved markup compatibility, frontend performance, or accessible editor controls.

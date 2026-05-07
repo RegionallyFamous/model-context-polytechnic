@@ -1,0 +1,3 @@
+WordPress discovers a plugin through a PHP file with a plugin header. A serious plugin normally lives in its own directory, uses a main bootstrap file, guards direct access, defines stable path/version constants, loads dependencies, and then delegates behavior to smaller classes or functions. Keep the bootstrap boring: metadata, guards, autoloading, requires, hooks, and activation/deactivation wiring. Source: https://developer.wordpress.org/plugins/plugin-basics/ and https://developer.wordpress.org/plugins/plugin-basics/header-requirements/
+
+What good looks like: the main file answers who the plugin is, what version is running, what PHP/WordPress versions it expects, how it loads, and where lifecycle hooks are registered. It does not become the whole application.

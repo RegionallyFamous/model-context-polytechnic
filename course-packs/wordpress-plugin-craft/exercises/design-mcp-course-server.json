@@ -1,0 +1,85 @@
+{
+    "position": 2,
+    "slug": "design-mcp-course-server",
+    "lesson_slug": "abilities-api-and-mcp",
+    "title": "Design Mcp Course Server",
+    "prompt": "Design the public MCP surface for a WordPress-hosted learning course. Include which tools are public, which authoring operations stay hidden, what schemas are required, how enrollment memory works, and how permissions are enforced.",
+    "hints": [
+        "The best answer is not \"make everything a tool.\" It curates a learner-safe surface."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "public",
+                    "authoring",
+                    "hidden",
+                    "schema",
+                    "permission_callback",
+                    "begin-course",
+                    "get-next-work",
+                    "search-course",
+                    "enrollment_key",
+                    "get-learning-memory"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

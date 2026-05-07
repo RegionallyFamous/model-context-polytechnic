@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "lifecycle-cleanup-plan",
+    "lesson_slug": "lifecycle-hooks",
+    "title": "Lifecycle Cleanup Plan",
+    "prompt": "Review a plugin that creates one custom table, one scheduled event, and one option. Decide what belongs in activation, deactivation, and uninstall. Include what must be idempotent and what must not be deleted on deactivation.",
+    "hints": [
+        "Activation prepares runtime state; deactivation pauses runtime work; uninstall is the explicit removal path."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Separates lifecycle responsibilities",
+                "points": 1,
+                "required_terms": [ "activation", "deactivation", "uninstall" ]
+            },
+            {
+                "name": "Protects user data",
+                "points": 1,
+                "any_terms": [ "do not delete", "preserve data", "explicit removal", "operator" ]
+            },
+            {
+                "name": "Handles scheduled work",
+                "points": 1,
+                "any_terms": [ "unschedule", "wp_clear_scheduled_hook", "cron", "scheduled event" ]
+            },
+            {
+                "name": "Names idempotence or migration safety",
+                "points": 1,
+                "any_terms": [ "idempotent", "schema version", "dbDelta", "safe to run again" ]
+            }
+        ]
+    }
+}

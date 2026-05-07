@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "privacy-i18n-audit",
+    "lesson_slug": "i18n-privacy",
+    "title": "Privacy and i18n Audit",
+    "prompt": "Audit a plugin that stores anonymous learning attempts and displays admin notices. Identify translation requirements, privacy disclosures, retention behavior, export/erasure considerations, and what must not be logged.",
+    "hints": [
+        "Anonymous data can still deserve a policy when it stores prompts, answers, or opaque handles."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers translation basics",
+                "points": 1,
+                "any_terms": [ "__(", "esc_html__", "text domain", "translation", "i18n" ]
+            },
+            {
+                "name": "Identifies stored data",
+                "points": 1,
+                "any_terms": [ "attempts", "feedback", "logs", "enrollment", "retention" ]
+            },
+            {
+                "name": "Protects sensitive material",
+                "points": 1,
+                "any_terms": [ "do not log", "secret", "token", "personal data", "hash" ]
+            },
+            {
+                "name": "Mentions export or erasure policy",
+                "points": 1,
+                "any_terms": [ "export", "erasure", "privacy policy", "delete", "retention" ]
+            }
+        ]
+    }
+}

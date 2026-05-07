@@ -1,0 +1,86 @@
+{
+    "position": 1,
+    "slug": "secure-write-path",
+    "lesson_slug": "capabilities-nonces-rest-permissions",
+    "title": "Secure Write Path",
+    "prompt": "Design the security model for a plugin settings save operation and a REST endpoint that updates the same setting. Include capability checks, nonce/auth expectations, validation, sanitization, escaping, and failure behavior.",
+    "hints": [
+        "Do not rely on nonces alone. Do not rely on sanitization as authorization."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "capability",
+                    "nonce",
+                    "permission_callback",
+                    "validate",
+                    "sanitize",
+                    "escape",
+                    "current_user_can",
+                    "WP_Error",
+                    "CSRF",
+                    "rate limit",
+                    "payload"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

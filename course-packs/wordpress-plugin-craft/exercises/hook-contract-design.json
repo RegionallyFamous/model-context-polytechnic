@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "hook-contract-design",
+    "lesson_slug": "hooks-as-contracts",
+    "title": "Hook Contract Design",
+    "prompt": "Design two custom hooks for a plugin that imports external records: one action after a record is imported and one filter before a record is saved. Name each hook, describe timing, payload shape, and compatibility promises.",
+    "hints": [
+        "Actions announce events; filters transform values and must return the filtered value."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Distinguishes action and filter",
+                "points": 1,
+                "required_terms": [ "action", "filter" ]
+            },
+            {
+                "name": "Specifies contract details",
+                "points": 1,
+                "any_terms": [ "timing", "payload", "arguments", "return" ]
+            },
+            {
+                "name": "Uses namespaced or prefixed hook names",
+                "points": 1,
+                "any_terms": [ "prefix", "namespace", "plugin slug", "stable name" ]
+            },
+            {
+                "name": "Mentions backward compatibility",
+                "points": 1,
+                "any_terms": [ "compatibility", "do not break", "document", "version" ]
+            }
+        ]
+    }
+}

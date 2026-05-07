@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "review-cadence-findings",
+    "lesson_slug": "plugin-review-cadence",
+    "title": "Review Cadence Findings",
+    "prompt": "Given a plugin you have not seen before, outline the review passes you would run and the first five findings categories you would report. Lead with risk, not style.",
+    "hints": [
+        "A good review has ordered passes and findings tied to behavior, security, data, performance, and release risk."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Orders review passes",
+                "points": 1,
+                "any_terms": [ "contract", "security", "data", "performance", "tests", "release" ]
+            },
+            {
+                "name": "Leads with material risk",
+                "points": 1,
+                "any_terms": [ "risk", "regression", "vulnerability", "data loss", "behavior" ]
+            },
+            {
+                "name": "Reports findings clearly",
+                "points": 1,
+                "any_terms": [ "severity", "file", "line", "reproduction", "impact" ]
+            },
+            {
+                "name": "Avoids style-first review",
+                "points": 1,
+                "any_terms": [ "not style", "behavior", "user-facing", "evidence" ]
+            }
+        ]
+    }
+}

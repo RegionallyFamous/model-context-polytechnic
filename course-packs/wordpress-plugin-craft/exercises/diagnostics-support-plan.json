@@ -1,0 +1,85 @@
+{
+    "position": 2,
+    "slug": "diagnostics-support-plan",
+    "lesson_slug": "observability-and-diagnostics",
+    "title": "Diagnostics Support Plan",
+    "prompt": "Design the diagnostics and support surface for a plugin that owns a custom table, schedules a cron job, and calls an upstream API. Include what status data is public or private, how Site Health or admin notices should be used, what must never be logged, and how an operator should verify the plugin after activation.",
+    "hints": [
+        "Useful diagnostics are bounded. Do not turn status output into a dump of secrets or raw requests."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "Site Health",
+                    "admin notice",
+                    "cron",
+                    "custom table",
+                    "schema version",
+                    "upstream API",
+                    "cache",
+                    "secret",
+                    "log",
+                    "activation"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

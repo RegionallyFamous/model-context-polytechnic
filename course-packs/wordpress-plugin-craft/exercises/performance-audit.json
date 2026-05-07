@@ -1,0 +1,84 @@
+{
+    "position": 1,
+    "slug": "performance-audit",
+    "lesson_slug": "performance-discipline",
+    "title": "Performance Audit",
+    "prompt": "Perform a design audit for a plugin that loads a dashboard script on every frontend page, calls a remote API on every page view, and stores logs in post meta. Return risks and fixes.",
+    "hints": [
+        "Be concrete: which code path changes, which storage changes, and what gets cached?"
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "enqueue",
+                    "frontend",
+                    "remote API",
+                    "cache",
+                    "transient",
+                    "query",
+                    "custom table",
+                    "index",
+                    "Query Monitor"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

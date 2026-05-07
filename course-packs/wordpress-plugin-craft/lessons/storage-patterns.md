@@ -1,0 +1,3 @@
+Good plugin storage starts with the question: how will this data be queried, edited, exported, deleted, and migrated? Options fit configuration. Post/user/term/comment meta fits data attached to existing objects. Custom post types fit records that benefit from WordPress admin screens and editorial lifecycle. Custom tables fit high-volume, relational, or time-series data. Transients fit cache that can disappear. Sources: https://developer.wordpress.org/plugins/ and https://developer.wordpress.org/apis/transients/
+
+A rock-solid answer includes data ownership, retention, indexes, migration versioning, and uninstall policy.

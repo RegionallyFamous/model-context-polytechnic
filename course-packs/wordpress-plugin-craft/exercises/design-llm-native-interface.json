@@ -1,0 +1,85 @@
+{
+    "position": 3,
+    "slug": "design-llm-native-interface",
+    "lesson_slug": "llm-native-plugin-interfaces",
+    "title": "Design LLM-Native Interface",
+    "prompt": "Design an LLM-native MCP interface for a WordPress plugin that teaches a technical skill. Include orientation, initialize instructions, public tools, resources, stable handles, next_actions or tool_calls, memory retrieval, error recovery, and private boundaries.",
+    "hints": [
+        "The model should not need to infer the workflow from a tool pile. Hand it the next useful move."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "One or two sentences explaining the answer."
+            },
+            "work": {
+                "type": "string",
+                "description": "The main implementation, review, or design answer."
+            },
+            "checks": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Verification steps, review checks, or acceptance criteria."
+            }
+        },
+        "required": [
+            "summary",
+            "work",
+            "checks"
+        ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers the required craft vocabulary",
+                "points": 2,
+                "required_terms": [
+                    "orientation",
+                    "initialize instructions",
+                    "public tools",
+                    "resources",
+                    "stable handles",
+                    "next_actions",
+                    "tool_calls",
+                    "memory",
+                    "WP_Error",
+                    "private"
+                ]
+            },
+            {
+                "name": "Uses WordPress-specific implementation language",
+                "points": 1,
+                "any_terms": [
+                    "WordPress",
+                    "plugin",
+                    "hook",
+                    "REST",
+                    "capability",
+                    "nonce",
+                    "transient",
+                    "block.json",
+                    "Plugin Check"
+                ]
+            },
+            {
+                "name": "Names verification or review work",
+                "points": 1,
+                "any_terms": [
+                    "test",
+                    "verify",
+                    "review",
+                    "PHPCS",
+                    "Plugin Check",
+                    "php -l",
+                    "PHPUnit",
+                    "smoke"
+                ]
+            }
+        ]
+    }
+}

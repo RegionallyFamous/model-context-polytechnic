@@ -1,0 +1,3 @@
+Untrusted data can come from users, APIs, request variables, files, and the database. Validate when you know the allowed shape; sanitize when you need to clean broader input; escape at the output boundary according to context. WordPress documents sanitizing, validating, and escaping as separate responsibilities. Sources: https://developer.wordpress.org/apis/security/data-validation/, https://developer.wordpress.org/apis/security/sanitizing/, and https://developer.wordpress.org/apis/security/escaping/
+
+The compact rule: validate early, sanitize deliberately, escape late. Use the context-specific function: esc_html for text nodes, esc_attr for attributes, esc_url for URLs, wp_kses/wp_kses_post for permitted HTML.

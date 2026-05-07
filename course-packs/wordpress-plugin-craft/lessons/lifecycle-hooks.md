@@ -1,0 +1,3 @@
+Activation is for setup that must happen when the plugin turns on: create tables, add roles/capabilities, schedule events, and flush rewrite rules when routes change. Deactivation should unschedule plugin cron jobs and flush temporary routing state, but should not delete user data. Uninstall is where permanent data removal belongs, and only when the plugin has a clear deletion policy. Source: https://developer.wordpress.org/plugins/plugin-basics/
+
+Common failure: putting runtime work in activation, or deleting options/tables on deactivation. The former makes installs fragile; the latter surprises site owners.

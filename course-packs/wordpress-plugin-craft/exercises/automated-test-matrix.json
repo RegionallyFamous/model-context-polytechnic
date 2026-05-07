@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "automated-test-matrix",
+    "lesson_slug": "automated-tests",
+    "title": "Automated Test Matrix",
+    "prompt": "Create a focused test plan for a plugin with a settings screen, REST write route, custom table, cron job, and frontend block. Choose which checks are PHPUnit, browser tests, static analysis, or smoke tests.",
+    "hints": [
+        "Tests should scale with risk and user-facing surface area."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Covers multiple test layers",
+                "points": 1,
+                "any_terms": [ "PHPUnit", "browser", "static analysis", "smoke", "Plugin Check" ]
+            },
+            {
+                "name": "Maps tests to plugin surfaces",
+                "points": 1,
+                "any_terms": [ "settings", "REST", "custom table", "cron", "block" ]
+            },
+            {
+                "name": "Prioritizes risk",
+                "points": 1,
+                "any_terms": [ "risk", "critical path", "write route", "permission" ]
+            },
+            {
+                "name": "Names local environment tooling",
+                "points": 1,
+                "any_terms": [ "wp-env", "WordPress test suite", "CI", "local environment" ]
+            }
+        ]
+    }
+}

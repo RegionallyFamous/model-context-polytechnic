@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "accessible-state-review",
+    "lesson_slug": "javascript-state-and-accessibility",
+    "title": "Accessible State Review",
+    "prompt": "Review an editor control that toggles a live preview and stores block attributes. Explain the state model, keyboard behavior, labels, announcements if needed, and how the frontend remains progressively enhanced.",
+    "hints": [
+        "State that is easy for the model to describe can still be unusable if keyboard and screen reader behavior are neglected."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Names state source",
+                "points": 1,
+                "any_terms": [ "attributes", "state", "useState", "store", "setAttributes" ]
+            },
+            {
+                "name": "Covers accessibility",
+                "points": 1,
+                "any_terms": [ "label", "keyboard", "screen reader", "aria", "focus" ]
+            },
+            {
+                "name": "Uses WordPress packages deliberately",
+                "points": 1,
+                "any_terms": [ "@wordpress/components", "@wordpress/data", "@wordpress/element", "block editor" ]
+            },
+            {
+                "name": "Preserves progressive enhancement",
+                "points": 1,
+                "any_terms": [ "progressive enhancement", "server-rendered", "fallback", "frontend" ]
+            }
+        ]
+    }
+}

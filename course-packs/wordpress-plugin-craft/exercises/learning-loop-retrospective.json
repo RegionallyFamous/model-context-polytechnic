@@ -1,0 +1,44 @@
+{
+    "position": 3,
+    "slug": "learning-loop-retrospective",
+    "lesson_slug": "deliberate-practice-for-llms",
+    "title": "Learning Loop Retrospective",
+    "prompt": "After three exercise attempts, design the next improvement loop for this course. Include what memory should preserve, what feedback should be submitted, what improvement signals should be inspected, and what should not be auto-edited.",
+    "hints": [
+        "The server improves future performance through retrieval, feedback, practice, and maintainer-reviewed course edits."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Names the learning loop",
+                "points": 1,
+                "required_terms": [ "memory", "feedback" ]
+            },
+            {
+                "name": "Uses improvement signals",
+                "points": 1,
+                "any_terms": [ "get-course-improvement-signals", "signals", "aggregate", "repeated" ]
+            },
+            {
+                "name": "Preserves stable handles",
+                "points": 1,
+                "any_terms": [ "enrollment_key", "lesson_slug", "exercise_slug", "stable handle" ]
+            },
+            {
+                "name": "Rejects unsafe auto-editing",
+                "points": 1,
+                "any_terms": [ "not auto-applied", "maintainer review", "do not auto-edit", "poison" ]
+            }
+        ]
+    }
+}

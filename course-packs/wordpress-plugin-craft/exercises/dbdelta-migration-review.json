@@ -1,0 +1,44 @@
+{
+    "position": 2,
+    "slug": "dbdelta-migration-review",
+    "lesson_slug": "custom-tables-dbdelta",
+    "title": "dbDelta Migration Review",
+    "prompt": "Design a custom table migration plan for plugin-owned analytics rows. Include schema versioning, dbDelta usage, indexes, charset/collation, and how to avoid destructive migrations.",
+    "hints": [
+        "The best migration can run more than once without corrupting data."
+    ],
+    "passing_score": 0.8,
+    "expected_output_schema": {
+        "type": "object",
+        "properties": {
+            "summary": { "type": "string" },
+            "work": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": [ "summary", "work", "checks" ]
+    },
+    "rubric": {
+        "criteria": [
+            {
+                "name": "Uses dbDelta and charset",
+                "points": 1,
+                "required_terms": [ "dbDelta", "charset" ]
+            },
+            {
+                "name": "Versions schema",
+                "points": 1,
+                "any_terms": [ "schema version", "option", "migration", "upgrade" ]
+            },
+            {
+                "name": "Designs useful indexes",
+                "points": 1,
+                "any_terms": [ "PRIMARY KEY", "KEY", "index", "query pattern" ]
+            },
+            {
+                "name": "Avoids destructive changes",
+                "points": 1,
+                "any_terms": [ "non-destructive", "backfill", "preserve", "do not drop" ]
+            }
+        ]
+    }
+}
