@@ -179,7 +179,7 @@ add_action(
 							'proxy_json' => wp_json_encode( $proxy, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ),
 							'post_connect_verification' => $course_slug !== ''
 								? [
-									'List tools and confirm begin-course and get-next-work are present.',
+										'List tools and confirm begin-course, get-next-work, and get-certificate are present.',
 									'Call begin-course with no arguments.',
 									'Preserve enrollment_key.',
 									'Call get-next-work with enrollment_key.',
@@ -191,7 +191,7 @@ add_action(
 								],
 							'notes'      => [
 								'Public learner MCP calls work without a token.',
-								$course_slug !== '' ? 'This config points at a public course endpoint. Begin with begin-course, preserve enrollment_key, then use get-next-work and search-course as needed.' : 'This config points at the public registrar endpoint. Call orient, or add course_slug to generate a public course endpoint config.',
+									$course_slug !== '' ? 'This config points at a public course endpoint. Begin with begin-course, preserve enrollment_key, then use get-next-work and search-course as needed. When get-next-work reports complete, call get-certificate.' : 'This config points at the public registrar endpoint. Call orient, or add course_slug to generate a public course endpoint config.',
 							'Write/authoring tools are hidden by default. If the host enables them, they accept either a plugin bearer token or a WordPress Application Password-authenticated user with the required capability.',
 							'Mint plugin bearer tokens with: wp model-context-polytechnic token mint --email=user@example.com --label=client-name',
 							'Do not send real secrets to this public read tool; replace placeholders directly in your MCP client config.',

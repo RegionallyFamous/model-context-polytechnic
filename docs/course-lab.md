@@ -11,8 +11,9 @@ It checks whether a course can be taken like an MCP student:
 5. Read the lesson.
 6. Attempt the exercise.
 7. Retrieve learning memory.
-8. Submit feedback.
-9. Inspect improvement signals before proposing edits.
+8. When all exercises pass, retrieve the certificate.
+9. Submit feedback.
+10. Inspect improvement signals before proposing edits.
 
 For exercises with exemplars, the intended loop is attempt first, review rubric feedback, then call `get-exercise` with `include_model_answer=true` if the learner needs calibration.
 
@@ -24,6 +25,7 @@ composer cohort-lab
 composer extended-cohort-lab
 composer stress-lab
 composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
 ```
 
 Useful variants:
@@ -39,7 +41,7 @@ php bin/course-lab.php --fail-on=warning
 
 The default lab fails only on critical findings. Warnings and notices are improvement signals.
 
-The first four commands run locally without WordPress. `http-course-smoke` runs against an activated WordPress site and proves the MCP HTTP initialize/session/tool loop end to end.
+The first four commands run locally without WordPress. `http-course-smoke` runs against an activated WordPress site and proves the MCP HTTP initialize/session/tool loop end to end. `http-course-completion-smoke` is the graduation rehearsal: it passes every exercise and verifies the certificate path.
 
 ## Student Cohorts
 

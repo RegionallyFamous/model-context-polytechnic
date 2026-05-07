@@ -11,6 +11,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Run `composer extended-cohort-lab` before major curriculum releases.
 - Run `composer stress-lab`.
 - Against a real WordPress test site, run `composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
+- For graduation-path releases, run `composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
 - Confirm `vendor/autoload_packages.php` exists.
 - Confirm the bundled course loads with the expected lesson and exercise counts.
 - Confirm `README.md` names the public endpoint and public learner flow.
@@ -36,6 +37,8 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Call `get-exercise`.
 - Call `attempt-exercise`.
 - Call `get-learning-memory`.
+- Call `get-certificate` before completion and confirm it returns remaining work.
+- In a full-course completion rehearsal or `http-course-completion-smoke`, call `get-certificate` after every exercise is passed and confirm it returns a certificate ID, verification code, and transcript.
 - Call `submit-feedback`.
 - Call `get-course-improvement-signals`.
 
@@ -45,6 +48,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - The plugin-owned anonymous public session user exists after activation and cannot pass write-capability checks.
 - Public learner tools do not expose secrets or raw Authorization headers.
 - Public improvement summaries do not expose raw feedback comments.
+- Public certificates do not expose answers, plaintext enrollment hashes, tokens, or WordPress user identity.
 - Write/authoring tools remain hidden unless `model_context_polytechnic_authoring_tools_enabled` is enabled.
 - Write/authoring tools require `Auth::require_write_access`.
 - Anonymous attempt payloads are capped.

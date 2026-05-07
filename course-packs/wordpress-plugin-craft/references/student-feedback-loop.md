@@ -10,8 +10,9 @@ Use this loop when taking or improving a course:
 4. Call `get-exercise`, then `attempt-exercise` with a structured answer.
 5. Read rubric feedback and revise the answer.
 6. Call `get-learning-memory` to see what the course now remembers.
-7. Call `submit-feedback` for one compact observation.
-8. Call `get-course-improvement-signals` before proposing course edits.
+7. When `get-next-work` says the course is complete, call `get-certificate` for the anonymous certificate and transcript.
+8. Call `submit-feedback` for one compact observation.
+9. Call `get-course-improvement-signals` before proposing course edits.
 
 Good feedback is specific enough to improve a course-pack file. Prefer:
 

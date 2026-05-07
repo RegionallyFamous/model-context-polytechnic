@@ -184,6 +184,7 @@ function check_public_contract( array $course ): array {
 		'get-next-work',
 		'attempt-exercise',
 		'get-learning-memory',
+		'get-certificate',
 		'submit-feedback',
 		'get-course-improvement-signals',
 	];
@@ -289,6 +290,7 @@ function build_pass_plan( array $course, array $inventory, int $passes ): array 
 		[ 'name' => 'Retrieval and Syllabus Navigation', 'goal' => 'Use get-next-work, get-syllabus, and search-course to recover only the context needed for the current task.' ],
 		[ 'name' => 'Exercise Attempt Quality', 'goal' => 'Attempt exercises using expected schemas and revise against rubric feedback.' ],
 		[ 'name' => 'Memory Recovery', 'goal' => 'Use get-learning-memory to carry strengths, gaps, and next work into later sessions.' ],
+		[ 'name' => 'Completion and Certificate', 'goal' => 'Verify completion has a visible get-certificate path and an anonymous transcript.' ],
 		[ 'name' => 'Feedback and Improvement Signals', 'goal' => 'File submit-feedback for confusing/helpful material and inspect aggregate improvement signals.' ],
 		[ 'name' => 'Capstone Plugin Judgment', 'goal' => 'Use the course to produce a safer WordPress plugin plan than an untrained model would.' ],
 	];
@@ -823,7 +825,7 @@ function agent_brief( array $lab ): string {
 		[
 			'You are a parallel LLM student-reviewer for Model Context Polytechnic.',
 			'Course: ' . $lab['course']['name'] . ' (' . $lab['course']['slug'] . ').',
-			'Take the course repeatedly using this loop: begin-course, get-course-improvement-signals, get-next-work, get-lesson, get-exercise, attempt-exercise, get-learning-memory, submit-feedback.',
+			'Take the course repeatedly using this loop: begin-course, get-course-improvement-signals, get-next-work, get-lesson, get-exercise, attempt-exercise, get-learning-memory, get-certificate when complete, submit-feedback.',
 			'Focus on whether the course makes you better at the target task, not whether it merely describes the topic.',
 			'Report concrete findings with lesson_slug, exercise_slug, or tool slug. Do not edit files.',
 			'Current lab score: ' . $lab['score']['llm_friendliness'] . '/100.',

@@ -51,6 +51,7 @@ $required_tools = [
 	$tool_prefix . 'get-exercise',
 	$tool_prefix . 'attempt-exercise',
 	$tool_prefix . 'get-learning-memory',
+	$tool_prefix . 'get-certificate',
 	$tool_prefix . 'get-next-work',
 	$tool_prefix . 'submit-feedback',
 	$tool_prefix . 'get-course-improvement-signals',
@@ -189,6 +190,26 @@ if ( empty( $memory['recent_attempts'] ) ) {
 $summary['memory_attempts'] = count( $memory['recent_attempts'] );
 $summary['checks'][] = 'get-learning-memory recovered the prior attempt';
 
+$certificate = call_tool(
+	$options,
+	$session_id,
+	$tool_prefix . 'get-certificate',
+	[
+		'enrollment_key' => $enrollment_key,
+	],
+	8
+);
+
+if ( ! array_key_exists( 'eligible', $certificate ) || ! empty( $certificate['eligible'] ) ) {
+	fail( 'get-certificate should report not-yet-eligible after a single smoke-test attempt.' );
+}
+
+if ( empty( $certificate['remaining_exercises'] ) || empty( $certificate['next_work'] ) ) {
+	fail( 'get-certificate did not return remaining exercises and next work for an unfinished enrollment.' );
+}
+
+$summary['checks'][] = 'get-certificate reported not-yet-complete status with next work';
+
 $model_answer = call_tool(
 	$options,
 	$session_id,
@@ -198,7 +219,7 @@ $model_answer = call_tool(
 		'include_model_answer' => true,
 		'enrollment_key'       => $enrollment_key,
 	],
-	8
+	9
 );
 
 if ( empty( $model_answer['exercise']['model_answer'] ) ) {

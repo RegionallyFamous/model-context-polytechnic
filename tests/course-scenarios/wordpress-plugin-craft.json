@@ -361,6 +361,17 @@
       "target_slug": "design-llm-native-interface"
     },
     {
+      "slug": "completion-certificate",
+      "title": "Completion Certificate",
+      "learner": "A model has passed the course and needs a final artifact.",
+      "failure_mode": "Finishes the last exercise but does not know what to do next.",
+      "expected_tools": ["get-next-work", "get-certificate"],
+      "route": ["get-next-work", "get-certificate"],
+      "required_course_terms": ["complete=true", "get-certificate", "certificate", "transcript"],
+      "target_type": "tool",
+      "target_slug": "get-certificate"
+    },
+    {
       "slug": "capstone-end-to-end",
       "title": "Capstone End To End",
       "learner": "A model plans a full plugin.",

@@ -893,14 +893,14 @@ class Registry {
 		}
 
 		return sprintf(
-			"First call begin-course. Use the returned enrollment_key for attempt-exercise, get-next-work, get-progress, and get-learning-memory so the course can remember this learner.\n%s",
+			"First call begin-course. Use the returned enrollment_key for attempt-exercise, get-next-work, get-progress, get-learning-memory, and get-certificate so the course can remember this learner through completion.\n%s",
 			$instructions
 		);
 	}
 
 	private static function default_course_instructions( string $name ): string {
 		return sprintf(
-			'You are attending %s at Model Context Polytechnic. Call begin-course, use get-next-work for the next exact move, read lessons, attempt exercises, revise against rubric feedback, recover prior progress with get-learning-memory, and keep responses precise, useful, and warmly professorial.',
+			'You are attending %s at Model Context Polytechnic. Call begin-course, use get-next-work for the next exact move, read lessons, attempt exercises, revise against rubric feedback, recover prior progress with get-learning-memory, call get-certificate when complete, and keep responses precise, useful, and warmly professorial.',
 			$name
 		);
 	}

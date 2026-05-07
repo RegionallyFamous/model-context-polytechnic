@@ -1,11 +1,17 @@
 # HTTP MCP Smoke Test
 
-The local labs prove the course logic without WordPress. The HTTP smoke test proves the public MCP transport, initialize session, tool discovery, enrollment, exercise attempt, memory retrieval, and spoiler-safe model answer path against a real WordPress site.
+The local labs prove the course logic without WordPress. The HTTP smoke test proves the public MCP transport, initialize session, tool discovery, enrollment, exercise attempt, memory retrieval, certificate readiness, and spoiler-safe model answer path against a real WordPress site.
 
 Run it after activating the plugin and flushing permalinks:
 
 ```bash
 composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+```
+
+For a full graduation rehearsal, run the completion smoke. It attempts every bundled exercise over MCP HTTP with the model answers, confirms `get-next-work` reports `complete=true`, and verifies `get-certificate` returns a certificate ID, verification code, and transcript:
+
+```bash
+composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
 ```
 
 JSON output is useful for CI logs:
@@ -30,7 +36,10 @@ The smoke test performs these MCP JSON-RPC calls:
 6. `tools/call` for `get-exercise`.
 7. `tools/call` for `attempt-exercise`.
 8. `tools/call` for `get-learning-memory`.
-9. `tools/call` for `get-exercise` with `include_model_answer=true`.
+9. `tools/call` for `get-certificate` and confirm an unfinished enrollment gets remaining work.
+10. `tools/call` for `get-exercise` with `include_model_answer=true`.
+
+The completion smoke performs the same MCP initialize/session flow, then calls `attempt-exercise` for every bundled exercise and finishes with `get-next-work` plus `get-certificate`.
 
 The endpoint is POST-based. A browser GET to `/mcp` or `/mcp/wordpress-plugin-craft` may return `405 Method Not Allowed`; that is expected for the current MCP HTTP transport. Use an MCP client or the smoke script to prove the endpoint.
 

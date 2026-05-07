@@ -24,6 +24,7 @@ $model_context_polytechnic_drop_site_data = static function () use ( $wpdb ): vo
 		'model_context_polytechnic_enrollments',
 		'model_context_polytechnic_learning_events',
 		'model_context_polytechnic_feedback',
+		'model_context_polytechnic_certificates',
 	];
 
 	foreach ( $tables as $table ) {

@@ -3,22 +3,22 @@
     "slug": "design-mcp-course-server",
     "lesson_slug": "abilities-api-and-mcp",
     "title": "Design Mcp Course Server",
-    "prompt": "Design the public MCP surface for a WordPress-hosted learning course. Include which tools are public, which authoring operations stay hidden, what schemas are required, how enrollment memory works, and how permissions are enforced.",
+    "prompt": "Design the public MCP surface for a WordPress-hosted learning course. Include which tools are public, which authoring operations stay hidden, what schemas are required, how enrollment memory and completion certificates work, and how permissions are enforced.",
     "hints": [
         "The best answer is not \"make everything a tool.\" It curates a learner-safe surface."
     ],
     "model_answer": {
         "summary": "A WordPress-hosted MCP course server should be public for learning, private for authoring, and strict about schemas and permissions.",
-        "work": "Expose public learner tools such as begin-course, get-next-work, search-course, get-lesson, get-exercise, attempt-exercise, submit-feedback, and get-learning-memory. Keep authoring operations hidden behind WordPress capability checks, not public MCP tools; editing lessons, changing rubrics, and importing packs should require an authenticated maintainer path. Every tool needs an input schema and output schema so the LLM can call it reliably. Enrollment memory should use an anonymous enrollment_key returned by begin-course and repeated in progress responses. Public permission_callback values can allow read and practice calls, while private write operations use current_user_can, nonces or bearer tokens, and REST permission discipline.",
+        "work": "Expose public learner tools such as begin-course, get-next-work, search-course, get-lesson, get-exercise, attempt-exercise, submit-feedback, get-learning-memory, and get-certificate. Keep authoring operations hidden behind WordPress capability checks, not public MCP tools; editing lessons, changing rubrics, and importing packs should require an authenticated maintainer path. Every tool needs an input schema and output schema so the LLM can call it reliably. Enrollment memory should use an anonymous enrollment_key returned by begin-course and repeated in progress responses. Completion should use get-certificate after every published exercise passes, returning an anonymous certificate ID, verification code, and transcript without treating the key as a password. Public permission_callback values can allow read and practice calls, while private write operations use current_user_can, nonces or bearer tokens, and REST permission discipline.",
         "checks": [
             "Verify public tools do not expose secrets or course authoring operations.",
             "Validate every schema with representative and invalid inputs.",
             "Call begin-course and confirm it returns an enrollment_key.",
-            "Call get-next-work, search-course, and get-learning-memory using the same enrollment_key.",
+            "Call get-next-work, search-course, get-learning-memory, and get-certificate using the same enrollment_key.",
             "Review hidden authoring paths for WordPress capability and permission_callback enforcement."
         ],
         "rubric_mapping": [
-            { "criterion": "Covers the required craft vocabulary", "covers": [ "public", "authoring", "hidden", "schema", "permission_callback", "begin-course", "get-next-work", "search-course", "enrollment_key", "get-learning-memory" ] },
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "public", "authoring", "hidden", "schema", "permission_callback", "begin-course", "get-next-work", "search-course", "enrollment_key", "get-learning-memory", "get-certificate" ] },
             { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "REST", "capability", "nonce" ] },
             { "criterion": "Names verification or review work", "covers": [ "verify", "validate", "review", "test" ] }
         ],
@@ -29,7 +29,7 @@
             "Using session language instead of a durable enrollment_key.",
             "Forgetting that permission_callback must protect private writes."
         ],
-        "revision_prompt": "Revise by splitting public learner tools from hidden authoring operations, then describe schemas, enrollment_key memory, and permission_callback rules.",
+        "revision_prompt": "Revise by splitting public learner tools from hidden authoring operations, then describe schemas, enrollment_key memory, get-certificate completion, and permission_callback rules.",
         "expected_score_band": "pass/high"
     },
     "passing_score": 0.8,
@@ -73,7 +73,8 @@
                     "get-next-work",
                     "search-course",
                     "enrollment_key",
-                    "get-learning-memory"
+                    "get-learning-memory",
+                    "get-certificate"
                 ]
             },
             {

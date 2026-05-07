@@ -44,6 +44,7 @@ $summary = [
 	'begin_course_shape' => [
 		'stable_handles' => [ 'enrollment_key', 'lesson_slug', 'exercise_slug' ],
 		'improvement_tools' => [ 'submit-feedback', 'get-course-improvement-signals' ],
+		'completion_tool' => 'get-certificate',
 		'first_lesson'   => [
 			'slug'  => $first_lesson['slug'],
 			'title' => $first_lesson['title'],
@@ -70,11 +71,17 @@ $summary = [
 		'has_output_schema'=> isset( $first_exercise['expected_output_schema'] ),
 		'has_model_answer' => ! empty( $first_exercise['model_answer'] ),
 		'has_feedback_loop'=> strpos( $course['instructions'], 'submit-feedback' ) !== false,
+		'has_certificate_loop' => strpos( $course['instructions'], 'get-certificate' ) !== false,
 	],
 ];
 
 if ( empty( $summary['exercise_contract']['has_feedback_loop'] ) ) {
 	fwrite( STDERR, "Course instructions do not mention submit-feedback.\n" );
+	exit( 1 );
+}
+
+if ( empty( $summary['exercise_contract']['has_certificate_loop'] ) ) {
+	fwrite( STDERR, "Course instructions do not mention get-certificate.\n" );
 	exit( 1 );
 }
 

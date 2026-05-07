@@ -32,7 +32,7 @@ add_action(
 					$next_actions = [
 						[
 							'action' => __( 'Choose a course endpoint.', 'model-context-polytechnic' ),
-							'why'    => __( 'Course endpoints expose begin-course, get-next-work, lessons, exercises, and memory.', 'model-context-polytechnic' ),
+							'why'    => __( 'Course endpoints expose begin-course, get-next-work, lessons, exercises, memory, and certificates.', 'model-context-polytechnic' ),
 						],
 					];
 
@@ -70,6 +70,7 @@ add_action(
 						'recovery'        => [
 							'If you have no enrollment_key, call begin-course.',
 							'If you have an enrollment_key, call get-learning-memory, then get-next-work.',
+							'If get-next-work reports complete, call get-certificate with the same enrollment_key.',
 							'If you do not know the right lesson, call search-course with a short technical phrase.',
 						],
 					];

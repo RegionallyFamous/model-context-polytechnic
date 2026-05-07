@@ -58,7 +58,7 @@ add_action(
 						],
 						'post_connect_verification' => $course_slug !== ''
 							? [
-								'List available tools and confirm begin-course, get-next-work, get-lesson, get-exercise, attempt-exercise, get-progress, and get-learning-memory are present.',
+								'List available tools and confirm begin-course, get-next-work, get-lesson, get-exercise, attempt-exercise, get-progress, get-learning-memory, and get-certificate are present.',
 								'Call begin-course with no arguments.',
 								'Preserve the returned enrollment_key.',
 								'Call get-next-work with enrollment_key.',

@@ -113,9 +113,10 @@ To prove the same loop over the real MCP HTTP transport on a WordPress site, run
 
 ```bash
 composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
 ```
 
-The smoke test posts MCP JSON-RPC requests to `initialize`, `tools/list`, `resources/list`, `begin-course`, `get-exercise`, `attempt-exercise`, `get-learning-memory`, and the spoiler-safe `include_model_answer=true` path. Browser GET requests to MCP endpoints may return `405 Method Not Allowed`; the transport is POST-based. See [http-smoke.md](docs/http-smoke.md).
+The smoke tests post MCP JSON-RPC requests to prove first-day enrollment, exercise attempts, memory retrieval, certificate readiness, and full-course certificate issuance. Browser GET requests to MCP endpoints may return `405 Method Not Allowed`; the transport is POST-based. See [http-smoke.md](docs/http-smoke.md).
 
 ## Requirements
 
@@ -338,6 +339,7 @@ Published course endpoints automatically include these public learning tools. Wo
 - `model-context-polytechnic/{course-slug}-get-next-work`
 - `model-context-polytechnic/{course-slug}-get-progress`
 - `model-context-polytechnic/{course-slug}-get-learning-memory`
+- `model-context-polytechnic/{course-slug}-get-certificate`
 - `model-context-polytechnic/{course-slug}-submit-feedback`
 - `model-context-polytechnic/{course-slug}-get-course-improvement-signals`
 
@@ -352,12 +354,15 @@ The public learning flow is intentionally light:
 5. Use `get-next-work` for the next recommended lesson, exercise, and exact tool arguments.
 6. Use `search-course` to retrieve targeted lessons, exercises, and references.
 7. Pass `enrollment_key` to `attempt-exercise`, `get-progress`, and `get-learning-memory`.
-8. Call `submit-feedback` when a lesson, exercise, tool response, or next action is confusing, helpful, stale, or missing an example.
-9. Call `get-course-improvement-signals` before proposing course changes so recommendations are based on accumulated evidence.
+8. When `get-next-work` reports `complete=true`, call `get-certificate` with the same `enrollment_key`.
+9. Call `submit-feedback` when a lesson, exercise, tool response, or next action is confusing, helpful, stale, or missing an example.
+10. Call `get-course-improvement-signals` before proposing course changes so recommendations are based on accumulated evidence.
 
 The enrollment key is anonymous. The plugin stores only a SHA-256 hash of it. If an attempt is submitted without an enrollment key, `attempt-exercise` will evaluate the work, create a new enrollment key, store the attempt against it, and return the key so future calls can remember the work.
 
-Public learning data is bounded. Exercise answers are capped at 20 KB, feedback comments are capped at 6 KB, public learning reads/writes are rate-limited, and old anonymous attempts, feedback, and telemetry events are pruned by a daily cleanup job. The default retention window is 180 days and can be changed with the `model_context_polytechnic_learning_retention_days` filter.
+Completion is also anonymous. `get-certificate` issues or retrieves a certificate only after every published exercise has a passing attempt for that enrollment key. The certificate includes a deterministic certificate ID, verification code, completion statement, and optional transcript. It proves completion for that anonymous learner record inside this WordPress-hosted MCP server; it is not a WordPress login, password, or human identity credential.
+
+Public learning data is bounded. Exercise answers are capped at 20 KB, feedback comments are capped at 6 KB, public learning reads/writes are rate-limited, and old anonymous attempts, feedback, and telemetry events are pruned by a daily cleanup job. Certificate records store hashed enrollment identity plus completion metadata, not answers. The default retention window is 180 days and can be changed with the `model_context_polytechnic_learning_retention_days` filter.
 
 Every public course tool call records a privacy-safe learning event: tool slug, target handle when known, result status, duration, and an input fingerprint. Enrollment keys are hashed and large fields such as answers or comments are hashed by fingerprint rather than stored in telemetry. This does not auto-edit the course; it creates aggregate improvement signals. The public `get-course-improvement-signals` tool returns counts, hotspots, exercise pass-rate patterns, and recommendations without returning raw feedback comments.
 

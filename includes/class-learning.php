@@ -9,8 +9,9 @@ class Learning {
 	const ENROLLMENTS_TABLE = 'model_context_polytechnic_enrollments';
 	const EVENTS_TABLE      = 'model_context_polytechnic_learning_events';
 	const FEEDBACK_TABLE    = 'model_context_polytechnic_feedback';
-	const SCHEMA_VERSION    = '4';
-	const MAX_ANSWER_BYTES  = 20000;
+	const CERTIFICATES_TABLE = 'model_context_polytechnic_certificates';
+	const SCHEMA_VERSION     = '5';
+	const MAX_ANSWER_BYTES   = 20000;
 	const MAX_FEEDBACK_BYTES = 6000;
 	const MAX_FEEDBACK_CONTEXT_BYTES = 4000;
 	const CLEANUP_HOOK      = 'model_context_polytechnic_learning_cleanup';
@@ -41,7 +42,8 @@ class Learning {
 		$attempts    = $wpdb->prefix . self::ATTEMPTS_TABLE;
 		$enrollments = $wpdb->prefix . self::ENROLLMENTS_TABLE;
 		$events      = $wpdb->prefix . self::EVENTS_TABLE;
-		$feedback    = $wpdb->prefix . self::FEEDBACK_TABLE;
+		$feedback     = $wpdb->prefix . self::FEEDBACK_TABLE;
+		$certificates = $wpdb->prefix . self::CERTIFICATES_TABLE;
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -183,6 +185,23 @@ class Learning {
 			) $charset;"
 		);
 
+		dbDelta(
+			"CREATE TABLE $certificates (
+				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				course_id BIGINT UNSIGNED NOT NULL,
+				enrollment_hash CHAR(64) NOT NULL,
+				certificate_id VARCHAR(80) NOT NULL,
+				completion_snapshot LONGTEXT NULL,
+				issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				last_viewed_at DATETIME NULL,
+				PRIMARY KEY (id),
+				UNIQUE KEY course_enrollment (course_id, enrollment_hash),
+				UNIQUE KEY certificate_id (certificate_id),
+				KEY course_id (course_id),
+				KEY issued_at (issued_at)
+			) $charset;"
+		);
+
 		update_option( 'model_context_polytechnic_learning_schema_version', self::SCHEMA_VERSION, false );
 	}
 
@@ -214,6 +233,7 @@ class Learning {
 		$enrollments = $wpdb->prefix . self::ENROLLMENTS_TABLE;
 		$events = $wpdb->prefix . self::EVENTS_TABLE;
 		$feedback = $wpdb->prefix . self::FEEDBACK_TABLE;
+		$certificates = $wpdb->prefix . self::CERTIFICATES_TABLE;
 
 		$wpdb->query(
 			$wpdb->prepare( "DELETE FROM $attempts WHERE created_at < %s", $cutoff )
@@ -231,7 +251,9 @@ class Learning {
 			$wpdb->prepare(
 				"DELETE e FROM $enrollments e
 				LEFT JOIN $attempts a ON a.course_id = e.course_id AND a.session_hash = e.enrollment_hash
+				LEFT JOIN $certificates c ON c.course_id = e.course_id AND c.enrollment_hash = e.enrollment_hash
 				WHERE a.id IS NULL
+				AND c.id IS NULL
 				AND e.created_at < %s
 				AND (e.last_seen_at IS NULL OR e.last_seen_at < %s)",
 				$cutoff,
@@ -252,6 +274,7 @@ class Learning {
 				self::learning_ability_name( $course_slug, 'get-next-work' ),
 				self::learning_ability_name( $course_slug, 'get-progress' ),
 				self::learning_ability_name( $course_slug, 'get-learning-memory' ),
+				self::learning_ability_name( $course_slug, 'get-certificate' ),
 				self::learning_ability_name( $course_slug, 'submit-feedback' ),
 				self::learning_ability_name( $course_slug, 'get-course-improvement-signals' ),
 			],
@@ -278,6 +301,7 @@ class Learning {
 			self::register_get_next_work_tool( $course );
 			self::register_get_progress_tool( $course );
 			self::register_get_learning_memory_tool( $course );
+			self::register_get_certificate_tool( $course );
 			self::register_submit_feedback_tool( $course );
 			self::register_get_course_improvement_signals_tool( $course );
 		}
@@ -611,6 +635,7 @@ class Learning {
 				'Call attempt-exercise with enrollment_key so feedback becomes durable memory.',
 				'After attempting, call get-exercise with include_model_answer=true when you need an exemplar for calibration or revision.',
 				'Call get-learning-memory at the start of a later session to recover what this learner has practiced.',
+				'When get-next-work says complete, call get-certificate with enrollment_key to receive the anonymous certificate and transcript.',
 				'Call submit-feedback whenever a tool response, lesson, exercise, or next action is confusing or unusually helpful.',
 				'Call get-course-improvement-signals before proposing course changes so suggestions are evidence-aware.',
 			],
@@ -849,6 +874,9 @@ class Learning {
 
 		self::touch_enrollment( (int) $course['id'], $hash, 'last_seen_at' );
 		$progress = self::progress_for_hash( (int) $course['id'], $hash );
+		$progress = self::progress_summary( $progress, count( self::all_public_exercises( (int) $course['id'] ) ) ) + [
+			'exercises' => $progress['exercises'] ?? [],
+		];
 		$progress['course'] = Registry::course_summary( $course );
 		$progress['enrollment_key'] = $enrollment_key;
 		$progress['enrollment_key_received'] = true;
@@ -878,6 +906,9 @@ class Learning {
 		$progress = self::progress_for_hash( (int) $course['id'], $hash );
 		$recent   = self::recent_attempts_for_hash( (int) $course['id'], $hash, 5 );
 		$memory   = self::memory_from_attempts( $progress, $recent );
+		$progress_with_totals = self::progress_summary( $progress, count( self::all_public_exercises( (int) $course['id'] ) ) ) + [
+			'exercises' => $progress['exercises'] ?? [],
+		];
 
 		return [
 			'course'          => Registry::course_summary( $course ),
@@ -888,7 +919,7 @@ class Learning {
 				'last_seen_at'            => $enrollment['last_seen_at'] ?? null,
 				'last_memory_at'          => current_time( 'mysql' ),
 			],
-			'progress'        => $progress,
+			'progress'        => $progress_with_totals,
 			'recent_attempts' => $recent,
 			'memory'          => [
 				'summary'                => $memory['summary'],
@@ -898,6 +929,96 @@ class Learning {
 				'how_to_use_this'       => __( 'Use this capsule as durable course context before answering or attempting the next exercise. It is memory retrieval, not model training.', 'model-context-polytechnic' ),
 			],
 			'note'            => __( 'The Polytechnic has opened the learner file. Keep the enrollment_key available in the client or conversation to recover this memory later.', 'model-context-polytechnic' ),
+		];
+	}
+
+	public static function get_certificate( array $course, array $input ) {
+		if ( ! Auth::rate_limit() ) {
+			return new \WP_Error( 'model_context_polytechnic_rate_limited', __( 'Too many public learning requests. Please try again shortly.', 'model-context-polytechnic' ), [ 'status' => 429 ] );
+		}
+
+		$enrollment_key = self::input_enrollment_key( $input );
+		if ( $enrollment_key === '' ) {
+			return new \WP_Error( 'model_context_polytechnic_missing_enrollment', __( 'enrollment_key is required to issue or retrieve a certificate.', 'model-context-polytechnic' ), [ 'status' => 400 ] );
+		}
+
+		$hash = self::enrollment_hash( $enrollment_key );
+		$enrollment = self::enrollment_by_hash( (int) $course['id'], $hash );
+		if ( ! $enrollment ) {
+			return new \WP_Error( 'model_context_polytechnic_enrollment_not_found', __( 'Enrollment key not found for this course.', 'model-context-polytechnic' ), [ 'status' => 404 ] );
+		}
+
+		self::touch_enrollment( (int) $course['id'], $hash, 'last_seen_at' );
+
+		$progress = self::progress_for_hash( (int) $course['id'], $hash );
+		$public_exercises = self::all_public_exercises( (int) $course['id'] );
+		$total_exercises = count( $public_exercises );
+		$remaining = self::remaining_exercises_for_progress( $public_exercises, $progress['exercises'] ?? [] );
+		$summary = self::progress_summary( $progress, $total_exercises );
+		$include_transcript = array_key_exists( 'include_transcript', $input ) ? ! empty( $input['include_transcript'] ) : true;
+		$recipient_name = self::certificate_recipient_name( (string) ( $input['recipient_name'] ?? '' ) );
+		$existing_certificate = self::certificate_record_for_hash( (int) $course['id'], $hash );
+
+		if ( $total_exercises < 1 || $remaining ) {
+			if ( $existing_certificate ) {
+				return [
+					'course'              => Registry::course_summary( $course ),
+					'eligible'            => true,
+					'certificate'         => self::certificate_from_record( $course, $hash, $existing_certificate, $recipient_name, $include_transcript ),
+					'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
+					'remaining_count'     => count( $remaining ),
+					'remaining_exercises' => array_map(
+						static function ( array $exercise ): array {
+							return self::exercise_summary( $exercise, false );
+						},
+						array_slice( $remaining, 0, 8 )
+					),
+					'next_work'           => self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key ),
+					'preserve'            => [
+						'enrollment_key',
+						'certificate.certificate_id',
+						'certificate.verification_code',
+					],
+					'note'                => __( 'This enrollment already has a recorded certificate. Current progress may look incomplete if course content changed or old attempt detail expired.', 'model-context-polytechnic' ),
+				];
+			}
+
+			return [
+				'course'              => Registry::course_summary( $course ),
+				'eligible'            => false,
+				'certificate'         => null,
+				'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
+				'remaining_count'     => count( $remaining ),
+				'remaining_exercises' => array_map(
+					static function ( array $exercise ): array {
+						return self::exercise_summary( $exercise, false );
+					},
+					array_slice( $remaining, 0, 8 )
+				),
+				'next_work'           => self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key ),
+				'preserve'            => [ 'enrollment_key' ],
+				'note'                => $total_exercises < 1
+					? __( 'No published exercises are available, so the Registrar cannot issue a completion certificate yet.', 'model-context-polytechnic' )
+					: __( 'Not ready for commencement yet. Pass the remaining exercises, then call get-certificate again with this enrollment_key.', 'model-context-polytechnic' ),
+			];
+		}
+
+		$certificate = self::issue_certificate( $course, $hash, $progress, $public_exercises, $recipient_name, $include_transcript );
+
+		return [
+			'course'              => Registry::course_summary( $course ),
+			'eligible'            => true,
+			'certificate'         => $certificate,
+			'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
+			'remaining_count'     => 0,
+			'remaining_exercises' => [],
+			'next_work'           => self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key ),
+			'preserve'            => [
+				'enrollment_key',
+				'certificate.certificate_id',
+				'certificate.verification_code',
+			],
+			'note'                => __( 'Commencement complete. This is an anonymous course certificate, not a WordPress login or human identity credential.', 'model-context-polytechnic' ),
 		];
 	}
 
@@ -1244,6 +1365,32 @@ class Learning {
 		);
 	}
 
+	private static function register_get_certificate_tool( array $course ): void {
+		self::register_public_course_tool(
+			$course,
+			'get-certificate',
+			__( 'Get certificate', 'model-context-polytechnic' ),
+			__( 'Issues or retrieves an anonymous completion certificate once every published exercise has a passing attempt.', 'model-context-polytechnic' ),
+			[
+				'type'       => 'object',
+				'properties' => [
+					'enrollment_key'     => [ 'type' => 'string', 'description' => 'Anonymous course enrollment key returned by begin-course.' ],
+					'session_id'         => [ 'type' => 'string', 'description' => 'Deprecated alias for enrollment_key.' ],
+					'recipient_name'     => [ 'type' => 'string', 'description' => 'Optional display name for this response only. It is not used as authentication.' ],
+					'include_transcript' => [ 'type' => 'boolean', 'default' => true ],
+				],
+				'anyOf'      => [
+					[ 'required' => [ 'enrollment_key' ] ],
+					[ 'required' => [ 'session_id' ] ],
+				],
+			],
+			static function ( array $input ) use ( $course ) {
+				return Learning::get_certificate( $course, $input );
+			},
+			false
+		);
+	}
+
 	private static function register_submit_feedback_tool( array $course ): void {
 		self::register_public_course_tool(
 			$course,
@@ -1401,6 +1548,7 @@ class Learning {
 				'Use get-exercise before attempting an exercise.',
 				'Use attempt-exercise for feedback. Provide enrollment_key so progress becomes durable course memory.',
 				'Use get-learning-memory at the start of later sessions to recover what this learner has practiced.',
+				'Use get-certificate after all published exercises have passing attempts.',
 				'Use submit-feedback when course material is confusing, helpful, stale, missing an example, or badly calibrated.',
 				'Use get-course-improvement-signals when improving course material or diagnosing learner friction.',
 				'Revise and attempt again until the rubric passes. A proper education has drafts in it.',
@@ -1416,6 +1564,7 @@ class Learning {
 			'first_call'     => self::learning_ability_name( $course['slug'], 'begin-course' ),
 			'next_work_tool' => self::learning_ability_name( $course['slug'], 'get-next-work' ),
 			'memory_tool'    => self::learning_ability_name( $course['slug'], 'get-learning-memory' ),
+			'certificate_tool' => self::learning_ability_name( $course['slug'], 'get-certificate' ),
 			'feedback_tool'  => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
 			'signals_tool'   => self::learning_ability_name( $course['slug'], 'get-course-improvement-signals' ),
 			'search_tool'    => Registry::course_ability_name( $course['slug'], 'search-course' ),
@@ -1429,6 +1578,7 @@ class Learning {
 				'get-exercise',
 				'attempt-exercise',
 				'get-exercise with include_model_answer=true after an attempt when you need exemplar calibration',
+				'get-certificate when get-next-work reports complete',
 				'submit-feedback when the course helped or failed you',
 				'get-course-improvement-signals before course revision',
 				'revise and repeat',
@@ -1468,6 +1618,7 @@ class Learning {
 					[ 'exercise_slug' => $exercise['slug'] ],
 					$enrollment_key
 				),
+				'transcript'           => self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] ),
 			];
 		}
 
@@ -1675,6 +1826,231 @@ class Learning {
 		];
 	}
 
+	private static function progress_summary( array $progress, int $total_exercises ): array {
+		$completed_count = min( (int) ( $progress['completed_count'] ?? 0 ), max( 0, $total_exercises ) );
+
+		return [
+			'attempt_count'         => (int) ( $progress['attempt_count'] ?? 0 ),
+			'completed_count'       => $completed_count,
+			'total_exercise_count'  => max( 0, $total_exercises ),
+			'completion_percent'    => $total_exercises > 0 ? round( $completed_count / $total_exercises, 4 ) : 0.0,
+		];
+	}
+
+	private static function remaining_exercises_for_progress( array $public_exercises, array $exercise_progress ): array {
+		$passed = [];
+		foreach ( $exercise_progress as $item ) {
+			if ( ! empty( $item['passed'] ) && ! empty( $item['exercise_slug'] ) ) {
+				$passed[ $item['exercise_slug'] ] = true;
+			}
+		}
+
+		return array_values(
+			array_filter(
+				$public_exercises,
+				static function ( array $exercise ) use ( $passed ): bool {
+					return empty( $passed[ $exercise['slug'] ] );
+				}
+			)
+		);
+	}
+
+	private static function certificate_recipient_name( string $recipient_name ): string {
+		$recipient_name = self::trim_to_bytes( sanitize_text_field( $recipient_name ), 120 );
+		return $recipient_name !== '' ? $recipient_name : __( 'Anonymous MCP Learner', 'model-context-polytechnic' );
+	}
+
+	private static function certificate_id( array $course, string $hash ): string {
+		return 'mcpoly-cert-' . substr( hash( 'sha256', $course['slug'] . '|' . $hash . '|certificate-v1' ), 0, 24 );
+	}
+
+	private static function verification_code( string $certificate_id, string $hash, array $course ): string {
+		return substr( hash( 'sha256', $certificate_id . '|' . $hash . '|' . $course['slug'] ), 0, 24 );
+	}
+
+	private static function certificate_record_for_hash( int $course_id, string $hash ): ?array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::CERTIFICATES_TABLE;
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $table WHERE course_id = %d AND enrollment_hash = %s", $course_id, $hash ),
+			ARRAY_A
+		);
+
+		return $row ?: null;
+	}
+
+	private static function certificate_from_record( array $course, string $hash, array $row, string $recipient_name, bool $include_transcript ): array {
+		$certificate_id = (string) ( $row['certificate_id'] ?? self::certificate_id( $course, $hash ) );
+		$snapshot = self::decode_json_value( $row['completion_snapshot'] ?? '', [] );
+		$certificate = [
+			'certificate_id'       => $certificate_id,
+			'verification_code'    => self::verification_code( $certificate_id, $hash, $course ),
+			'type'                 => 'anonymous_course_completion',
+			'institution'          => 'Model Context Polytechnic',
+			'title'                => __( 'Certificate of Satisfactory Tool Calling', 'model-context-polytechnic' ),
+			'recipient'            => $recipient_name,
+			'course'               => Registry::course_summary( $course ),
+			'issued_at'            => $row['issued_at'] ?? null,
+			'storage_status'       => 'recorded',
+			'completion_snapshot'  => [
+				'attempt_count'        => (int) ( $snapshot['attempt_count'] ?? 0 ),
+				'completed_count'      => (int) ( $snapshot['completed_count'] ?? 0 ),
+				'total_exercise_count' => (int) ( $snapshot['total_exercise_count'] ?? 0 ),
+				'completion_percent'   => (float) ( $snapshot['completion_percent'] ?? 1.0 ),
+			],
+			'statement'            => sprintf(
+				/* translators: 1: recipient name, 2: course name. */
+				__( 'Be it known that %1$s has completed %2$s at Model Context Polytechnic, having survived the readings, appeased the rubrics, and passed every published exercise.', 'model-context-polytechnic' ),
+				$recipient_name,
+				$snapshot['course_name'] ?? $course['name']
+			),
+			'verification'         => [
+				'method'                 => __( 'Call get-certificate again with the same enrollment_key. Matching certificate_id and verification_code prove the same anonymous learner record completed the course.', 'model-context-polytechnic' ),
+				'enrollment_fingerprint' => substr( $hash, 0, 12 ),
+			],
+			'limitations'          => [
+				__( 'This certificate is anonymous and keyed by enrollment_key possession.', 'model-context-polytechnic' ),
+				__( 'It is evidence of course completion inside this WordPress-hosted MCP server, not a human identity credential.', 'model-context-polytechnic' ),
+			],
+		];
+
+		if ( $include_transcript && isset( $snapshot['transcript'] ) && is_array( $snapshot['transcript'] ) ) {
+			$certificate['transcript'] = $snapshot['transcript'];
+		}
+
+		return $certificate;
+	}
+
+	private static function issue_certificate( array $course, string $hash, array $progress, array $public_exercises, string $recipient_name, bool $include_transcript ): array {
+		global $wpdb;
+
+		$certificate_id = self::certificate_id( $course, $hash );
+		$verification_code = self::verification_code( $certificate_id, $hash, $course );
+		$table = $wpdb->prefix . self::CERTIFICATES_TABLE;
+		$snapshot = [
+			'course_slug'           => $course['slug'],
+			'course_name'           => $course['name'],
+			'attempt_count'         => (int) ( $progress['attempt_count'] ?? 0 ),
+			'completed_count'       => (int) ( $progress['completed_count'] ?? 0 ),
+			'total_exercise_count'  => count( $public_exercises ),
+			'completion_percent'    => count( $public_exercises ) > 0 ? 1.0 : 0.0,
+			'exercise_slugs'        => array_map(
+				static function ( array $exercise ): string {
+					return (string) $exercise['slug'];
+				},
+				$public_exercises
+			),
+		];
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $table WHERE course_id = %d AND enrollment_hash = %s", (int) $course['id'], $hash ),
+			ARRAY_A
+		);
+
+		if ( ! $row ) {
+			$wpdb->insert(
+				$table,
+				[
+					'course_id'            => (int) $course['id'],
+					'enrollment_hash'      => $hash,
+					'certificate_id'       => $certificate_id,
+					'completion_snapshot'  => self::encode_json_value( $snapshot ),
+					'issued_at'            => current_time( 'mysql' ),
+					'last_viewed_at'       => current_time( 'mysql' ),
+				]
+			);
+		} else {
+			$wpdb->update(
+				$table,
+				[
+					'completion_snapshot' => self::encode_json_value( $snapshot ),
+					'last_viewed_at'      => current_time( 'mysql' ),
+				],
+				[ 'id' => (int) $row['id'] ]
+			);
+		}
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $table WHERE course_id = %d AND enrollment_hash = %s", (int) $course['id'], $hash ),
+			ARRAY_A
+		);
+
+		$certificate = [
+			'certificate_id'       => $certificate_id,
+			'verification_code'    => $verification_code,
+			'type'                 => 'anonymous_course_completion',
+			'institution'          => 'Model Context Polytechnic',
+			'title'                => __( 'Certificate of Satisfactory Tool Calling', 'model-context-polytechnic' ),
+			'recipient'            => $recipient_name,
+			'course'               => Registry::course_summary( $course ),
+			'issued_at'            => $row['issued_at'] ?? current_time( 'mysql' ),
+			'storage_status'       => $row ? 'recorded' : 'deterministic_unrecorded',
+			'statement'            => sprintf(
+				/* translators: 1: recipient name, 2: course name. */
+				__( 'Be it known that %1$s has completed %2$s at Model Context Polytechnic, having survived the readings, appeased the rubrics, and passed every published exercise.', 'model-context-polytechnic' ),
+				$recipient_name,
+				$course['name']
+			),
+			'verification'         => [
+				'method'                 => __( 'Call get-certificate again with the same enrollment_key. Matching certificate_id and verification_code prove the same anonymous learner record completed the course.', 'model-context-polytechnic' ),
+				'enrollment_fingerprint' => substr( $hash, 0, 12 ),
+			],
+			'limitations'          => [
+				__( 'This certificate is anonymous and keyed by enrollment_key possession.', 'model-context-polytechnic' ),
+				__( 'It is evidence of course completion inside this WordPress-hosted MCP server, not a human identity credential.', 'model-context-polytechnic' ),
+			],
+			'next_actions'         => [
+				[
+					'tool'      => self::learning_ability_name( $course['slug'], 'get-learning-memory' ),
+					'arguments' => [ 'enrollment_key' => 'Use the key that produced this certificate.' ],
+					'why'       => __( 'Carry the final memory capsule into future plugin-building work.', 'model-context-polytechnic' ),
+				],
+				[
+					'tool'      => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
+					'arguments' => [
+						'enrollment_key' => 'Use the key that produced this certificate.',
+						'feedback_type'  => 'helpful',
+						'target_type'    => 'course',
+						'target_slug'    => $course['slug'],
+						'comment'        => 'What should the faculty improve for the next model?',
+					],
+					'why'       => __( 'Leave one final signal for the next cohort.', 'model-context-polytechnic' ),
+				],
+			],
+		];
+
+		if ( $include_transcript ) {
+			$certificate['transcript'] = self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] );
+		}
+
+		return $certificate;
+	}
+
+	private static function certificate_transcript( array $public_exercises, array $exercise_progress ): array {
+		$progress_by_slug = [];
+		foreach ( $exercise_progress as $item ) {
+			if ( ! empty( $item['exercise_slug'] ) ) {
+				$progress_by_slug[ $item['exercise_slug'] ] = $item;
+			}
+		}
+
+		return array_map(
+			static function ( array $exercise ) use ( $progress_by_slug ): array {
+				$progress = $progress_by_slug[ $exercise['slug'] ] ?? [];
+
+				return [
+					'exercise_slug'   => $exercise['slug'],
+					'exercise_title'  => $exercise['title'],
+					'passed'          => ! empty( $progress['passed'] ),
+					'best_score'      => $progress['best_score'] ?? null,
+					'last_attempt_at' => $progress['last_attempt_at'] ?? null,
+				];
+			},
+			$public_exercises
+		);
+	}
+
 	private static function recent_attempts_for_hash( int $course_id, string $hash, int $limit ): array {
 		global $wpdb;
 		$table = $wpdb->prefix . self::ATTEMPTS_TABLE;
@@ -1751,10 +2127,12 @@ class Learning {
 		$next_work = self::next_work_response( $course, $exercise_progress, null, null, $enrollment_key );
 
 		return [
-			'lesson'   => $next_work['lesson'],
-			'exercise' => $next_work['exercise'],
-			'tool_calls' => $next_work['tool_calls'],
-			'note'     => $next_work['note'],
+			'lesson'                => $next_work['lesson'],
+			'exercise'              => $next_work['exercise'],
+			'complete'              => $next_work['complete'] ?? false,
+			'certificate_available' => $next_work['certificate_available'] ?? false,
+			'tool_calls'            => $next_work['tool_calls'],
+			'note'                  => $next_work['note'],
 		];
 	}
 
@@ -1766,10 +2144,11 @@ class Learning {
 			}
 		}
 
+		$public_exercises = self::all_public_exercises( (int) $course['id'] );
 		$exercise = $preferred_exercise;
 		if ( ! $exercise || ! empty( $passed[ $exercise['slug'] ] ) ) {
 			$exercise = null;
-			foreach ( self::all_public_exercises( (int) $course['id'] ) as $candidate ) {
+			foreach ( $public_exercises as $candidate ) {
 				if ( empty( $passed[ $candidate['slug'] ] ) ) {
 					$exercise = $candidate;
 					break;
@@ -1777,17 +2156,38 @@ class Learning {
 			}
 		}
 
+		$course_complete = ! $exercise && ! empty( $public_exercises ) && ! self::remaining_exercises_for_progress( $public_exercises, $exercise_progress );
+
 		$lesson = $preferred_lesson;
 		if ( $exercise && ! empty( $exercise['lesson_id'] ) ) {
 			$lesson = self::lesson_by_id( (int) $course['id'], (int) $exercise['lesson_id'], true );
 		}
 
-		if ( ! $lesson ) {
+		if ( ! $lesson && ! $course_complete ) {
 			$lesson = self::first_public_lesson( (int) $course['id'] );
 		}
 
 		$tool_calls = [];
-		if ( $lesson ) {
+		if ( $course_complete ) {
+			$tool_calls[] = [
+				'tool'      => self::learning_ability_name( $course['slug'], 'get-certificate' ),
+				'arguments' => [ 'enrollment_key' => $enrollment_key !== '' ? $enrollment_key : 'Use the key returned by begin-course.' ],
+			];
+			$tool_calls[] = [
+				'tool'      => self::learning_ability_name( $course['slug'], 'get-learning-memory' ),
+				'arguments' => [ 'enrollment_key' => $enrollment_key !== '' ? $enrollment_key : 'Use the key returned by begin-course.' ],
+			];
+			$tool_calls[] = [
+				'tool'      => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
+				'arguments' => [
+					'enrollment_key' => $enrollment_key !== '' ? $enrollment_key : 'Use the key returned by begin-course.',
+					'feedback_type'  => 'helpful',
+					'target_type'    => 'course',
+					'target_slug'    => $course['slug'],
+					'comment'        => 'Commencement complete. What should the faculty improve for the next model?',
+				],
+			];
+		} elseif ( $lesson ) {
 			$tool_calls[] = [
 				'tool'      => self::learning_ability_name( $course['slug'], 'get-lesson' ),
 				'arguments' => self::tool_arguments_with_enrollment(
@@ -1818,13 +2218,17 @@ class Learning {
 		}
 
 		return [
-			'course'     => Registry::course_summary( $course ),
-			'lesson'     => $lesson ? self::lesson_summary( $lesson, false ) : null,
-			'exercise'   => $exercise ? self::exercise_summary( $exercise, false ) : null,
-			'tool_calls' => $tool_calls,
-			'note'       => $exercise
+			'course'                => Registry::course_summary( $course ),
+			'lesson'                => $lesson ? self::lesson_summary( $lesson, false ) : null,
+			'exercise'              => $exercise ? self::exercise_summary( $exercise, false ) : null,
+			'complete'              => $course_complete,
+			'certificate_available' => $course_complete,
+			'tool_calls'            => $tool_calls,
+			'note'                  => $exercise
 				? __( 'Recommended because it is the earliest published exercise not yet passed by this enrollment.', 'model-context-polytechnic' )
-				: __( 'All published exercises have passing attempts. Review the syllabus or wait for the faculty to open another workshop.', 'model-context-polytechnic' ),
+				: ( $course_complete
+					? __( 'All published exercises have passing attempts. Call get-certificate for commencement, then retrieve learning memory for future plugin work.', 'model-context-polytechnic' )
+					: __( 'No published exercise is available. Review the syllabus or wait for the faculty to open another workshop.', 'model-context-polytechnic' ) ),
 		];
 	}
 
@@ -2540,6 +2944,8 @@ class Learning {
 			'get-next-work' => [
 				'lesson' => [ 'type' => [ 'object', 'null' ] ],
 				'exercise' => [ 'type' => [ 'object', 'null' ] ],
+				'complete' => [ 'type' => 'boolean' ],
+				'certificate_available' => [ 'type' => 'boolean' ],
 				'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 			],
 			'get-progress' => [
@@ -2554,6 +2960,15 @@ class Learning {
 				'progress' => [ 'type' => 'object' ],
 				'recent_attempts' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 				'memory' => [ 'type' => 'object' ],
+			],
+			'get-certificate' => [
+				'eligible' => [ 'type' => 'boolean' ],
+				'certificate' => [ 'type' => [ 'object', 'null' ] ],
+				'progress' => [ 'type' => 'object' ],
+				'remaining_count' => [ 'type' => 'integer' ],
+				'remaining_exercises' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+				'next_work' => [ 'type' => 'object' ],
+				'preserve' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
 			],
 			'submit-feedback' => [
 				'feedback_saved' => [ 'type' => 'boolean' ],

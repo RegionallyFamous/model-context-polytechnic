@@ -172,6 +172,7 @@ function public_tools(): array {
 		'get-next-work',
 		'get-progress',
 		'get-learning-memory',
+		'get-certificate',
 		'submit-feedback',
 		'get-course-improvement-signals',
 		'search-course',
