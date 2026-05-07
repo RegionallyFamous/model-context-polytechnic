@@ -7,6 +7,31 @@
     "hints": [
         "Be concrete: which code path changes, which storage changes, and what gets cached?"
     ],
+    "model_answer": {
+        "summary": "The plugin is doing expensive work globally; load assets only where needed, cache remote API results, and move high-volume logs out of post meta.",
+        "work": "Only enqueue the dashboard script on the admin dashboard or the specific frontend route that needs it; do not enqueue it on every frontend page. Never call the remote API on every page view. Cache responses in a transient with a bounded TTL and serve stale data during short failures when acceptable. Replace post meta logs with a custom table designed for log queries, including indexes for created_at, status, and any lookup key. Review queries with Query Monitor and avoid unbounded meta_query scans on public traffic.",
+        "checks": [
+            "Verify enqueue hooks load the asset only on the intended admin or frontend screen.",
+            "Test remote API caching and transient expiry.",
+            "Review custom table indexes against the expected query patterns.",
+            "Use Query Monitor to inspect query count and slow queries before and after the change.",
+            "Smoke test pages that do not need the dashboard script and confirm no asset is loaded."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "enqueue", "frontend", "remote API", "cache", "transient", "query", "custom table", "index", "Query Monitor" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "hook", "transient" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review", "smoke" ] }
+        ],
+        "why_this_is_good": "It connects each performance risk to a specific WordPress mechanism and a measurable verification step.",
+        "common_misses": [
+            "Saying to optimize assets without naming enqueue scope.",
+            "Caching only successful remote API results without a failure plan.",
+            "Continuing to store high-volume logs in post meta.",
+            "Skipping Query Monitor verification."
+        ],
+        "revision_prompt": "Revise by naming the enqueue fix, remote API cache/transient strategy, custom table/index plan, query risk, and Query Monitor verification.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

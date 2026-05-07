@@ -42,7 +42,7 @@ add_action(
 							'endpoint'  => Registry::course_vanity_endpoint( $course['slug'] ),
 							'endpoint_required' => true,
 							'current_endpoint_has_tool' => false,
-							'tool'      => Server::ABILITY_PREFIX . '/' . $course['slug'] . '/begin-course',
+							'tool'      => Server::ABILITY_PREFIX . '/' . $course['slug'] . '-begin-course',
 							'arguments' => new \stdClass(),
 						];
 					} elseif ( ! empty( $courses[0]['slug'] ) ) {
@@ -52,7 +52,7 @@ add_action(
 							'endpoint'  => Registry::course_vanity_endpoint( $courses[0]['slug'] ),
 							'endpoint_required' => true,
 							'current_endpoint_has_tool' => false,
-							'tool'      => Server::ABILITY_PREFIX . '/' . $courses[0]['slug'] . '/begin-course',
+							'tool'      => Server::ABILITY_PREFIX . '/' . $courses[0]['slug'] . '-begin-course',
 							'arguments' => new \stdClass(),
 						];
 					}

@@ -7,6 +7,31 @@
     "hints": [
         "Useful diagnostics are bounded. Do not turn status output into a dump of secrets or raw requests."
     ],
+    "model_answer": {
+        "summary": "Diagnostics should help operators verify health without exposing secrets, raw upstream payloads, or private content.",
+        "work": "Expose non-sensitive status in Site Health: plugin version, custom table existence, schema version, pending cron status, cache freshness, and the last upstream API success or failure class. Use an admin notice only for actionable setup or broken activation states, such as a missing custom table or failed migration. Logs should include timestamps, error classes, and correlation IDs, but never the API secret, bearer token, personal data, raw request body, or full upstream response. On activation, verify the schema version option, custom table, scheduled cron event, and any required cache priming.",
+        "checks": [
+            "Run activation and confirm the custom table and schema version exist.",
+            "Verify Site Health reports cron, cache, upstream API status, and table status.",
+            "Review logs to confirm no secret or token values are stored.",
+            "Trigger an upstream API failure and confirm the admin notice or status is actionable.",
+            "Test that diagnostics remain useful without exposing private records."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "Site Health", "admin notice", "cron", "custom table", "schema version", "upstream API", "cache", "secret", "log", "activation" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "hook", "transient" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review" ] }
+        ],
+        "why_this_is_good": "It draws a bright line between operational telemetry and sensitive data, which makes support safer.",
+        "common_misses": [
+            "Dumping raw upstream API responses into logs.",
+            "Using admin notices for routine status instead of actionable failures.",
+            "Reporting table existence but not schema version.",
+            "Forgetting activation verification."
+        ],
+        "revision_prompt": "Revise by covering Site Health, admin notices, cron, custom table schema version, upstream API cache, secret-safe logs, and activation verification.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

@@ -7,6 +7,31 @@
     "hints": [
         "Treat secrets, third-party transfer, and operator clarity as first-class requirements."
     ],
+    "model_answer": {
+        "summary": "A settings screen that stores an API key and sends content to a third-party service must make consent, permission, and safe output explicit.",
+        "work": "Register settings through the Settings API, gate the page and save action with a specific capability such as manage_options, and verify a nonce on every form submit. Store the API key as an option with autoload disabled when possible, never print the full secret back to the browser, and show only a masked status. Explain what content is sent to the third-party service, link to its privacy terms, and include a privacy policy note if site data leaves WordPress. Escape all admin output with the right context, translate visible strings with the plugin text domain for i18n, and make error messages actionable without exposing secrets.",
+        "checks": [
+            "Test that a user without the required capability cannot view or save the screen.",
+            "Verify the nonce blocks cross-site form submission.",
+            "Review every output path for escape functions and every visible string for i18n.",
+            "Confirm the API key is never logged, exported in diagnostics, or printed in full.",
+            "Smoke test the third-party opt-in and failure states."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "capability", "nonce", "API key", "privacy", "third-party", "escape", "i18n", "Settings API" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "capability", "nonce" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review", "smoke" ] }
+        ],
+        "why_this_is_good": "It reviews the admin screen as an operator workflow and a data transfer boundary, which is exactly where plugin mistakes tend to hurt.",
+        "common_misses": [
+            "Checking capability on page load but not on save.",
+            "Saving the API key without explaining third-party transfer.",
+            "Escaping only some notices or labels.",
+            "Skipping translated strings because the screen is small."
+        ],
+        "revision_prompt": "Revise by covering capability, nonce, API key storage, third-party privacy disclosure, escaping, i18n, and a concrete verification checklist.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

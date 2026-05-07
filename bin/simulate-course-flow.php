@@ -55,11 +55,11 @@ $summary = [
 	],
 	'next_actions_shape' => [
 		[
-			'tool'      => 'model-context-polytechnic/' . $course['slug'] . '/get-lesson',
+			'tool'      => 'model-context-polytechnic/' . $course['slug'] . '-get-lesson',
 			'arguments' => [ 'lesson_slug' => $first_lesson['slug'] ],
 		],
 		[
-			'tool'      => 'model-context-polytechnic/' . $course['slug'] . '/get-exercise',
+			'tool'      => 'model-context-polytechnic/' . $course['slug'] . '-get-exercise',
 			'arguments' => [ 'exercise_slug' => $first_exercise['slug'] ],
 		],
 	],

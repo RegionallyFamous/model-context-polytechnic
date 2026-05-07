@@ -7,6 +7,32 @@
     "hints": [
         "Scheduled work should be bounded, repeat-safe, and removed when the plugin is deactivated."
     ],
+    "model_answer": {
+        "summary": "The fix is to schedule once, make the callback repeat-safe, and remove the event during deactivation.",
+        "work": "On activation, call wp_next_scheduled before wp_schedule_event so the daily cron event is not duplicated. Keep the cron callback bounded: process a small batch, use a short lock or transient to avoid overlap, and make every record update idempotent so reruns do not duplicate remote writes. Register the callback on a named hook and keep remote API, storage, and logging boundaries clear. On deactivation, call wp_clear_scheduled_hook for that hook so the plugin leaves no orphaned scheduled work.",
+        "checks": [
+            "Verify activation creates only one scheduled event.",
+            "Run the cron callback twice and confirm it is idempotent.",
+            "Use WP-CLI to list cron events before and after deactivation.",
+            "Smoke test lock expiry and batch limits.",
+            "Test remote API failure handling without leaving the job stuck."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Uses scheduling APIs", "covers": [ "wp_next_scheduled", "wp_schedule_event", "wp_clear_scheduled_hook", "cron" ] },
+            { "criterion": "Names deactivation cleanup", "covers": [ "deactivation" ] },
+            { "criterion": "Requires idempotent callback", "covers": [ "idempotent", "bounded", "lock", "batch" ] },
+            { "criterion": "Includes verification", "covers": [ "verify", "WP-CLI", "test", "smoke" ] }
+        ],
+        "why_this_is_good": "It fixes both lifecycle cleanup and the deeper reliability issue: background work must tolerate retries.",
+        "common_misses": [
+            "Scheduling on every load instead of activation.",
+            "Forgetting wp_next_scheduled.",
+            "Clearing the wrong hook name during deactivation.",
+            "Assuming the callback only ever runs once."
+        ],
+        "revision_prompt": "Revise by naming the scheduling guard, cron hook, deactivation cleanup, idempotent callback behavior, and verification commands.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

@@ -7,6 +7,32 @@
     "hints": [
         "Actions announce events; filters transform values and must return the filtered value."
     ],
+    "model_answer": {
+        "summary": "Custom hooks are public contracts, so their names, timing, payload, and compatibility promises need to be stable and documented.",
+        "work": "Define an action such as my_plugin_record_imported that fires after a record has been validated, saved, and assigned an internal ID. Its arguments can be $record_id, $source_record, and $context, with the payload documented as arrays containing stable keys. Define a filter such as my_plugin_pre_save_record that runs after normalization but before database write; it receives $record, $source_record, and $context and must return the filtered record. Use a plugin slug or namespace-style prefix to avoid collisions, document the hook version, and do not break argument order or return expectations without a deprecation path.",
+        "checks": [
+            "Verify the action fires only after a successful import.",
+            "Test that the filter return value is used and validated before save.",
+            "Document hook names, timing, arguments, payload keys, and return expectations.",
+            "Review names for prefix or namespace uniqueness.",
+            "Add compatibility notes before changing arguments in a future version."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Distinguishes action and filter", "covers": [ "action", "filter" ] },
+            { "criterion": "Specifies contract details", "covers": [ "timing", "payload", "arguments", "return" ] },
+            { "criterion": "Uses namespaced or prefixed hook names", "covers": [ "prefix", "namespace", "plugin slug", "stable name" ] },
+            { "criterion": "Mentions backward compatibility", "covers": [ "compatibility", "do not break", "document", "version" ] }
+        ],
+        "why_this_is_good": "It teaches that hooks are not just extension points; they are APIs with compatibility obligations.",
+        "common_misses": [
+            "Using a filter but forgetting to return the modified value.",
+            "Firing the action before the import has actually succeeded.",
+            "Choosing generic hook names that can collide.",
+            "Changing payload shape without documenting compatibility."
+        ],
+        "revision_prompt": "Revise by naming one action and one filter, then specify timing, arguments, payload shape, return value, prefixing, and compatibility promises.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

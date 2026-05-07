@@ -41,6 +41,8 @@ Each published course can include:
 
 Public course endpoints expose learning tools without login. The LLM should call `begin-course` first; the server returns an anonymous `enrollment_key` and first recommended work. Attempts without a key still work and automatically issue one unless `remember=false`. Treat `enrollment_key` as a lightweight enrollment card, not a WordPress password.
 
+The MCP HTTP adapter stores protocol sessions against a WordPress user. To keep public learning genuinely no-login, the plugin creates a plugin-owned anonymous subscriber used only for public MCP session IDs and briefly serializes public session requests to avoid user-meta races. That internal user is not a learner account, cannot authorize private write tools, and is removed on uninstall.
+
 The public registrar is LLM-first. If a model is unsure what to do, it should call `model-context-polytechnic/orient` or read the `model-context-polytechnic/llm-interface` resource. Course responses prefer stable handles, `next_actions`, `tool_calls`, and explicit recovery notes so the model does not have to infer workflow from a loose tool list.
 
 The bundled flagship course is **WordPress Plugin Craft**. It is seeded automatically on activation and updated idempotently when the bundled course-pack fingerprint changes. Learner attempts and enrollment memory are not deleted by reseeding.
@@ -106,6 +108,14 @@ php bin/course-lab.php --agent-brief
 ```
 
 The lab checks public enrollment, stable handles, practice density, exercise schemas, feedback loops, and course-improvement signals. It also runs deterministic student cohorts across orientation, memory, security, storage, blocks, performance, release, course-authoring, LLM-interface, capstone-maintainer, privacy, admin UX, PHP architecture, testing, hooks, diagnostics, review cadence, namespace safety, lifecycle, and remote-service lenses. The stress lab adds fixture-driven friction scenarios plus golden weak/strong exam answers scored against real rubrics. Use the cohort report first; use stress scenarios for regressions; use the agent brief for larger read-only parallel review; then fold repeated findings back into course-pack files.
+
+To prove the same loop over the real MCP HTTP transport on a WordPress site, run:
+
+```bash
+composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+```
+
+The smoke test posts MCP JSON-RPC requests to `initialize`, `tools/list`, `resources/list`, `begin-course`, `get-exercise`, `attempt-exercise`, `get-learning-memory`, and the spoiler-safe `include_model_answer=true` path. Browser GET requests to MCP endpoints may return `405 Method Not Allowed`; the transport is POST-based. See [http-smoke.md](docs/http-smoke.md).
 
 ## Requirements
 
@@ -316,20 +326,22 @@ If the plugin is already active when new storage code is added, the auth, regist
 
 Course servers and their ability lists are assembled when the MCP server is registered for a request. After a host site changes bundled or database-backed coursework, reconnect or refresh the MCP client to see the new endpoint/tool list.
 
-Published course endpoints automatically include these public learning tools:
+Published course endpoints automatically include these public learning tools. WordPress ability IDs allow one namespace slash, so course handles are folded into the ability name:
 
-- `model-context-polytechnic/{course-slug}/begin-course`
-- `model-context-polytechnic/{course-slug}/get-study-plan`
-- `model-context-polytechnic/{course-slug}/search-course`
-- `model-context-polytechnic/{course-slug}/get-syllabus`
-- `model-context-polytechnic/{course-slug}/get-lesson`
-- `model-context-polytechnic/{course-slug}/get-exercise`
-- `model-context-polytechnic/{course-slug}/attempt-exercise`
-- `model-context-polytechnic/{course-slug}/get-next-work`
-- `model-context-polytechnic/{course-slug}/get-progress`
-- `model-context-polytechnic/{course-slug}/get-learning-memory`
-- `model-context-polytechnic/{course-slug}/submit-feedback`
-- `model-context-polytechnic/{course-slug}/get-course-improvement-signals`
+- `model-context-polytechnic/{course-slug}-begin-course`
+- `model-context-polytechnic/{course-slug}-get-study-plan`
+- `model-context-polytechnic/{course-slug}-search-course`
+- `model-context-polytechnic/{course-slug}-get-syllabus`
+- `model-context-polytechnic/{course-slug}-get-lesson`
+- `model-context-polytechnic/{course-slug}-get-exercise`
+- `model-context-polytechnic/{course-slug}-attempt-exercise`
+- `model-context-polytechnic/{course-slug}-get-next-work`
+- `model-context-polytechnic/{course-slug}-get-progress`
+- `model-context-polytechnic/{course-slug}-get-learning-memory`
+- `model-context-polytechnic/{course-slug}-submit-feedback`
+- `model-context-polytechnic/{course-slug}-get-course-improvement-signals`
+
+MCP clients see sanitized tool names with the slash converted to a dash, such as `model-context-polytechnic-wordpress-plugin-craft-begin-course`.
 
 The public learning flow is intentionally light:
 
@@ -351,7 +363,7 @@ Every public course tool call records a privacy-safe learning event: tool slug, 
 
 They also include a syllabus resource:
 
-- `model-context-polytechnic/{course-slug}/resource/syllabus`
+- `model-context-polytechnic/{course-slug}-resource-syllabus`
 
 Rubric criteria support deterministic grading with `required_terms` or `any_terms`:
 

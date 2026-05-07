@@ -7,6 +7,32 @@
     "hints": [
         "Compatibility is an ongoing promise, not a line in the plugin header."
     ],
+    "model_answer": {
+        "summary": "A compatibility plan should state the support promise, test it as a matrix, and protect users during migrations and API changes.",
+        "work": "Set explicit header targets with Requires at least and Requires PHP, then document the active WordPress version and PHP version ranges in the README. Treat public functions, hooks, REST shapes, and database schema as compatibility surfaces: deprecate old behavior with notices and backward compatibility fallbacks before removal. Store a schema version option, run migrations idempotently, and test upgrades from older versions with real sample data. CI should run the matrix across supported PHP and WordPress versions, include Plugin Check, and run a smoke test that activates, migrates, and calls the public API.",
+        "checks": [
+            "Verify plugin headers match the documented version matrix.",
+            "Run migration tests from at least one older schema version.",
+            "Test public API behavior before and after deprecation changes.",
+            "Run CI across supported PHP version and WordPress version combinations.",
+            "Run Plugin Check and an activation smoke test before release."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Names version targets", "covers": [ "Requires at least", "Requires PHP", "WordPress version", "PHP version" ] },
+            { "criterion": "Handles deprecations", "covers": [ "deprecation", "backward compatibility", "fallback", "compatibility" ] },
+            { "criterion": "Tests migrations and APIs", "covers": [ "migration", "schema version", "API", "test" ] },
+            { "criterion": "Defines release checks", "covers": [ "matrix", "CI", "Plugin Check", "smoke" ] }
+        ],
+        "why_this_is_good": "It treats compatibility as tested behavior over time instead of static metadata.",
+        "common_misses": [
+            "Only setting Requires PHP without testing that PHP range.",
+            "Changing hooks or REST output without deprecation.",
+            "Running migrations only on a fresh install.",
+            "Leaving Plugin Check or smoke tests out of release gates."
+        ],
+        "revision_prompt": "Revise by including header targets, deprecation rules, schema/API migration tests, and matrix-based release checks.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

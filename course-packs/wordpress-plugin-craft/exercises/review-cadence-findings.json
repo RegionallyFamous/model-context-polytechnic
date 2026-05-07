@@ -7,6 +7,32 @@
     "hints": [
         "A good review has ordered passes and findings tied to behavior, security, data, performance, and release risk."
     ],
+    "model_answer": {
+        "summary": "Start with the plugin contract and then review the areas most likely to cause user-facing risk, regression, vulnerability, data loss, or release failure.",
+        "work": "Run ordered passes for contract, security, data, performance, tests, and release readiness. First findings should not style-nit the code; they should report material behavior risk with severity, file, line, reproduction steps, impact, and evidence. Categories to lead with are permission and nonce failures, unsafe validate/sanitize/escape paths, migration or deletion data loss, frontend or query performance regressions, missing tests around risky behavior, and release metadata or privacy gaps. Style comments can wait unless they hide a behavior problem.",
+        "checks": [
+            "Confirm the review starts with contract and user-facing behavior.",
+            "For each finding, include severity, file, line, reproduction, impact, and evidence.",
+            "Prioritize security, data, performance, tests, and release risks before style.",
+            "Verify at least one finding category maps to a real behavior or regression risk.",
+            "Ask whether the report would help an engineer fix the issue without guessing."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Orders review passes", "covers": [ "contract", "security", "data", "performance", "tests", "release" ] },
+            { "criterion": "Leads with material risk", "covers": [ "risk", "regression", "vulnerability", "data loss", "behavior" ] },
+            { "criterion": "Reports findings clearly", "covers": [ "severity", "file", "line", "reproduction", "impact" ] },
+            { "criterion": "Avoids style-first review", "covers": [ "not style", "behavior", "user-facing", "evidence" ] }
+        ],
+        "why_this_is_good": "It teaches review as risk communication, which is much more valuable than a pile of preferences.",
+        "common_misses": [
+            "Starting with formatting instead of behavior.",
+            "Reporting findings without file and line references.",
+            "Naming a risk without reproduction or impact.",
+            "Skipping release and privacy review."
+        ],
+        "revision_prompt": "Revise by ordering the review passes and writing the first finding categories with severity, file, line, reproduction, impact, evidence, and material risk.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

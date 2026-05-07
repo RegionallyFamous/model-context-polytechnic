@@ -10,6 +10,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Run `composer course-lab`.
 - Run `composer extended-cohort-lab` before major curriculum releases.
 - Run `composer stress-lab`.
+- Against a real WordPress test site, run `composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
 - Confirm `vendor/autoload_packages.php` exists.
 - Confirm the bundled course loads with the expected lesson and exercise counts.
 - Confirm `README.md` names the public endpoint and public learner flow.
@@ -21,8 +22,9 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Install the plugin folder in `wp-content/plugins/model-context-polytechnic`.
 - Activate the plugin on WordPress 6.9+ with PHP 8.1+.
 - Flush permalinks.
-- Visit `/wp-json/model_context_polytechnic/mcp`.
-- Visit `/mcp`.
+- POST an MCP `initialize` request to `/wp-json/model_context_polytechnic/mcp`.
+- POST an MCP `initialize` request to `/mcp`.
+- Know that browser GET requests can return `405 Method Not Allowed`; the HTTP transport is POST-based.
 - Connect an MCP client to `/mcp`.
 - Call `orient`.
 - Connect an MCP client to `/mcp/wordpress-plugin-craft`.
@@ -40,6 +42,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 ## Public Boundary Review
 
 - Public learner tools do not require WordPress login.
+- The plugin-owned anonymous public session user exists after activation and cannot pass write-capability checks.
 - Public learner tools do not expose secrets or raw Authorization headers.
 - Public improvement summaries do not expose raw feedback comments.
 - Write/authoring tools remain hidden unless `model_context_polytechnic_authoring_tools_enabled` is enabled.
@@ -55,4 +58,4 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Include `course-packs/` and `schemas/`.
 - Exclude local logs, Git metadata, temporary files, and generated ZIPs.
 - Deactivation must keep data.
-- Uninstall is the explicit data removal path.
+- Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.

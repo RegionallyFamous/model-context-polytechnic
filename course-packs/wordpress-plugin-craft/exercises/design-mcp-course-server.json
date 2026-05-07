@@ -7,6 +7,31 @@
     "hints": [
         "The best answer is not \"make everything a tool.\" It curates a learner-safe surface."
     ],
+    "model_answer": {
+        "summary": "A WordPress-hosted MCP course server should be public for learning, private for authoring, and strict about schemas and permissions.",
+        "work": "Expose public learner tools such as begin-course, get-next-work, search-course, get-lesson, get-exercise, attempt-exercise, submit-feedback, and get-learning-memory. Keep authoring operations hidden behind WordPress capability checks, not public MCP tools; editing lessons, changing rubrics, and importing packs should require an authenticated maintainer path. Every tool needs an input schema and output schema so the LLM can call it reliably. Enrollment memory should use an anonymous enrollment_key returned by begin-course and repeated in progress responses. Public permission_callback values can allow read and practice calls, while private write operations use current_user_can, nonces or bearer tokens, and REST permission discipline.",
+        "checks": [
+            "Verify public tools do not expose secrets or course authoring operations.",
+            "Validate every schema with representative and invalid inputs.",
+            "Call begin-course and confirm it returns an enrollment_key.",
+            "Call get-next-work, search-course, and get-learning-memory using the same enrollment_key.",
+            "Review hidden authoring paths for WordPress capability and permission_callback enforcement."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "public", "authoring", "hidden", "schema", "permission_callback", "begin-course", "get-next-work", "search-course", "enrollment_key", "get-learning-memory" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "REST", "capability", "nonce" ] },
+            { "criterion": "Names verification or review work", "covers": [ "verify", "validate", "review", "test" ] }
+        ],
+        "why_this_is_good": "It gives LLMs a low-friction learning interface while keeping course control out of anonymous public traffic.",
+        "common_misses": [
+            "Making authoring tools public because they are convenient.",
+            "Skipping schemas for tools that seem obvious.",
+            "Using session language instead of a durable enrollment_key.",
+            "Forgetting that permission_callback must protect private writes."
+        ],
+        "revision_prompt": "Revise by splitting public learner tools from hidden authoring operations, then describe schemas, enrollment_key memory, and permission_callback rules.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

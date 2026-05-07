@@ -7,6 +7,32 @@
     "hints": [
         "State that is easy for the model to describe can still be unusable if keyboard and screen reader behavior are neglected."
     ],
+    "model_answer": {
+        "summary": "The editor control should have one clear source of truth, accessible controls, and a frontend that still works when JavaScript is unavailable.",
+        "work": "Store persistent settings in block attributes and use setAttributes for changes that must be saved. Use local state or useState only for temporary UI details, or a small @wordpress/data store when multiple editor components need the same state. Prefer @wordpress/components controls with explicit label text, predictable keyboard behavior, and focus that stays on the triggering control after a toggle. If the preview updates important text, add an aria-live announcement or screen reader status message. On the frontend, render the meaningful default HTML on the server, then add JavaScript as progressive enhancement so a server-rendered fallback remains usable.",
+        "checks": [
+            "Verify saved attributes round-trip through the block editor.",
+            "Test keyboard-only operation for the toggle and preview controls.",
+            "Check screen reader labels, focus order, and any aria-live announcement.",
+            "Confirm @wordpress/components, @wordpress/element, and @wordpress/data are used only where they clarify the state model.",
+            "Disable frontend JavaScript and verify the fallback still communicates the content."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Names state source", "covers": [ "attributes", "setAttributes", "state", "useState", "store" ] },
+            { "criterion": "Covers accessibility", "covers": [ "label", "keyboard", "screen reader", "aria", "focus" ] },
+            { "criterion": "Uses WordPress packages deliberately", "covers": [ "@wordpress/components", "@wordpress/data", "@wordpress/element", "block editor" ] },
+            { "criterion": "Preserves progressive enhancement", "covers": [ "progressive enhancement", "server-rendered", "fallback", "frontend" ] }
+        ],
+        "why_this_is_good": "It separates durable block data from temporary editor state and treats accessibility as part of the data flow, not as polish after the fact.",
+        "common_misses": [
+            "Using local state for values that must be saved as attributes.",
+            "Relying on icon-only controls without labels.",
+            "Forgetting keyboard and focus behavior.",
+            "Building a JavaScript-only frontend with no server-rendered fallback."
+        ],
+        "revision_prompt": "Revise by naming the state source, the accessibility behavior, the WordPress packages involved, and the no-JavaScript frontend fallback.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

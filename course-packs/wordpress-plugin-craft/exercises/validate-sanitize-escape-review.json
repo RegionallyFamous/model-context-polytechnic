@@ -7,6 +7,32 @@
     "hints": [
         "Validate shape and permission first; sanitize for storage; escape late for the specific output context."
     ],
+    "model_answer": {
+        "summary": "The write path should validate intent and shape, sanitize stored values, and escape late for each output context.",
+        "work": "Before accepting the write, check capability with current_user_can or a REST permission_callback and verify the nonce for form submissions. Validate that title is present, URL is a valid URL, description only allows intended HTML, and display order is numeric. Sanitize title with sanitize_text_field, URL with esc_url_raw for storage, description with wp_kses_post or a stricter allowed-tags list, and display order with absint. At output time, escape late by context: esc_html for text, esc_url for links, esc_attr for attributes, and wp_kses_post only for intended HTML output.",
+        "checks": [
+            "Test missing or invalid fields fail validation before storage.",
+            "Verify nonce, capability, permission_callback, or current_user_can protects the write path.",
+            "Confirm sanitize_text_field, esc_url_raw, wp_kses_post, and absint are used for storage.",
+            "Review output context and escape late with esc_html, esc_url, esc_attr, or HTML-safe output.",
+            "Add tests for title, URL, HTML description, and display order edge cases."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Names all three phases", "covers": [ "validate", "sanitize", "escape" ] },
+            { "criterion": "Uses WordPress APIs", "covers": [ "sanitize_text_field", "esc_html", "esc_url", "wp_kses_post", "absint" ] },
+            { "criterion": "Escapes by output context", "covers": [ "output context", "escape late", "attribute", "HTML", "URL" ] },
+            { "criterion": "Includes permission or intent check", "covers": [ "capability", "nonce", "permission_callback", "current_user_can" ] }
+        ],
+        "why_this_is_good": "It keeps the three safety phases distinct, which helps LLMs avoid the common mistake of treating sanitization as output security.",
+        "common_misses": [
+            "Escaping before storage instead of sanitizing for storage.",
+            "Using one function for every field.",
+            "Forgetting the permission or nonce check.",
+            "Ignoring attribute, HTML, and URL output context differences."
+        ],
+        "revision_prompt": "Revise by splitting validate, sanitize, and escape into separate phases with WordPress APIs and a capability, nonce, permission_callback, or current_user_can check.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

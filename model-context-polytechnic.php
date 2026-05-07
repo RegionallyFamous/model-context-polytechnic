@@ -30,6 +30,7 @@ require_once $model_context_polytechnic_autoloader;
 
 require_once __DIR__ . '/includes/class-server.php';
 require_once __DIR__ . '/includes/class-auth.php';
+require_once __DIR__ . '/includes/class-public-session.php';
 require_once __DIR__ . '/includes/class-registry.php';
 require_once __DIR__ . '/includes/class-learning.php';
 require_once __DIR__ . '/includes/class-course-pack.php';
@@ -46,6 +47,7 @@ foreach ( glob( __DIR__ . '/includes/abilities/*.php' ) as $model_context_polyte
 
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Server', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Auth', 'init' ] );
+add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\PublicSession', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Registry', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Learning', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\BundledCourses', 'init' ] );
@@ -55,6 +57,7 @@ register_activation_hook(
 	__FILE__,
 	static function () {
 		ModelContextPolytechnic\Mcp\Auth::install_table();
+		ModelContextPolytechnic\Mcp\PublicSession::install_user();
 		ModelContextPolytechnic\Mcp\Registry::install_tables();
 		ModelContextPolytechnic\Mcp\Learning::install_tables();
 		ModelContextPolytechnic\Mcp\BundledCourses::seed_all();

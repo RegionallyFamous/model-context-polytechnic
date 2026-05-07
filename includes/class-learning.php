@@ -284,11 +284,11 @@ class Learning {
 	}
 
 	public static function learning_ability_name( string $course_slug, string $ability_slug ): string {
-		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '/' . self::sanitize_slug( $ability_slug );
+		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-' . self::sanitize_slug( $ability_slug );
 	}
 
 	public static function learning_resource_name( string $course_slug, string $resource_slug ): string {
-		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '/resource/' . self::sanitize_slug( $resource_slug );
+		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-resource-' . self::sanitize_slug( $resource_slug );
 	}
 
 	public static function execute_public_course_tool( array $course, string $tool_slug, array $input, callable $callback ) {

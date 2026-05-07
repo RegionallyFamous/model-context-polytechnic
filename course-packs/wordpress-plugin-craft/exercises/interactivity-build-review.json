@@ -7,6 +7,32 @@
     "hints": [
         "Use build tooling and interactivity where it clarifies the block contract; avoid shipping a private framework for a tiny behavior."
     ],
+    "model_answer": {
+        "summary": "A small interactive block should put its contract in block.json, build with WordPress tooling, and keep meaningful HTML server-rendered.",
+        "work": "Use block.json for name, attributes, supports, editorScript, viewScript or viewScriptModule, style handles, and render metadata if the block is dynamic. Use @wordpress/scripts in package.json so dependency extraction, build, and asset metadata are handled by WordPress conventions. If the frontend behavior is simple state such as expanding details or filtering local markup, consider the Interactivity API with data-wp directives and a small store instead of a custom framework. Keep the first render server-rendered so content is present before JavaScript, then add progressive enhancement while watching asset size and performance.",
+        "checks": [
+            "Verify block.json declares scripts, supports, attributes, and render behavior correctly.",
+            "Run the @wordpress/scripts build and confirm dependency extraction output is loaded.",
+            "Review whether Interactivity API data-wp directives are simpler than custom JavaScript.",
+            "Disable JavaScript and confirm server-rendered content remains useful.",
+            "Measure frontend asset weight and performance on a page with the block."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Uses block metadata", "covers": [ "block.json", "editorScript", "viewScript", "render", "supports" ] },
+            { "criterion": "Uses WordPress build tooling", "covers": [ "@wordpress/scripts", "dependency extraction", "build", "package.json" ] },
+            { "criterion": "Considers Interactivity API", "covers": [ "Interactivity API", "data-wp", "store", "directive" ] },
+            { "criterion": "Keeps frontend cost bounded", "covers": [ "server-rendered", "progressive enhancement", "asset", "performance" ] }
+        ],
+        "why_this_is_good": "It uses WordPress-native contracts and keeps the frontend from becoming heavier than the interaction deserves.",
+        "common_misses": [
+            "Registering scripts manually while ignoring block.json metadata.",
+            "Skipping dependency extraction.",
+            "Using a framework where Interactivity API directives would be enough.",
+            "Rendering empty frontend containers that depend entirely on JavaScript."
+        ],
+        "revision_prompt": "Revise by naming the block.json fields, @wordpress/scripts build path, possible Interactivity API use, and server-rendered performance fallback.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

@@ -7,6 +7,31 @@
     "hints": [
         "Think like the Plugin Review Team and a site owner at the same time."
     ],
+    "model_answer": {
+        "summary": "Release readiness means the plugin is legally clear, understandable to humans, predictable to update, and honest about data and external services.",
+        "work": "Confirm the license is GPL-compatible and that readme sections match the shipped behavior, stable tag, version, tested WordPress range, Requires PHP, screenshots, and assets. Make sure bundled and generated source is human readable, with build steps and source files included when JavaScript or CSS is compiled. Document privacy behavior and every external service, including what data is sent and when. Set Update URI when the plugin should not be updated from WordPress.org, and define support expectations, known limitations, and rollback guidance.",
+        "checks": [
+            "Verify GPL-compatible licensing for plugin code and bundled assets.",
+            "Review readme stable tag, version, changelog, screenshots, and tested ranges.",
+            "Confirm compiled assets have human readable source and build instructions.",
+            "Check privacy and external service disclosures against actual network behavior.",
+            "Test update behavior, Update URI, support links, and rollback notes."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "GPL", "readme", "version", "stable", "human readable", "privacy", "external service", "Update URI", "support" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "Plugin Check" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review" ] }
+        ],
+        "why_this_is_good": "It balances plugin directory review concerns with the practical questions a site owner asks before installing.",
+        "common_misses": [
+            "Forgetting Update URI on a non-directory plugin.",
+            "Shipping minified or built files without human readable source.",
+            "Hiding external service behavior in vague marketing language.",
+            "Letting the readme version or stable tag drift from the plugin header."
+        ],
+        "revision_prompt": "Revise by checking GPL licensing, readme and version metadata, stable tag, human readable source, privacy, external service disclosure, Update URI, and support expectations.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

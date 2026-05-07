@@ -7,6 +7,31 @@
     "hints": [
         "The right answer is not anti-abstraction. It is pro-fit."
     ],
+    "model_answer": {
+        "summary": "The proposed architecture is overbuilt for one settings page and one shortcode; keep the useful seams and remove ceremony that does not buy clarity.",
+        "work": "PHP 8.1 features such as typed properties, readonly value objects, and constructor promotion are useful, but a service container and five interface layers are not justified unless the plugin has real interchangeable implementations. Use WordPress API entry points directly: one Settings class for the admin page, one Shortcode class registered through add_shortcode, and a small REST controller only if JavaScript needs async data. Use JavaScript only for interactions that improve the screen; a normal Settings API form is simpler and more maintainable than a React app for static fields. Keep one interface only where tests or a replaceable upstream client truly need it.",
+        "checks": [
+            "Review whether each interface has more than one expected implementation.",
+            "Verify the shortcode works without the custom router.",
+            "Test any REST endpoint with capability and nonce checks.",
+            "Run PHPCS and php -l to confirm the simpler PHP 8.1 structure is clean.",
+            "Smoke test the settings page with JavaScript disabled if the form can work without it."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "PHP 8.1", "interface", "service container", "WordPress API", "shortcode", "REST", "JavaScript", "simpler", "maintainable" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "hook", "REST", "capability", "nonce" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review", "PHPCS", "php -l", "smoke" ] }
+        ],
+        "why_this_is_good": "It does not reject modern PHP; it insists that abstractions prove their value in the actual plugin shape.",
+        "common_misses": [
+            "Treating every interface as automatically good architecture.",
+            "Using a custom router where WordPress routing already exists.",
+            "Shipping React for a form that does not need client state.",
+            "Skipping tests after simplifying the structure."
+        ],
+        "revision_prompt": "Revise by naming which abstractions stay, which go, how WordPress APIs replace custom routing, and how the simpler design is verified.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

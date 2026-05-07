@@ -52,6 +52,8 @@ class Server {
 	}
 
 	public static function register_servers( $adapter ): void {
+		self::ensure_abilities_registered();
+
 		$tools     = self::tools();
 		$resources = self::resources();
 		$prompts   = self::prompts();
@@ -109,6 +111,12 @@ class Server {
 		return apply_filters( self::FILTER_PREFIX . '_tools', [] );
 	}
 
+	private static function ensure_abilities_registered(): void {
+		if ( class_exists( 'WP_Abilities_Registry' ) ) {
+			\WP_Abilities_Registry::get_instance();
+		}
+	}
+
 	public static function resources(): array {
 		return apply_filters( self::FILTER_PREFIX . '_resources', [] );
 	}
@@ -161,6 +169,11 @@ class Server {
 				'auth_mode'      => self::AUTH_MODE,
 				'write_auth_mode' => self::WRITE_AUTH_MODE,
 				'authoring_tools_enabled' => self::authoring_tools_enabled(),
+				'public_http_sessions' => [
+					'enabled' => self::AUTH_MODE === 'public',
+					'storage' => 'Plugin-owned anonymous WordPress user meta for MCP HTTP session IDs.',
+					'write_access' => 'Public session user cannot authorize private write tools.',
+				],
 			],
 			'urls'        => [
 				'rest'   => self::rest_endpoint(),
@@ -244,7 +257,7 @@ class Server {
 		return [
 			'purpose'              => 'Make MCP-hosted coursework easy for LLMs to discover, start, retrieve, practice, remember, and recover from errors without WordPress credentials.',
 			'first_call'           => Server::ABILITY_PREFIX . '/orient',
-			'course_first_call'    => 'model-context-polytechnic/{course-slug}/begin-course',
+			'course_first_call'    => 'model-context-polytechnic/{course-slug}-begin-course',
 			'stable_handles'       => [
 				'course_slug'     => 'Stable public course identifier used in endpoint paths and ability names.',
 				'enrollment_key'  => 'Anonymous learner handle returned by begin-course and repeated by memory-related responses. Store it in the client conversation or project memory.',

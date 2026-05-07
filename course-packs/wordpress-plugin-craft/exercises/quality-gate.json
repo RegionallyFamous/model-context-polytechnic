@@ -7,6 +7,31 @@
     "hints": [
         "A good gate is runnable by someone else, not just aspirational."
     ],
+    "model_answer": {
+        "summary": "A release quality gate should be scripted, repeatable, and broad enough to catch syntax, standards, behavior, security, documentation, and schema issues.",
+        "work": "Run php -l across plugin PHP files, PHPCS with WordPress Coding Standards, Plugin Check, PHPUnit unit and integration tests, and a manual smoke pass in a disposable WordPress site. Include a security review for capabilities, nonces, permission_callback logic, validation, sanitization, escaping, and secret handling. Include i18n and accessibility checks for admin screens and blocks. Validate README accuracy, JSON course packs or block metadata, and schema files so published docs match the actual plugin behavior.",
+        "checks": [
+            "composer validate and php -l pass.",
+            "PHPCS with WordPress Coding Standards passes or has documented intentional exceptions.",
+            "Plugin Check and PHPUnit pass.",
+            "Manual smoke tests cover activation, deactivation, primary workflows, and failure states.",
+            "Security, i18n, accessibility, README, JSON, and schema reviews are complete."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "php -l", "PHPCS", "WordPress Coding Standards", "Plugin Check", "PHPUnit", "manual", "security", "i18n", "accessibility", "README", "JSON", "schema" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "capability", "nonce", "Plugin Check" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review", "PHPCS", "Plugin Check", "php -l", "PHPUnit", "smoke" ] }
+        ],
+        "why_this_is_good": "It is both machine-runnable and reviewer-friendly, which makes the release gate repeatable instead of ceremonial.",
+        "common_misses": [
+            "Listing tools without saying what they verify.",
+            "Skipping manual smoke tests.",
+            "Treating README and schema validation as optional.",
+            "Forgetting accessibility or i18n review."
+        ],
+        "revision_prompt": "Revise by turning the release gate into a runnable checklist that includes syntax, PHPCS, Plugin Check, PHPUnit, manual smoke, security, i18n, accessibility, README, JSON, and schema checks.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

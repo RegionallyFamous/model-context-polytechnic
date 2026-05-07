@@ -23,6 +23,7 @@ composer course-lab
 composer cohort-lab
 composer extended-cohort-lab
 composer stress-lab
+composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
 ```
 
 Useful variants:
@@ -37,6 +38,8 @@ php bin/course-lab.php --fail-on=warning
 ```
 
 The default lab fails only on critical findings. Warnings and notices are improvement signals.
+
+The first four commands run locally without WordPress. `http-course-smoke` runs against an activated WordPress site and proves the MCP HTTP initialize/session/tool loop end to end.
 
 ## Student Cohorts
 

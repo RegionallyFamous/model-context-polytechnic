@@ -7,6 +7,31 @@
     "hints": [
         "Name the collision risk directly. Then give a practical structure, not a lecture."
     ],
+    "model_answer": {
+        "summary": "Global save(), load(), and render() functions create collision risk and make the plugin hard to reason about as it grows.",
+        "work": "Use a namespace such as ArchiveFacultyNotes\\Plugin or a unique prefix for any global symbols that must exist. Keep the bootstrap responsible for constants, dependency loading, and wiring, then move features into small classes with clear boundaries such as AdminScreen, RestController, Importer, and Renderer. Register hooks deliberately on init only when WordPress APIs are available and that timing is correct; other hooks should attach at the earliest safe lifecycle point. Each class should own its hook registrations and expose behavior that can be tested without relying on unrelated global state.",
+        "checks": [
+            "Search for unprefixed global functions that could collide with WordPress, a theme, or another plugin.",
+            "Review hook timing and confirm init is only used when it is the right lifecycle boundary.",
+            "Verify each class has one boundary and does not mix admin, REST, rendering, and storage.",
+            "Run a smoke test that activates the plugin with common plugins enabled.",
+            "Add focused tests around the importer, REST controller, and renderer behavior."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "namespace", "prefix", "collision", "hooks", "init", "bootstrap", "classes", "boundary", "test" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "hook", "REST" ] },
+            { "criterion": "Names verification or review work", "covers": [ "test", "verify", "review", "smoke" ] }
+        ],
+        "why_this_is_good": "It replaces vague architecture advice with a WordPress-specific loading model and concrete ownership boundaries.",
+        "common_misses": [
+            "Only saying to use classes without naming the collision problem.",
+            "Registering every hook on init even when timing matters.",
+            "Putting REST, admin, and rendering code behind one large manager class.",
+            "Forgetting tests around the new boundaries."
+        ],
+        "revision_prompt": "Revise by naming the collision risk, proposing namespace or prefix strategy, showing the bootstrap/classes split, and adding hook timing plus tests.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

@@ -7,6 +7,33 @@
     "hints": [
         "The server improves future performance through retrieval, feedback, practice, cohort review, and maintainer-reviewed course edits."
     ],
+    "model_answer": {
+        "summary": "The next loop should preserve useful memory, gather feedback, inspect aggregate signals, and route course edits through human review.",
+        "work": "Memory should preserve the enrollment_key, completed lesson_slug and exercise_slug handles, attempt scores, repeated misses, useful feedback, and the learner's next recommended work. Ask the LLM to submit feedback when an exercise is confusing or helpful, then inspect get-course-improvement-signals for repeated failures, low confidence, common rubric misses, and aggregate comments. Run a small cohort in course-lab with different student and reviewer profiles before changing lessons. Do not auto-edit course content from raw feedback; proposed changes should be maintainer review only, because public feedback can be noisy or poison the course.",
+        "checks": [
+            "Confirm get-learning-memory returns stable enrollment_key, lesson_slug, and exercise_slug history.",
+            "Review get-course-improvement-signals for repeated misses before editing content.",
+            "Run a cohort course-lab pass with at least several simulated students.",
+            "Have a reviewer compare changed lessons against source references.",
+            "Verify proposed edits are not auto-applied from untrusted feedback."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Names the learning loop", "covers": [ "memory", "feedback" ] },
+            { "criterion": "Uses improvement signals", "covers": [ "get-course-improvement-signals", "signals", "aggregate", "repeated" ] },
+            { "criterion": "Uses cohort review", "covers": [ "cohort", "student", "reviewer", "course-lab" ] },
+            { "criterion": "Preserves stable handles", "covers": [ "enrollment_key", "lesson_slug", "exercise_slug", "stable handle" ] },
+            { "criterion": "Rejects unsafe auto-editing", "covers": [ "not auto-applied", "maintainer review", "do not auto-edit", "poison" ] }
+        ],
+        "why_this_is_good": "It keeps the learning loop evidence-based while protecting the course from untrusted automatic rewrites.",
+        "common_misses": [
+            "Saving vague memories without stable lesson or exercise handles.",
+            "Treating one complaint as enough evidence for a course edit.",
+            "Skipping cohort review after changing instructions.",
+            "Auto-applying feedback without maintainer review."
+        ],
+        "revision_prompt": "Revise by naming what memory preserves, what feedback collects, which aggregate signals matter, how course-lab cohort review works, and what must not be auto-edited.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

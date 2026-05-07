@@ -7,6 +7,32 @@
     "hints": [
         "Anonymous data can still deserve a policy when it stores prompts, answers, or opaque handles."
     ],
+    "model_answer": {
+        "summary": "The plugin should translate operator-facing text and describe exactly what anonymous learning data is stored, retained, exported, and deleted.",
+        "work": "Wrap admin notice strings in translation functions such as __( 'Message', 'model-context-polytechnic' ) or esc_html__ with the plugin text domain, and escape output in the final context. Stored data includes attempts, feedback, logs, enrollment handles, lesson progress, scores, and retention timestamps. Do not log secrets, tokens, personal data, raw headers, or full prompts if they can contain private material; hash enrollment keys before storage. Add a privacy policy note explaining retention and whether anonymous records can be exported or erased through an enrollment key, plus a delete or retention cleanup path for old data.",
+        "checks": [
+            "Review admin notices for translation and the correct text domain.",
+            "Verify all notice output is escaped.",
+            "List stored attempts, feedback, logs, enrollment data, and retention behavior.",
+            "Confirm secrets, tokens, and personal data are not logged.",
+            "Test export, erasure, delete, or retention cleanup behavior for learning records."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers translation basics", "covers": [ "__(", "esc_html__", "text domain", "translation", "i18n" ] },
+            { "criterion": "Identifies stored data", "covers": [ "attempts", "feedback", "logs", "enrollment", "retention" ] },
+            { "criterion": "Protects sensitive material", "covers": [ "do not log", "secret", "token", "personal data", "hash" ] },
+            { "criterion": "Mentions export or erasure policy", "covers": [ "export", "erasure", "privacy policy", "delete", "retention" ] }
+        ],
+        "why_this_is_good": "It treats anonymous learning records as real data with lifecycle obligations, while keeping WordPress translation basics visible.",
+        "common_misses": [
+            "Translating strings but forgetting the text domain.",
+            "Calling data anonymous while logging raw prompts or headers.",
+            "Hashing tokens but not documenting retention.",
+            "Ignoring export or erasure because users do not log in."
+        ],
+        "revision_prompt": "Revise by covering translation functions, text domain, stored learning data, sensitive logging exclusions, hashed handles, privacy policy, retention, export, and erasure.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

@@ -145,11 +145,11 @@ class Registry {
 	}
 
 	public static function course_ability_name( string $course_slug, string $ability_slug ): string {
-		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '/' . self::sanitize_slug( $ability_slug );
+		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-' . self::sanitize_slug( $ability_slug );
 	}
 
 	public static function content_resource_name( string $course_slug, string $content_slug ): string {
-		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '/content/' . self::sanitize_slug( $content_slug );
+		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-content-' . self::sanitize_slug( $content_slug );
 	}
 
 	public static function course_rest_endpoint( string $slug ): string {
@@ -522,7 +522,7 @@ class Registry {
 			'updated_at'        => $now,
 		];
 
-		$existing = self::ability_by_name( $ability_name );
+		$existing = self::ability_by_name( $ability_name ) ?: self::ability_by_course_slug( (int) $course['id'], $slug );
 		if ( $existing ) {
 			$wpdb->update( $wpdb->prefix . self::ABILITIES_TABLE, $row, [ 'id' => (int) $existing['id'] ] );
 			$action = 'ability.updated';
@@ -572,7 +572,7 @@ class Registry {
 			'updated_at'    => $now,
 		];
 
-		$existing = self::content_by_resource_name( $row['resource_name'] );
+		$existing = self::content_by_resource_name( $row['resource_name'] ) ?: self::content_by_course_slug( (int) $course['id'], $slug );
 		if ( $existing ) {
 			$wpdb->update( $wpdb->prefix . self::CONTENT_TABLE, $row, [ 'id' => (int) $existing['id'] ] );
 			$action = 'content.updated';
@@ -811,11 +811,33 @@ class Registry {
 		return $row ?: null;
 	}
 
+	private static function ability_by_course_slug( int $course_id, string $slug ): ?array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::ABILITIES_TABLE;
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $table WHERE course_id = %d AND slug = %s", $course_id, $slug ),
+			ARRAY_A
+		);
+
+		return $row ?: null;
+	}
+
 	private static function content_by_resource_name( string $resource_name ): ?array {
 		global $wpdb;
 		$table = $wpdb->prefix . self::CONTENT_TABLE;
 		$row = $wpdb->get_row(
 			$wpdb->prepare( "SELECT * FROM $table WHERE resource_name = %s", $resource_name ),
+			ARRAY_A
+		);
+
+		return $row ?: null;
+	}
+
+	private static function content_by_course_slug( int $course_id, string $slug ): ?array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::CONTENT_TABLE;
+		$row = $wpdb->get_row(
+			$wpdb->prepare( "SELECT * FROM $table WHERE course_id = %d AND slug = %s", $course_id, $slug ),
 			ARRAY_A
 		);
 

@@ -34,6 +34,8 @@ $model_context_polytechnic_drop_site_data = static function () use ( $wpdb ): vo
 	delete_option( 'model_context_polytechnic_registry_schema_version' );
 	delete_option( 'model_context_polytechnic_learning_schema_version' );
 	delete_option( 'model_context_polytechnic_bundled_courses_version' );
+	delete_option( 'model_context_polytechnic_public_session_user_id' );
+	delete_option( 'model_context_polytechnic_public_session_lock' );
 
 	$wpdb->query(
 		"DELETE FROM {$wpdb->options}
@@ -50,4 +52,18 @@ if ( is_multisite() && function_exists( 'get_sites' ) ) {
 	}
 } else {
 	$model_context_polytechnic_drop_site_data();
+}
+
+$model_context_polytechnic_public_user = get_user_by( 'login', 'model_context_polytechnic_public_session' );
+if ( $model_context_polytechnic_public_user ) {
+	require_once ABSPATH . 'wp-admin/includes/user.php';
+	if ( is_multisite() ) {
+		require_once ABSPATH . 'wp-admin/includes/ms.php';
+	}
+
+	if ( is_multisite() && function_exists( 'wpmu_delete_user' ) ) {
+		wpmu_delete_user( (int) $model_context_polytechnic_public_user->ID );
+	} elseif ( function_exists( 'wp_delete_user' ) ) {
+		wp_delete_user( (int) $model_context_polytechnic_public_user->ID );
+	}
 }
