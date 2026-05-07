@@ -7,6 +7,32 @@
     "hints": [
         "Tests should scale with risk and user-facing surface area."
     ],
+    "model_answer": {
+        "summary": "Choose tests by risk: protect writes and data migrations first, then cover user-facing browser and block behavior.",
+        "work": "Use PHPUnit for pure PHP services, storage decisions, validation functions, and custom table migration helpers against the WordPress test suite. Add REST integration tests for the write route, especially permission_callback denial, schema failures, and success. Use browser tests for the settings screen because capability gates, nonce behavior, labels, notices, and saving flow are user-facing. Test the cron job with schedule/unschedule assertions and an idempotent callback smoke test. Test the frontend block with a small browser or editor flow for render, keyboard behavior, and saved attributes. Add static analysis or PHPCS/WPCS, Plugin Check, php -l, and CI or wp-env/local environment smoke commands so another maintainer can run the matrix.",
+        "checks": [
+            "Map each test to settings, REST, custom table, cron, or block risk.",
+            "Prioritize permission and write-route tests before visual polish.",
+            "Run php -l, PHPCS/WPCS, Plugin Check, PHPUnit, and browser smoke tests.",
+            "Verify wp-env or another local environment can reproduce the checks.",
+            "Document what remains manual."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers multiple test layers", "covers": [ "PHPUnit", "browser", "static analysis", "smoke", "Plugin Check" ] },
+            { "criterion": "Maps tests to plugin surfaces", "covers": [ "settings", "REST", "custom table", "cron", "block" ] },
+            { "criterion": "Prioritizes risk", "covers": [ "risk", "critical path", "write route", "permission" ] },
+            { "criterion": "Names local environment tooling", "covers": [ "wp-env", "WordPress test suite", "CI", "local environment" ] }
+        ],
+        "why_this_is_good": "It does not say 'write tests' as decoration. It ties each check to a failure mode a real plugin would face.",
+        "common_misses": [
+            "Only listing tools without mapping them to plugin surfaces.",
+            "Skipping permission_callback tests for write routes.",
+            "Ignoring migrations and cron because they are not visible UI.",
+            "No command or environment another maintainer can run."
+        ],
+        "revision_prompt": "Revise by making a table in prose: surface, risk, test type, command/tool, and acceptance signal.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

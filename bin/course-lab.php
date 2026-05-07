@@ -109,6 +109,7 @@ function run_course_lab( array $course, int $passes, int $students ): array {
 			'exercises' => count( $inventory['exercises'] ),
 			'references' => count( $course['references'] ),
 			'exercised_lessons' => count( $inventory['lesson_exercises'] ),
+			'exemplar_exercises' => count( $inventory['model_answered_exercises'] ),
 			'unexercised_lessons' => array_values( array_diff( array_keys( $inventory['lessons'] ), array_keys( $inventory['lesson_exercises'] ) ) ),
 		],
 		'passes' => $pass_plan,
@@ -118,7 +119,7 @@ function run_course_lab( array $course, int $passes, int $students ): array {
 			'Run this lab before and after course edits.',
 			'Review the student cohort before changing lessons, exercises, or tool contracts. Use --students=20 for the extended class.',
 			'Spawn a parallel student-reviewer with the agent brief for large course changes.',
-			'Apply repeated or high-severity findings to course-pack files first, then rerun composer release:check.',
+			'Apply repeated or high-severity findings to course-pack files first. Add or revise model_answer exemplars when feedback shows calibration gaps, then rerun composer release:check.',
 			'Do not auto-apply public feedback to the syllabus without maintainer review.',
 		],
 	];
@@ -128,6 +129,7 @@ function course_inventory( array $course ): array {
 	$lessons = [];
 	$exercises = [];
 	$lesson_exercises = [];
+	$model_answered_exercises = [];
 	$corpus = [
 		$course['name'],
 		$course['description'],
@@ -153,6 +155,10 @@ function course_inventory( array $course ): array {
 			$corpus[] = $exercise['title'];
 			$corpus[] = $exercise['prompt'];
 			$corpus[] = json_encode( $exercise['rubric'], JSON_UNESCAPED_SLASHES );
+			if ( ! empty( $exercise['model_answer'] ) ) {
+				$model_answered_exercises[ $exercise['slug'] ] = true;
+				$corpus[] = json_encode( $exercise['model_answer'], JSON_UNESCAPED_SLASHES );
+			}
 		}
 	}
 
@@ -165,6 +171,7 @@ function course_inventory( array $course ): array {
 		'lessons' => $lessons,
 		'exercises' => $exercises,
 		'lesson_exercises' => $lesson_exercises,
+		'model_answered_exercises' => $model_answered_exercises,
 		'corpus' => strtolower( implode( "\n", array_filter( $corpus ) ) ),
 	];
 }
@@ -758,10 +765,11 @@ function print_human_report( array $lab ): void {
 	echo 'Course Lab: ' . $lab['course']['name'] . ' (' . $lab['course']['slug'] . ')' . PHP_EOL;
 	echo 'LLM friendliness: ' . $lab['score']['llm_friendliness'] . '/100' . PHP_EOL;
 	echo sprintf(
-		'Inventory: %d module(s), %d lesson(s), %d exercise(s), %d reference(s). Practice density: %.3f',
+		'Inventory: %d module(s), %d lesson(s), %d exercise(s), %d exemplar(s), %d reference(s). Practice density: %.3f',
 		$lab['inventory']['modules'],
 		$lab['inventory']['lessons'],
 		$lab['inventory']['exercises'],
+		$lab['inventory']['exemplar_exercises'],
 		$lab['inventory']['references'],
 		$lab['score']['practice_density']
 	) . PHP_EOL;

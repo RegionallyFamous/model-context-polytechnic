@@ -46,6 +46,46 @@
     "expected_output_schema": {
       "type": "object"
     },
+    "model_answer": {
+      "type": "object",
+      "description": "Optional learner-facing exemplar returned only when explicitly requested. Include the exercise's expected answer fields, then add calibration notes such as rubric_mapping, why_this_is_good, common_misses, revision_prompt, and expected_score_band.",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "work": {
+          "type": "string"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rubric_mapping": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "why_this_is_good": {
+          "type": "string"
+        },
+        "common_misses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "revision_prompt": {
+          "type": "string"
+        },
+        "expected_score_band": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
     "rubric": {
       "type": "object",
       "required": ["criteria"],

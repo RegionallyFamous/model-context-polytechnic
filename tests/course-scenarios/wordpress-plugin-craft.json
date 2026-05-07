@@ -99,6 +99,18 @@
       "target_slug": "attempt-exercise"
     },
     {
+      "slug": "failed-attempt-needs-exemplar",
+      "title": "Failed Attempt Needs Exemplar",
+      "learner": "A model has rubric feedback but still does not know what excellent work looks like.",
+      "failure_mode": "Needs a spoiler-safe model answer after attempting.",
+      "expected_tools": ["attempt-exercise", "get-exercise"],
+      "route": ["attempt-exercise:secure-write-path", "get-exercise:secure-write-path"],
+      "target_exercises": ["secure-write-path"],
+      "required_project_terms": ["include_model_answer", "model_answer_available", "Compare your attempt to the exemplar"],
+      "target_type": "tool",
+      "target_slug": "get-exercise"
+    },
+    {
       "slug": "oversized-answer",
       "title": "Oversized Answer",
       "learner": "A model posts a giant answer blob.",

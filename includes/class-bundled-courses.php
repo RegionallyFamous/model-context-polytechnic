@@ -111,6 +111,7 @@ class BundledCourses {
 						'rubric'                 => $exercise['rubric'],
 						'expected_output_schema' => $exercise['expected_output_schema'] ?? CoursePack::default_expected_output_schema(),
 						'hints'                  => $exercise['hints'],
+						'model_answer'           => $exercise['model_answer'] ?? [],
 						'passing_score'          => $exercise['passing_score'] ?? 0.8,
 						'position'               => $exercise['position'],
 						'status'                 => 'published',

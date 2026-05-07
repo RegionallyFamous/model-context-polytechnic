@@ -35,6 +35,7 @@ Each published course can include:
 - Lessons: instructional material and objectives.
 - Exercises: prompts the AI can attempt.
 - Rubrics: deterministic criteria for feedback and pass/fail scoring.
+- Model answers: spoiler-safe exemplars the AI can request after an attempt for calibration and revision.
 - Progress: anonymous attempt history keyed by an `enrollment_key`.
 - Improvement signals: privacy-safe tool telemetry plus anonymous learner feedback, so the course can see what is confusing, helpful, brittle, or missing an example.
 
@@ -56,6 +57,8 @@ course-packs/wordpress-plugin-craft/
 ```
 
 `course.json` defines metadata, modules, lesson ordering, exercise file references, and public reference files. Lessons are Markdown so they can be edited and reviewed like curriculum. Exercises are JSON so rubrics, required terms, hints, and expected output schemas remain machine-checkable. `sources.json` is the source bibliography used to seed the public bibliography resource.
+
+Tradeoff-heavy exercises can include `model_answer` exemplars with the expected `summary`, `work`, and `checks` fields plus calibration notes. Normal `get-exercise` calls do not reveal the model answer; learners request it with `include_model_answer=true` after attempting or when revising a failed answer.
 
 The course-pack loader validates packs before seeding. A malformed pack will not be silently converted into a half-course. Bundled courses are reseeded from a content fingerprint, so edits to Markdown lessons, JSON exercises, references, or bibliography files are picked up without hand-bumping a PHP array version.
 

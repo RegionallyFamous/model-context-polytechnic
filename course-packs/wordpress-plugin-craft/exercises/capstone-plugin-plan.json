@@ -7,6 +7,32 @@
     "hints": [
         "This is the final workshop. A passing answer should be implementable by another engineer."
     ],
+    "model_answer": {
+        "summary": "Plan the plugin as a WordPress-native system with an explicit public read surface, private settings workflow, bounded caching, and a release gate.",
+        "work": "Architecture: keep a small bootstrap with plugin headers, constants, autoloading, activation/deactivation hooks, and namespaced service classes for settings, API client, cache, cron, REST, admin UI, and diagnostics. Storage: use options for private settings, transients or object cache for external API responses, and a schema-versioned custom table only if cached records need high-volume querying. Public REST: expose GET /cached-data with a permission_callback that allows safe read-only data and never reveals API keys or raw upstream payloads. Private UI: build a Settings API screen guarded by a capability such as manage_options, verify a nonce on saves, validate and sanitize settings, and escape output. Caching and cron: fetch upstream data with the WordPress HTTP API, timeout/error handling, cache keys, TTL, stale-safe fallback policy, and a scheduled refresh that is unscheduled on deactivation. Diagnostics: expose bounded status such as cache age, last refresh, schema version, and next cron run without secrets. Tests: cover services with PHPUnit, REST permissions, admin nonce/capability paths, cron scheduling, cache hit/miss, and manual browser smoke. Release: run php -l, PHPCS/WPCS, Plugin Check, readme/privacy/external service review, compatibility checks, and final ZIP install test.",
+        "checks": [
+            "Verify public REST responses are read-only and secret-free.",
+            "Test private settings save for capability, nonce, validation, sanitization, and escaping.",
+            "Test cache hit, cache miss, timeout, bad status, and stale fallback behavior.",
+            "Verify cron scheduling on activation and unscheduling on deactivation.",
+            "Run php -l, PHPUnit, REST integration tests, browser smoke, PHPCS/WPCS, Plugin Check, and release readme/privacy review."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "architecture", "storage", "permission_callback", "nonce", "capability", "cache", "cron", "Settings API", "REST", "tests", "Plugin Check" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "hook", "REST", "capability", "nonce", "transient", "Plugin Check" ] },
+            { "criterion": "Names verification or review work", "covers": [ "Test", "Verify", "Review", "PHPCS", "Plugin Check", "php -l", "PHPUnit", "smoke" ] }
+        ],
+        "why_this_is_good": "It is implementable by another engineer because each subsystem has a WordPress API, a boundary, and a verification path.",
+        "common_misses": [
+            "A public endpoint that leaks private upstream settings.",
+            "No nonce or capability plan for the settings screen.",
+            "Caching described vaguely with no timeout or failure policy.",
+            "No deactivation cleanup for scheduled jobs.",
+            "Release checks treated as an afterthought."
+        ],
+        "revision_prompt": "Revise by turning each subsystem into a decision: API, data ownership, permission boundary, failure mode, and test.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.85,
     "expected_output_schema": {
         "type": "object",

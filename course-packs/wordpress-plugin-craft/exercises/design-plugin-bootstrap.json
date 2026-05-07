@@ -7,6 +7,31 @@
     "hints": [
         "Think like a reviewer: can another engineer understand loading and lifecycle in one minute?"
     ],
+    "model_answer": {
+        "summary": "A solid bootstrap is boring on purpose: it identifies the plugin, guards direct access, loads dependencies, and delegates real work.",
+        "work": "Use a folder such as archive-faculty-notes with a main file archive-faculty-notes.php. The plugin header should include Plugin Name, Description, Version, Requires PHP, Requires at least, Author, License, and Text Domain. Start with defined('ABSPATH') || exit;, define version/path/url constants, load Composer or bundled dependencies, require small class files, and register activation and deactivation hooks. Activation can create tables, schedule events, and flush rewrites if needed; deactivation can unschedule events and flush temporary rewrite state. The bootstrap should not contain business logic, remote API calls, rendering loops, or database migrations beyond delegating to lifecycle classes.",
+        "checks": [
+            "Run php -l on the main file.",
+            "Verify plugin header fields and text domain are correct.",
+            "Activate and deactivate in a disposable WordPress site.",
+            "Review that the main file delegates feature code instead of becoming the application.",
+            "Confirm dependency loading fails with a clear admin notice if required files are missing."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "folder", "main file", "Plugin Name", "ABSPATH", "version", "activation", "deactivation", "autoload", "text domain", "not business logic" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "hook" ] },
+            { "criterion": "Names verification or review work", "covers": [ "php -l", "Verify", "review" ] }
+        ],
+        "why_this_is_good": "It teaches the first architectural habit: the main file is a contract and loading point, not a junk drawer.",
+        "common_misses": [
+            "Skipping the ABSPATH guard.",
+            "Putting feature code and remote calls in the main file.",
+            "Forgetting text domain or version constants.",
+            "Registering lifecycle hooks but hiding their behavior."
+        ],
+        "revision_prompt": "Revise by making the bootstrap answer the who, where, version, loading, lifecycle, and must-not-do questions in separate sentences.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

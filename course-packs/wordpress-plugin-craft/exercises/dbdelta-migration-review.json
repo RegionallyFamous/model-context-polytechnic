@@ -7,6 +7,32 @@
     "hints": [
         "The best migration can run more than once without corrupting data."
     ],
+    "model_answer": {
+        "summary": "Use dbDelta with explicit schema versioning, useful indexes, and non-destructive upgrade steps that can run more than once.",
+        "work": "Create the analytics table on activation or upgrade with dbDelta, using $wpdb->prefix for the table name and $wpdb->get_charset_collate() for charset/collation. Include an id BIGINT primary key, columns for event type, object id, created_at, and payload as needed, plus KEY indexes that match real queries such as course_id + created_at or event_type + created_at. Store a schema version option and run migrations only when the stored version is behind. Avoid destructive changes: add columns with defaults, backfill in small batches, preserve old data, and do not drop columns or tables during normal upgrades.",
+        "checks": [
+            "Run the installer twice and verify dbDelta does not duplicate or corrupt the table.",
+            "Inspect table charset/collation and indexes after activation.",
+            "Test upgrading from an older schema version in a copy of production-like data.",
+            "Verify all dynamic SQL values use $wpdb->prepare.",
+            "Confirm no migration drops data without an explicit operator-approved path."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Uses dbDelta and charset", "covers": [ "dbDelta", "charset" ] },
+            { "criterion": "Versions schema", "covers": [ "schema version", "option", "migration", "upgrade" ] },
+            { "criterion": "Designs useful indexes", "covers": [ "PRIMARY KEY", "KEY", "index", "query pattern" ] },
+            { "criterion": "Avoids destructive changes", "covers": [ "non-destructive", "backfill", "preserve", "do not drop" ] }
+        ],
+        "why_this_is_good": "It treats custom tables as long-lived production data, not demo scaffolding. The answer includes migration repeatability, query performance, and data preservation.",
+        "common_misses": [
+            "Creating a table without a schema version option.",
+            "No indexes beyond the primary key.",
+            "Dropping columns during an automatic upgrade.",
+            "Forgetting charset/collation."
+        ],
+        "revision_prompt": "Revise by adding the exact schema version mechanism, the indexes that serve known queries, and the non-destructive upgrade path.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

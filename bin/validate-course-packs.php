@@ -21,6 +21,7 @@ foreach ( $audit['packs'] as $pack ) {
 	echo '  modules: ' . $pack['counts']['modules'] . PHP_EOL;
 	echo '  lessons: ' . $pack['counts']['lessons'] . PHP_EOL;
 	echo '  exercises: ' . $pack['counts']['exercises'] . PHP_EOL;
+	echo '  model answers: ' . ( $pack['counts']['model_answers'] ?? 0 ) . PHP_EOL;
 	echo '  references: ' . ( $pack['counts']['references'] + ( $pack['counts']['sources'] > 0 ? 1 : 0 ) ) . PHP_EOL;
 	echo '  sources: ' . $pack['counts']['sources'] . PHP_EOL;
 

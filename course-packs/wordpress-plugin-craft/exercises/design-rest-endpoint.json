@@ -7,6 +7,31 @@
     "hints": [
         "Split public reads from private writes. Do not make one callback guess the intent."
     ],
+    "model_answer": {
+        "summary": "Expose diagnostics as a public read contract and settings updates as a private write contract with different routes, schemas, and permissions.",
+        "work": "Register a namespace such as archive-faculty/v1. Add GET /status for safe public diagnostic data with a permission_callback that allows only bounded read-only output, and return fields such as plugin_version, schema_version, cache_status, and last_job_status. Add POST /settings for private updates with args schema, a permission_callback that checks current_user_can('manage_options') or a narrower capability, validation before storage, and WP_Error for unauthorized or invalid input. Keep response shapes structured and documented; do not echo directly or mix public reads and private writes in one ambiguous callback.",
+        "checks": [
+            "Verify GET /status works publicly and does not expose secrets.",
+            "Verify POST /settings denies anonymous and low-capability users.",
+            "Test schema validation failures and WP_Error response shape.",
+            "Confirm public and private routes have separate permission_callback behavior.",
+            "Add REST integration tests for successful and denied requests."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "namespace", "GET", "POST", "permission_callback", "schema", "WP_Error", "public", "private", "capability" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "REST", "capability", "plugin" ] },
+            { "criterion": "Names verification or review work", "covers": [ "Verify", "Test" ] }
+        ],
+        "why_this_is_good": "It prevents a common REST mistake: a single route that silently becomes a write path. The public/private boundary is visible in the route design and test plan.",
+        "common_misses": [
+            "One route that reads or writes depending on payload.",
+            "Missing permission_callback.",
+            "Public diagnostics that expose tokens, raw requests, or secrets.",
+            "Ad hoc echoes instead of structured REST responses."
+        ],
+        "revision_prompt": "Revise by splitting the read and write surfaces, naming the permission_callback for each, and listing the response and error contract.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

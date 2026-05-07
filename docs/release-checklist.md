@@ -13,6 +13,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm `vendor/autoload_packages.php` exists.
 - Confirm the bundled course loads with the expected lesson and exercise counts.
 - Confirm `README.md` names the public endpoint and public learner flow.
+- Confirm exemplar `model_answer` content is present for first-work and tradeoff-heavy exercises without being returned by default.
 - Confirm no real tokens, enrollment keys, Authorization headers, or local site URLs are committed.
 
 ## WordPress Smoke Test

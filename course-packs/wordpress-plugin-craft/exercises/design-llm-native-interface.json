@@ -7,6 +7,31 @@
     "hints": [
         "The model should not need to infer the workflow from a tool pile. Hand it the next useful move."
     ],
+    "model_answer": {
+        "summary": "An LLM-native teaching interface should reduce inference by returning orientation, stable handles, exact next actions, memory retrieval, and clear public/private boundaries.",
+        "work": "Put the first move in initialize instructions: call begin-course. Public tools should include begin-course, get-study-plan, get-syllabus, search-course, get-lesson, get-exercise, attempt-exercise, get-next-work, get-progress, get-learning-memory, submit-feedback, and get-course-improvement-signals. Resources should expose syllabus and references for retrieval. Every response should repeat stable handles such as enrollment_key, lesson_slug, and exercise_slug when they are needed, and return next_actions or tool_calls with exact tool names and arguments. Missing handles, invalid slugs, oversized payloads, and rate limits should return WP_Error with recoverable messages. Authoring tools and private writes should stay hidden by default and require capability or bearer-token authorization if enabled.",
+        "checks": [
+            "Verify initialize instructions name begin-course and the public study loop.",
+            "Check tool schemas and output schemas include stable handles and next_actions.",
+            "Test missing enrollment_key, invalid slug, oversized answer, and rate limit recovery.",
+            "Review public tools for secret leakage and private boundary violations.",
+            "Run php -l, course-flow simulation, course lab, and Plugin Check."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "orientation", "initialize instructions", "public tools", "resources", "stable handles", "next_actions", "tool_calls", "memory", "WP_Error", "private" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "REST", "capability", "plugin" ] },
+            { "criterion": "Names verification or review work", "covers": [ "Verify", "Test", "Review", "php -l", "Plugin Check" ] }
+        ],
+        "why_this_is_good": "It designs for how models actually operate: limited context, no guaranteed durable memory, and a need for exact tool calls instead of hidden workflow inference.",
+        "common_misses": [
+            "Only exposing a tool list without an operating loop.",
+            "Returning prose directions but no exact next_actions.",
+            "Failing silently on bad handles.",
+            "Mixing public learner tools with private authoring tools."
+        ],
+        "revision_prompt": "Revise by adding the first call, stable handles, exact next tool calls, memory recovery, WP_Error recovery, and private boundaries.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

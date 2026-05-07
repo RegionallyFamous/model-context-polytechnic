@@ -68,12 +68,18 @@ $summary = [
 		'criteria_count'   => count( $rubric['criteria'] ),
 		'passing_score'    => $first_exercise['passing_score'],
 		'has_output_schema'=> isset( $first_exercise['expected_output_schema'] ),
+		'has_model_answer' => ! empty( $first_exercise['model_answer'] ),
 		'has_feedback_loop'=> strpos( $course['instructions'], 'submit-feedback' ) !== false,
 	],
 ];
 
 if ( empty( $summary['exercise_contract']['has_feedback_loop'] ) ) {
 	fwrite( STDERR, "Course instructions do not mention submit-feedback.\n" );
+	exit( 1 );
+}
+
+if ( empty( $summary['exercise_contract']['has_model_answer'] ) ) {
+	fwrite( STDERR, "First exercise has no model_answer exemplar.\n" );
 	exit( 1 );
 }
 

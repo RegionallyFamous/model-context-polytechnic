@@ -7,6 +7,31 @@
     "hints": [
         "Do not rely on nonces alone. Do not rely on sanitization as authorization."
     ],
+    "model_answer": {
+        "summary": "Secure the settings screen and REST write as two separate intent-checked paths, both protected before data is accepted.",
+        "work": "For the settings screen, render and save only for users with a capability such as manage_options, verify a nonce on the form POST to reduce CSRF risk, validate the payload shape, sanitize values before storage, and escape late when showing the saved setting. For the REST endpoint, register an explicit permission_callback that checks the same capability or a deliberate token policy, define args/schema validation, reject invalid payloads with WP_Error, sanitize before update_option, and return a structured response. Public-adjacent writes should cap payload size and use a rate limit; sanitization never replaces authorization.",
+        "checks": [
+            "Verify users without the capability cannot save through the form or REST endpoint.",
+            "Test bad nonce, missing nonce, and valid nonce behavior for the browser form.",
+            "Test REST permission_callback denial and schema validation failures return WP_Error.",
+            "Confirm stored values are sanitized and rendered values are escaped by output context.",
+            "Review payload size and rate limit behavior for abuse resistance."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "capability", "nonce", "permission_callback", "validate", "sanitize", "escape", "current_user_can", "WP_Error", "CSRF", "rate limit", "payload" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "REST", "capability", "nonce", "plugin" ] },
+            { "criterion": "Names verification or review work", "covers": [ "Test", "Verify", "review" ] }
+        ],
+        "why_this_is_good": "It orders security correctly: authorize first, verify browser intent where relevant, validate shape, sanitize storage, and escape output. It also keeps REST permission separate from admin form nonce behavior.",
+        "common_misses": [
+            "Saying the nonce is authentication.",
+            "Sanitizing input but letting unauthorized users write.",
+            "Using one callback that guesses whether a request is public or private.",
+            "Forgetting WP_Error failure behavior."
+        ],
+        "revision_prompt": "Revise by naming the exact authorization check for each write surface, then list validation, sanitization, escaping, and failure responses in order.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

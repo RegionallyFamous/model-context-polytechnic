@@ -14,6 +14,8 @@ It checks whether a course can be taken like an MCP student:
 8. Submit feedback.
 9. Inspect improvement signals before proposing edits.
 
+For exercises with exemplars, the intended loop is attempt first, review rubric feedback, then call `get-exercise` with `include_model_answer=true` if the learner needs calibration.
+
 ## Run The Lab
 
 ```bash

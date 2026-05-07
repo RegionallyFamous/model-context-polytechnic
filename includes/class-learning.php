@@ -9,7 +9,7 @@ class Learning {
 	const ENROLLMENTS_TABLE = 'model_context_polytechnic_enrollments';
 	const EVENTS_TABLE      = 'model_context_polytechnic_learning_events';
 	const FEEDBACK_TABLE    = 'model_context_polytechnic_feedback';
-	const SCHEMA_VERSION    = '3';
+	const SCHEMA_VERSION    = '4';
 	const MAX_ANSWER_BYTES  = 20000;
 	const MAX_FEEDBACK_BYTES = 6000;
 	const MAX_FEEDBACK_CONTEXT_BYTES = 4000;
@@ -96,6 +96,7 @@ class Learning {
 				rubric LONGTEXT NULL,
 				expected_output_schema LONGTEXT NULL,
 				hints LONGTEXT NULL,
+				model_answer LONGTEXT NULL,
 				passing_score FLOAT NOT NULL DEFAULT 0.7,
 				position INT NOT NULL DEFAULT 0,
 				status VARCHAR(20) NOT NULL DEFAULT 'published',
@@ -503,6 +504,7 @@ class Learning {
 			'rubric'                 => self::normalize_rubric( $input['rubric'] ?? [] ),
 			'expected_output_schema' => self::encode_json_value( $input['expected_output_schema'] ?? [ 'type' => 'object' ] ),
 			'hints'                  => self::encode_json_value( $input['hints'] ?? [] ),
+			'model_answer'           => self::normalize_model_answer( $input['model_answer'] ?? [] ),
 			'passing_score'          => self::sanitize_score( $input['passing_score'] ?? 0.7 ),
 			'position'               => isset( $input['position'] ) ? (int) $input['position'] : 0,
 			'status'                 => self::sanitize_status( (string) ( $input['status'] ?? 'published' ) ),
@@ -607,6 +609,7 @@ class Learning {
 				'Call get-syllabus for the map of the course.',
 				'Call get-lesson before attempting linked exercises.',
 				'Call attempt-exercise with enrollment_key so feedback becomes durable memory.',
+				'After attempting, call get-exercise with include_model_answer=true when you need an exemplar for calibration or revision.',
 				'Call get-learning-memory at the start of a later session to recover what this learner has practiced.',
 				'Call submit-feedback whenever a tool response, lesson, exercise, or next action is confusing or unusually helpful.',
 				'Call get-course-improvement-signals before proposing course changes so suggestions are evidence-aware.',
@@ -671,6 +674,7 @@ class Learning {
 				'Answer in the requested schema or with explicit implementation decisions.',
 				'Attempt the linked exercise.',
 				'Use feedback and missing rubric terms as the revision checklist.',
+				'Use model answers only after an attempt or when calibrating a failed answer; do not skip the practice loop.',
 				'Fetch learning memory before future work.',
 			],
 			'milestones'   => self::study_milestones( $course ),
@@ -717,25 +721,28 @@ class Learning {
 		}
 
 		$include_hints = ! empty( $input['include_hints'] );
+		$include_model_answer = ! empty( $input['include_model_answer'] );
 		$enrollment_key = self::input_enrollment_key( $input );
+		$next_actions = [
+			[
+				'tool'      => self::learning_ability_name( $course['slug'], 'attempt-exercise' ),
+				'arguments' => [
+					'exercise_slug'  => $exercise['slug'],
+					'answer'         => 'Replace with your structured answer.',
+				] + ( $enrollment_key !== '' ? [ 'enrollment_key' => $enrollment_key ] : [ 'enrollment_key' => 'Use the key returned by begin-course.' ] ),
+			],
+		];
 
 		return [
 			'course'   => Registry::course_summary( $course ),
-			'exercise' => self::exercise_summary( $exercise, $include_hints ),
+			'exercise' => self::exercise_summary( $exercise, $include_hints, $include_model_answer ),
 			'answer_contract' => [
 				'expected_shape'   => self::decode_json_value( $exercise['expected_output_schema'], [ 'type' => 'object' ] ),
 				'max_answer_bytes' => self::MAX_ANSWER_BYTES,
 				'grader'           => __( 'Deterministic rubric-assisted grading. Include rubric vocabulary when it is relevant and true.', 'model-context-polytechnic' ),
-			],
-			'next_actions' => [
-				[
-					'tool'      => self::learning_ability_name( $course['slug'], 'attempt-exercise' ),
-					'arguments' => [
-						'exercise_slug'  => $exercise['slug'],
-						'answer'         => 'Replace with your structured answer.',
-					] + ( $enrollment_key !== '' ? [ 'enrollment_key' => $enrollment_key ] : [ 'enrollment_key' => 'Use the key returned by begin-course.' ] ),
+					'exemplar_policy'  => __( 'Model answers are calibration material. Try the exercise first, then compare your answer to the exemplar if you need revision guidance.', 'model-context-polytechnic' ),
 				],
-			],
+			'next_actions' => $next_actions,
 			'note'     => __( 'Submit an answer to attempt-exercise. Provide enrollment_key to attach the attempt to durable course memory; if omitted, the tool will issue one automatically.', 'model-context-polytechnic' ),
 		];
 	}
@@ -816,6 +823,7 @@ class Learning {
 			'enrollment_key_used' => $stored,
 			'enrollment_key_issued' => $key_was_issued,
 			'next_work'             => $stored ? self::next_work_response( $course, $stored_progress['exercises'] ?? [], null, null, $enrollment_key ) : null,
+			'next_actions'          => self::attempt_next_actions( $course, $exercise, $evaluation, $enrollment_key ),
 			'preserve'              => $stored ? [ 'enrollment_key' ] : [],
 			'note'                  => $stored
 				? __( 'Attempt recorded in the course gradebook for this enrollment_key. Use get-learning-memory with the same key in later sessions.', 'model-context-polytechnic' )
@@ -1131,6 +1139,7 @@ class Learning {
 				'properties' => [
 					'exercise_slug'  => [ 'type' => 'string' ],
 					'include_hints'  => [ 'type' => 'boolean', 'default' => false ],
+					'include_model_answer' => [ 'type' => 'boolean', 'default' => false, 'description' => 'When true, returns the exemplar model answer for calibration after an attempt.' ],
 					'enrollment_key' => [ 'type' => 'string', 'description' => 'Optional anonymous course enrollment key returned by begin-course. Used only to carry the key into next_actions.' ],
 					'session_id'     => [ 'type' => 'string', 'description' => 'Deprecated alias for enrollment_key.' ],
 				],
@@ -1419,6 +1428,7 @@ class Learning {
 				'get-lesson',
 				'get-exercise',
 				'attempt-exercise',
+				'get-exercise with include_model_answer=true after an attempt when you need exemplar calibration',
 				'submit-feedback when the course helped or failed you',
 				'get-course-improvement-signals before course revision',
 				'revise and repeat',
@@ -1467,6 +1477,34 @@ class Learning {
 				'arguments' => $enrollment_key !== ''
 					? [ 'enrollment_key' => $enrollment_key ]
 					: [ 'enrollment_key' => 'Use the key returned by begin-course.' ],
+			];
+		}
+
+		return $actions;
+	}
+
+	private static function attempt_next_actions( array $course, array $exercise, array $evaluation, string $enrollment_key = '' ): array {
+		$actions = [];
+
+		if ( empty( $evaluation['passed'] ) && self::exercise_has_model_answer( $exercise ) ) {
+			$actions[] = [
+				'tool'      => self::learning_ability_name( $course['slug'], 'get-exercise' ),
+				'arguments' => self::tool_arguments_with_enrollment(
+					[
+						'exercise_slug'        => $exercise['slug'],
+						'include_hints'        => true,
+						'include_model_answer' => true,
+					],
+					$enrollment_key
+				),
+				'why'       => __( 'Compare your attempt to the exemplar, then revise against missing rubric terms.', 'model-context-polytechnic' ),
+			];
+		}
+
+		if ( $enrollment_key !== '' ) {
+			$actions[] = [
+				'tool'      => self::learning_ability_name( $course['slug'], empty( $evaluation['passed'] ) ? 'get-learning-memory' : 'get-next-work' ),
+				'arguments' => [ 'enrollment_key' => $enrollment_key ],
 			];
 		}
 
@@ -2400,12 +2438,13 @@ class Learning {
 		return $data;
 	}
 
-	private static function exercise_summary( ?array $exercise, bool $include_hints ): array {
+	private static function exercise_summary( ?array $exercise, bool $include_hints, bool $include_model_answer = false ): array {
 		if ( ! $exercise ) {
 			return [];
 		}
 
 		$rubric = self::decode_json_value( $exercise['rubric'], [] );
+		$model_answer = self::decode_json_value( $exercise['model_answer'] ?? '', [] );
 		$data = [
 			'id'                     => (int) $exercise['id'],
 			'slug'                   => $exercise['slug'],
@@ -2413,6 +2452,7 @@ class Learning {
 			'prompt'                 => $exercise['prompt'],
 			'rubric'                 => $rubric,
 			'expected_output_schema' => self::decode_json_value( $exercise['expected_output_schema'], [ 'type' => 'object' ] ),
+			'model_answer_available' => ! empty( $model_answer ),
 			'passing_score'          => (float) $exercise['passing_score'],
 			'position'               => (int) $exercise['position'],
 			'status'                 => $exercise['status'],
@@ -2420,6 +2460,11 @@ class Learning {
 
 		if ( $include_hints ) {
 			$data['hints'] = self::decode_json_value( $exercise['hints'], [] );
+		}
+
+		if ( $include_model_answer && $model_answer ) {
+			$data['model_answer'] = $model_answer;
+			$data['model_answer_note'] = __( 'Study this after attempting the exercise. Use it to revise judgment, not to skip practice.', 'model-context-polytechnic' );
 		}
 
 		return $data;
@@ -2489,6 +2534,7 @@ class Learning {
 				'enrollment_key_used' => [ 'type' => 'boolean' ],
 				'enrollment_key_issued' => [ 'type' => 'boolean' ],
 				'next_work' => [ 'type' => [ 'object', 'null' ] ],
+				'next_actions' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 				'preserve' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
 			],
 			'get-next-work' => [
@@ -2539,6 +2585,19 @@ class Learning {
 		}
 
 		return self::encode_json_value( $value );
+	}
+
+	private static function normalize_model_answer( $model_answer ): string {
+		$value = is_string( $model_answer ) ? self::decode_json_value( $model_answer, [] ) : $model_answer;
+		if ( ! is_array( $value ) ) {
+			$value = [];
+		}
+
+		return self::encode_json_value( $value );
+	}
+
+	private static function exercise_has_model_answer( array $exercise ): bool {
+		return ! empty( self::decode_json_value( $exercise['model_answer'] ?? '', [] ) );
 	}
 
 	private static function decode_json_value( $json, $default ) {

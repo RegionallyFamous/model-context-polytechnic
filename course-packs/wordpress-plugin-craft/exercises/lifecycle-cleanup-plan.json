@@ -7,6 +7,31 @@
     "hints": [
         "Activation prepares runtime state; deactivation pauses runtime work; uninstall is the explicit removal path."
     ],
+    "model_answer": {
+        "summary": "Use activation for repeat-safe setup, deactivation for pausing runtime behavior, and uninstall for explicit data removal.",
+        "work": "On activation, create or update the custom table with dbDelta, store a schema version option, create any required default option, and schedule the recurring event only if it is not already scheduled. Keep the activation routine idempotent and safe to run again. On deactivation, unschedule the scheduled event with wp_clear_scheduled_hook and flush temporary runtime state if needed, but do not delete the custom table or the option because the operator may be temporarily disabling the plugin. On uninstall, remove plugin-owned options and tables only as the documented explicit removal path, and preserve data unless the plugin policy tells the operator that uninstall deletes it.",
+        "checks": [
+            "Activate twice and verify the table, option, and scheduled event are not duplicated.",
+            "Deactivate and verify the cron scheduled event is gone while stored data remains.",
+            "Run uninstall in a disposable site and verify explicit removal matches the documented policy.",
+            "Review that setup code is idempotent and that no runtime network sync happens during activation."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Separates lifecycle responsibilities", "covers": [ "activation", "deactivation", "uninstall" ] },
+            { "criterion": "Protects user data", "covers": [ "do not delete", "operator", "explicit removal" ] },
+            { "criterion": "Handles scheduled work", "covers": [ "wp_clear_scheduled_hook", "scheduled event", "cron" ] },
+            { "criterion": "Names idempotence or migration safety", "covers": [ "idempotent", "schema version", "dbDelta", "safe to run again" ] }
+        ],
+        "why_this_is_good": "It treats plugin lifecycle hooks as operator promises. The answer avoids surprising data loss, avoids duplicate cron jobs, and keeps install-time setup separate from normal runtime work.",
+        "common_misses": [
+            "Deleting tables or options on deactivation.",
+            "Running a remote sync during activation.",
+            "Scheduling cron without checking for an existing event.",
+            "Forgetting that uninstall is the destructive path."
+        ],
+        "revision_prompt": "Revise your answer so each lifecycle hook has exactly one job and every destructive action is tied to explicit uninstall behavior.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

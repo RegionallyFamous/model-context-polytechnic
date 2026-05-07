@@ -153,6 +153,7 @@ class CoursePack {
 			'modules'    => 0,
 			'lessons'    => 0,
 			'exercises'  => 0,
+			'model_answers' => 0,
 			'references' => 0,
 			'sources'    => 0,
 		];
@@ -259,6 +260,9 @@ class CoursePack {
 
 				self::record_referenced_file( $dir, $exercise_path, $referenced_files );
 				self::audit_exercise( $exercise_result['data'], $exercise_label, $exercise_slugs, $exercise_lesson_refs, $errors, $warnings );
+				if ( isset( $exercise_result['data']['model_answer'] ) && is_array( $exercise_result['data']['model_answer'] ) && ! empty( $exercise_result['data']['model_answer'] ) ) {
+					$counts['model_answers']++;
+				}
 				$counts['exercises']++;
 			}
 		}
@@ -388,6 +392,19 @@ class CoursePack {
 			$warnings[] = $label . ': expected_output_schema is recommended so LLM answers are machine-checkable without relying on the loader default.';
 		}
 
+		if ( isset( $exercise['model_answer'] ) ) {
+			if ( ! is_array( $exercise['model_answer'] ) ) {
+				$errors[] = $label . ': model_answer must be an object.';
+			} else {
+				$required_answer_fields = self::string_list( $exercise['expected_output_schema']['required'] ?? [] );
+				foreach ( $required_answer_fields as $required_answer_field ) {
+					if ( ! array_key_exists( $required_answer_field, $exercise['model_answer'] ) ) {
+						$warnings[] = sprintf( '%s: model_answer should include expected field "%s".', $label, $required_answer_field );
+					}
+				}
+			}
+		}
+
 		$rubric = $exercise['rubric'] ?? null;
 		if ( ! is_array( $rubric ) || ! is_array( $rubric['criteria'] ?? null ) || empty( $rubric['criteria'] ) ) {
 			$errors[] = $label . ': rubric.criteria must be a non-empty array.';
@@ -455,6 +472,7 @@ class CoursePack {
 		$exercise['lesson_slug']   = (string) ( $exercise['lesson_slug'] ?? '' );
 		$exercise['prompt']        = (string) ( $exercise['prompt'] ?? '' );
 		$exercise['hints']         = self::string_list( $exercise['hints'] ?? [] );
+		$exercise['model_answer']  = is_array( $exercise['model_answer'] ?? null ) ? $exercise['model_answer'] : [];
 		$exercise['passing_score'] = isset( $exercise['passing_score'] ) ? (float) $exercise['passing_score'] : 0.8;
 		$exercise['rubric']        = is_array( $exercise['rubric'] ?? null ) ? $exercise['rubric'] : [ 'criteria' => [] ];
 

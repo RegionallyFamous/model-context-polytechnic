@@ -103,6 +103,10 @@ add_action(
 							'description' => 'Rubric object. Use criteria[] with name, points, required_terms, and/or any_terms for deterministic grading.',
 						],
 						'expected_output_schema' => [ 'type' => 'object' ],
+						'model_answer'           => [
+							'type'        => 'object',
+							'description' => 'Optional exemplar answer and calibration notes returned to learners only when explicitly requested.',
+						],
 						'hints'                  => [
 							'type'  => 'array',
 							'items' => [ 'type' => 'string' ],

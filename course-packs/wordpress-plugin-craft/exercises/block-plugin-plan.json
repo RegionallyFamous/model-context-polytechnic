@@ -7,6 +7,31 @@
     "hints": [
         "Do not make the editor do all production rendering unless that is truly the right contract."
     ],
+    "model_answer": {
+        "summary": "Use block.json as the contract, PHP as the reliable render path, and JavaScript only where editor or frontend interaction needs it.",
+        "work": "Create a namespaced block such as mcpoly/faculty-directory with block.json declaring attributes for search placeholder, department filter, and display options, plus editorScript, style, and viewScript only if frontend interaction is needed. Register the block with register_block_type and a PHP render callback so public output is server-rendered, cached when appropriate, escaped, and usable without editor JavaScript. Store faculty records in the data shape that fits the source, expose bounded REST reads if the editor needs searchable data, and protect any private writes with capabilities and nonces. Editor UX should provide accessible controls, sensible previews, and clear loading/error states. Frontend behavior should progressively enhance the rendered directory, avoid global assets, and keep performance bounded.",
+        "checks": [
+            "Verify block.json names attributes, editorScript, viewScript, style, and namespace correctly.",
+            "Smoke test PHP render output with JavaScript disabled.",
+            "Check REST/data calls are cached or bounded and do not expose private data.",
+            "Test editor controls for labels, keyboard behavior, and preview states.",
+            "Run Plugin Check, php -l, and a block/editor browser smoke test."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "block.json", "render", "editorScript", "viewScript", "attributes", "REST", "performance", "accessibility", "namespace" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "REST", "capability", "nonce", "Plugin Check" ] },
+            { "criterion": "Names verification or review work", "covers": [ "Verify", "Test", "Smoke", "Plugin Check", "php -l" ] }
+        ],
+        "why_this_is_good": "It keeps the production contract server-rendered and inspectable, while still using block metadata and JavaScript where they add value.",
+        "common_misses": [
+            "Making editor JavaScript the only render path.",
+            "Loading block scripts globally on every page.",
+            "Forgetting accessible editor controls.",
+            "No namespace or block.json contract."
+        ],
+        "revision_prompt": "Revise by separating block metadata, PHP render, editor data needs, frontend enhancement, and verification.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

@@ -104,6 +104,7 @@ function stress_inventory( array $course, string $root ): array {
 			$course_corpus[] = implode( ' ', string_list( $exercise['hints'] ?? [] ) );
 			$course_corpus[] = json_encode( $exercise['rubric'], JSON_UNESCAPED_SLASHES );
 			$course_corpus[] = json_encode( $exercise['expected_output_schema'] ?? [], JSON_UNESCAPED_SLASHES );
+			$course_corpus[] = json_encode( $exercise['model_answer'] ?? [], JSON_UNESCAPED_SLASHES );
 		}
 	}
 

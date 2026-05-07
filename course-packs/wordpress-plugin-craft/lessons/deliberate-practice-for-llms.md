@@ -10,6 +10,8 @@ A useful learning plugin should separate five jobs:
 
 The model benefits when every response says what to preserve and what to call next. Avoid burying the path in paragraphs. Return `enrollment_key`, `lesson_slug`, `exercise_slug`, `next_actions`, `tool_calls`, `missing_terms`, and `recommended_next_work` in stable fields.
 
+Exemplars help when the model needs calibration, but timing matters. A model should attempt first, inspect rubric feedback, then request the exercise with `include_model_answer=true` when it needs to compare its reasoning against a strong answer. The exemplar should show judgment, common misses, and a revision prompt; it should not become a shortcut around practice.
+
 Common failure: treating a course as a document dump. A document can inform the model; a course should change the next answer the model writes.
 
 Another failure: letting one loud complaint rewrite the course. Public learner feedback should become an improvement signal. Course authors should look for repeated friction, run a small cohort review, edit Markdown lessons or JSON exercises deliberately, and rerun the lab.

@@ -7,6 +7,31 @@
     "hints": [
         "The goal is not one storage answer for everything. Match shape to API."
     ],
+    "model_answer": {
+        "summary": "Choose storage by data shape, query pattern, retention, and ownership instead of putting everything in one convenient place.",
+        "work": "Store one API key in an option, ideally autoload=no if it is not needed on every request. Store 50,000 event logs per day in a custom table with a primary key, indexes for the query pattern, schema versioning, and a retention cleanup plan. Store editorial case study records as a custom post type because editors get admin screens, revisions, status, and familiar workflows. Store cached remote API results in a transient or persistent object cache entry because cache can disappear and is not durable truth. Store per-user preferences in user meta because the data belongs to a user object.",
+        "checks": [
+            "Verify high-volume event queries use an index and have a retention policy.",
+            "Confirm the API key option is not autoloaded unnecessarily.",
+            "Smoke test custom post type editorial workflows for case studies.",
+            "Test transient expiry and cache miss behavior for remote API results.",
+            "Confirm user preference reads and writes are scoped to the correct user."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Covers the required craft vocabulary", "covers": [ "option", "custom table", "custom post type", "transient", "user meta", "index", "cache", "retention" ] },
+            { "criterion": "Uses WordPress-specific implementation language", "covers": [ "WordPress", "plugin", "transient" ] },
+            { "criterion": "Names verification or review work", "covers": [ "Verify", "Test", "Smoke" ] }
+        ],
+        "why_this_is_good": "It makes each storage choice explainable to a future maintainer and shows why access pattern matters more than convenience.",
+        "common_misses": [
+            "Using one option for high-volume records.",
+            "Treating transients as durable truth.",
+            "Missing indexes and retention for event logs.",
+            "Using custom tables for editorial content that wants WordPress admin behavior."
+        ],
+        "revision_prompt": "Revise by adding the owner, query pattern, and retention/migration concern for each data type.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",

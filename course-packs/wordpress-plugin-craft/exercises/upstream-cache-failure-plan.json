@@ -7,6 +7,32 @@
     "hints": [
         "A remote API can be slow, down, or surprising. The plugin should stay polite under all three conditions."
     ],
+    "model_answer": {
+        "summary": "Wrap upstream lookups in the WordPress HTTP API, cache successful reads, and make failure output structured and recoverable.",
+        "work": "Build a stable cache key from the normalized lookup input, such as mcpoly_remote_record_ plus md5 of the request arguments. Check get_transient first and return cached data with status=cached when present. On a cache miss, call wp_remote_get with a short timeout and no secrets in the URL, validate wp_remote_retrieve_response_code, decode and validate the body, then set_transient with an explicit TTL such as HOUR_IN_SECONDS. If the request returns WP_Error, times out, gives a bad status code, or has invalid JSON, return structured output with status=error, error_code, note, recoverable=true, and stale cached data if a stale-safe fallback policy exists.",
+        "checks": [
+            "Test cache hit and cache miss paths.",
+            "Simulate timeout, WP_Error, non-200 status code, and invalid JSON.",
+            "Verify cache key normalization avoids leaking secrets.",
+            "Confirm TTL and invalidation behavior.",
+            "Verify callers receive structured recoverable output instead of a fatal error."
+        ],
+        "rubric_mapping": [
+            { "criterion": "Uses WordPress HTTP and caching APIs", "covers": [ "wp_remote_get", "set_transient", "get_transient", "transient" ] },
+            { "criterion": "Handles failures explicitly", "covers": [ "WP_Error", "timeout", "status code", "fallback" ] },
+            { "criterion": "Designs cache key and lifetime", "covers": [ "cache key", "TTL", "HOUR_IN_SECONDS" ] },
+            { "criterion": "Returns structured recoverable output", "covers": [ "structured", "error", "note", "recoverable", "status" ] }
+        ],
+        "why_this_is_good": "It assumes remote services are unreliable and protects the WordPress site from slow, noisy, or secret-leaking failure modes.",
+        "common_misses": [
+            "Calling the remote API on every page view.",
+            "No timeout or status code handling.",
+            "Caching errors as if they were real data.",
+            "Returning false or crashing instead of structured error output."
+        ],
+        "revision_prompt": "Revise by describing the cache key, TTL, HTTP timeout, response validation, and every failure response the caller can recover from.",
+        "expected_score_band": "pass/high"
+    },
     "passing_score": 0.8,
     "expected_output_schema": {
         "type": "object",
