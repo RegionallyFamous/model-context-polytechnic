@@ -18,6 +18,7 @@
     "course-flow:simulate": "php bin/simulate-course-flow.php",
     "course-lab": "php bin/course-lab.php --passes=6",
     "cohort-lab": "php bin/course-lab.php --passes=6 --students=10",
+    "extended-cohort-lab": "php bin/course-lab.php --passes=6 --students=20",
     "stress-lab": "php bin/stress-lab.php",
     "foundation:check": "php bin/foundation-check.php",
     "release:check": [

@@ -19,6 +19,7 @@ It checks whether a course can be taken like an MCP student:
 ```bash
 composer course-lab
 composer cohort-lab
+composer extended-cohort-lab
 composer stress-lab
 ```
 
@@ -27,6 +28,7 @@ Useful variants:
 ```bash
 php bin/course-lab.php --passes=12
 php bin/course-lab.php --students=10
+php bin/course-lab.php --students=20
 php bin/course-lab.php --json
 php bin/course-lab.php --agent-brief
 php bin/course-lab.php --fail-on=warning
@@ -34,7 +36,7 @@ php bin/course-lab.php --fail-on=warning
 
 The default lab fails only on critical findings. Warnings and notices are improvement signals.
 
-## Ten-Student Cohort
+## Student Cohorts
 
 The default lab also sends ten deterministic LLM-student profiles through the course:
 
@@ -48,6 +50,19 @@ The default lab also sends ten deterministic LLM-student profiles through the co
 - Course-pack authoring.
 - LLM-native interface design.
 - Capstone maintainer judgment.
+
+The extended cohort adds ten more specialist students:
+
+- Privacy and internationalization.
+- Admin workflow and settings.
+- Modern PHP 8.1 boundaries.
+- Test strategy.
+- Hook contract design.
+- Observability and support diagnostics.
+- Systematic review cadence.
+- Namespace and dependency coexistence.
+- Lifecycle and uninstall safety.
+- Remote service resilience.
 
 Each student returns feedback-shaped output: `feedback_type`, `target_type`, `target_slug`, `rating`, `comment`, and `suggested_fix`. This mirrors what a real learner would send through `submit-feedback`, but it is safe to run locally before publishing a course edit.
 

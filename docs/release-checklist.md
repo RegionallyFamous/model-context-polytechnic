@@ -8,6 +8,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Run `composer foundation:check`.
 - Run `composer course-packs:validate`.
 - Run `composer course-lab`.
+- Run `composer extended-cohort-lab` before major curriculum releases.
 - Run `composer stress-lab`.
 - Confirm `vendor/autoload_packages.php` exists.
 - Confirm the bundled course loads with the expected lesson and exercise counts.

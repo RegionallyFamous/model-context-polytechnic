@@ -116,7 +116,7 @@ function run_course_lab( array $course, int $passes, int $students ): array {
 		'findings' => $findings,
 		'improvement_protocol' => [
 			'Run this lab before and after course edits.',
-			'Review the 10-student cohort before changing lessons, exercises, or tool contracts.',
+			'Review the student cohort before changing lessons, exercises, or tool contracts. Use --students=20 for the extended class.',
 			'Spawn a parallel student-reviewer with the agent brief for large course changes.',
 			'Apply repeated or high-severity findings to course-pack files first, then rerun composer release:check.',
 			'Do not auto-apply public feedback to the syllabus without maintainer review.',
@@ -428,6 +428,96 @@ function student_profile_templates(): array {
 			'target_type' => 'exercise',
 			'target_slug' => 'capstone-plugin-plan',
 		],
+		[
+			'id' => 'privacy-officer',
+			'name' => 'Dorothy, Privacy Officer',
+			'lens' => 'privacy and internationalization',
+			'goal' => 'Decide whether plugin data collection, translation, export, and erasure duties are visible before release.',
+			'keywords' => [ 'personal data', 'exported', 'erased', 'text domain', 'translation', 'retention' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'i18n-privacy',
+		],
+		[
+			'id' => 'admin-operator',
+			'name' => 'Mary, Admin Operator',
+			'lens' => 'admin workflow and settings',
+			'goal' => 'Evaluate whether a plugin admin surface is focused, permissioned, accessible, and operationally useful.',
+			'keywords' => [ 'Settings API', 'Admin UI', 'notices', 'accessible form labels', 'capabilities' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'admin-settings',
+		],
+		[
+			'id' => 'php-81-maintainer',
+			'name' => 'Rasmus, PHP 8.1 Maintainer',
+			'lens' => 'modern PHP boundaries',
+			'goal' => 'Use modern PHP without pretending WordPress stopped speaking arrays, callbacks, globals, and WP_Error.',
+			'keywords' => [ 'types', 'value objects', 'WP_Error', 'dependency injection', 'exceptions' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'php-81-craft',
+		],
+		[
+			'id' => 'test-engineer',
+			'name' => 'Anita, Test Engineer',
+			'lens' => 'test strategy',
+			'goal' => 'Translate plugin risk into the right mix of PHP, integration, browser, smoke, and local-environment checks.',
+			'keywords' => [ 'PHPUnit', 'wp-env', 'browser tests', 'smoke tests', 'static analysis' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'automated-tests',
+		],
+		[
+			'id' => 'hook-designer',
+			'name' => 'Jean, Hook Designer',
+			'lens' => 'extension contracts',
+			'goal' => 'Design hooks that expose stable events and transformations instead of leaking unfinished internals.',
+			'keywords' => [ 'actions', 'filters', 'custom hooks', 'payloads', 'timing' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'hooks-as-contracts',
+		],
+		[
+			'id' => 'observability-support',
+			'name' => 'Evelyn, Support Diagnostician',
+			'lens' => 'observability and support',
+			'goal' => 'Find bounded diagnostics that help operators without leaking secrets or noisy internals.',
+			'keywords' => [ 'Site Health', 'logs', 'status tools', 'secrets', 'diagnostic' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'observability-and-diagnostics',
+		],
+		[
+			'id' => 'review-cadence-student',
+			'name' => 'Barbara, Review Cadence Student',
+			'lens' => 'systematic plugin review',
+			'goal' => 'Turn a plugin review into repeatable findings across contract, security, data, performance, UX, tests, and distribution.',
+			'keywords' => [ 'contract', 'security', 'data', 'performance', 'UX', 'tests', 'distribution' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'plugin-review-cadence',
+		],
+		[
+			'id' => 'namespace-collision-student',
+			'name' => 'Adele, Namespace Collision Student',
+			'lens' => 'runtime coexistence',
+			'goal' => 'Prevent plugin collisions in the shared WordPress PHP runtime and dependency graph.',
+			'keywords' => [ 'Namespaces', 'unique prefixes', 'collisions', 'dependency conflicts', 'Jetpack Autoloader' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'namespaces-and-prefixes',
+		],
+		[
+			'id' => 'lifecycle-uninstall-student',
+			'name' => 'Hedy, Lifecycle Student',
+			'lens' => 'activation and uninstall safety',
+			'goal' => 'Decide what belongs in activation, deactivation, and uninstall without destroying owner data accidentally.',
+			'keywords' => [ 'activation', 'deactivation', 'uninstall', 'destructive', 'cleanup' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'lifecycle-hooks',
+		],
+		[
+			'id' => 'external-service-student',
+			'name' => 'Claude, External Service Student',
+			'lens' => 'remote service resilience',
+			'goal' => 'Design remote API behavior that is cached, private, timeout-bounded, and release-disclosed.',
+			'keywords' => [ 'external APIs', 'WordPress HTTP APIs', 'timeout', 'cache', 'WP_Error', 'external service' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'http-api-caching',
+		],
 	];
 }
 
@@ -688,7 +778,7 @@ function print_human_report( array $lab ): void {
 	}
 
 	if ( ! empty( $lab['student_cohort']['students'] ) ) {
-		echo PHP_EOL . 'Ten-student cohort:' . PHP_EOL;
+		echo PHP_EOL . sprintf( 'Student cohort (%d profile%s):', $lab['student_cohort']['student_count'], $lab['student_cohort']['student_count'] === 1 ? '' : 's' ) . PHP_EOL;
 		foreach ( $lab['student_cohort']['students'] as $student ) {
 			echo sprintf(
 				'  %d. %s (%s) rating %d/5 - %s',
