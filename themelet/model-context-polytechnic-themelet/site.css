@@ -16,6 +16,9 @@
   --line: rgba(60, 37, 20, 0.2);
   --shadow: 0 22px 56px rgba(42, 22, 13, 0.18);
   --max: 1180px;
+  --measure: 66ch;
+  --measure-narrow: 54ch;
+  --measure-wide: 76ch;
 }
 
 * {
@@ -35,8 +38,11 @@ body {
     var(--paper);
   background-size: 36px 36px;
   font-family: "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 18px;
-  line-height: 1.55;
+  font-size: clamp(17px, 0.25vw + 16px, 19px);
+  line-height: 1.62;
+  font-kerning: normal;
+  font-synthesis-weight: none;
+  hanging-punctuation: first last;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -69,7 +75,9 @@ code {
   border-radius: 5px;
   background: rgba(255, 253, 248, 0.72);
   color: var(--burgundy);
+  font-family: "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 0.93em;
+  line-height: 1.45;
 }
 
 .skip-link {
@@ -161,8 +169,9 @@ h2 {
 
 .brand strong {
   display: block;
-  font-size: clamp(1.03rem, 2vw, 1.24rem);
+  font-size: clamp(1.03rem, 1.25vw, 1.24rem);
   line-height: 1.15;
+  text-wrap: balance;
 }
 
 .brand small {
@@ -242,25 +251,32 @@ h1,
 h2,
 h3,
 p {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 h1 {
   max-width: 11ch;
   margin: 0;
   color: inherit;
-  font-size: clamp(4rem, 10.4vw, 8.6rem);
-  line-height: 0.91;
+  font-size: clamp(3.6rem, 8.8vw, 8rem);
+  line-height: 0.94;
   text-shadow: 0 3px 24px rgba(0, 0, 0, 0.38);
   text-wrap: balance;
 }
 
+h2,
+h3 {
+  text-wrap: balance;
+}
+
 .lede {
-  max-width: 49rem;
+  max-width: var(--measure-wide);
   margin: 1.45rem 0 0;
   color: rgba(255, 251, 241, 0.96);
-  font-size: clamp(1.08rem, 2.2vw, 1.34rem);
+  font-size: clamp(1.08rem, 1.1vw, 1.32rem);
+  line-height: 1.58;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.46);
+  text-wrap: pretty;
 }
 
 .hero .eyebrow {
@@ -344,7 +360,9 @@ h1 {
   color: rgba(255, 248, 232, 0.82);
   font-size: 0.95rem;
   font-weight: 800;
+  line-height: 1.35;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
+  text-wrap: balance;
 }
 
 .crest-band {
@@ -440,7 +458,7 @@ h1 {
 }
 
 .section-heading {
-  max-width: 760px;
+  max-width: var(--measure-wide);
   margin-bottom: 2rem;
 }
 
@@ -467,17 +485,21 @@ h1 {
 }
 
 h2 {
+  max-width: var(--measure-narrow);
   margin: 0;
   color: var(--burgundy-dark);
-  font-size: clamp(2rem, 4.8vw, 4rem);
-  line-height: 1.04;
+  font-size: clamp(2.05rem, 3.6vw, 3.7rem);
+  line-height: 1.08;
 }
 
 .section-heading p:not(.eyebrow),
 .registrar-panel p,
 .apply-copy p {
+  max-width: var(--measure);
   color: var(--muted);
   font-size: clamp(1.02rem, 2vw, 1.18rem);
+  line-height: 1.68;
+  text-wrap: pretty;
 }
 
 .steps,
@@ -544,6 +566,8 @@ h2 {
 .bulletin-board p,
 .apply-card li {
   color: var(--muted);
+  line-height: 1.64;
+  text-wrap: pretty;
 }
 
 .step-card > code {
@@ -588,6 +612,10 @@ h2 {
 .course-card.featured h3,
 .course-card.featured p {
   color: #fff6df;
+}
+
+.course-card.featured p {
+  max-width: var(--measure);
 }
 
 .course-card.featured .course-code {
@@ -664,8 +692,9 @@ pre {
   padding: 1.1rem;
   overflow-x: auto;
   color: #fff0c8;
-  font-size: clamp(0.86rem, 2vw, 1rem);
+  font-size: clamp(0.86rem, 1vw, 0.98rem);
   line-height: 1.45;
+  tab-size: 2;
 }
 
 pre code {
@@ -763,8 +792,12 @@ pre code {
   padding-left: 1.2rem;
 }
 
+.apply-card li {
+  padding-left: 0.2rem;
+}
+
 .apply-card li + li {
-  margin-top: 0.55rem;
+  margin-top: 0.65rem;
 }
 
 .site-footer {
@@ -832,6 +865,7 @@ pre code {
 
   h1 {
     max-width: 11ch;
+    font-size: clamp(3.1rem, 13vw, 5rem);
   }
 
   .admissions-layout .section-heading {
@@ -904,11 +938,13 @@ pre code {
 
   h1 {
     max-width: 100%;
-    font-size: 3.05rem;
+    font-size: clamp(2.7rem, 14vw, 3.35rem);
+    line-height: 0.98;
   }
 
   h2 {
-    font-size: 2.1rem;
+    font-size: clamp(1.9rem, 9vw, 2.35rem);
+    line-height: 1.1;
   }
 
   .hero-actions .button {

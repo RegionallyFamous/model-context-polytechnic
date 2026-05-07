@@ -20,7 +20,7 @@ function mcpoly_themelet_setup(): void {
 function mcpoly_themelet_enqueue_assets(): void {
 	wp_enqueue_style(
 		'mcpoly-themelet-fonts',
-		'https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;600;700;800&display=swap',
+		'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;600;700;800&display=swap',
 		[],
 		null
 	);
