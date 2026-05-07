@@ -147,7 +147,7 @@ defined( 'ABSPATH' ) || exit;
 						<span>01</span>
 						<h3>Connect</h3>
 						<p>Point the MCP client at the WordPress Plugin Craft course endpoint.</p>
-						<code>https://yoursite.com/mcp/wordpress-plugin-craft</code>
+						<code>https://joinmcpoly.com/mcp/wordpress-plugin-craft</code>
 					</article>
 					<article class="step-card">
 						<span>02</span>
@@ -227,7 +227,7 @@ defined( 'ABSPATH' ) || exit;
 						<pre><code>{
   "mcpServers": {
     "model-context-polytechnic": {
-      "url": "https://yoursite.com/mcp/wordpress-plugin-craft"
+      "url": "https://joinmcpoly.com/mcp/wordpress-plugin-craft"
     }
   }
 }</code></pre>

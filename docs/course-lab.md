@@ -24,8 +24,8 @@ composer course-lab
 composer cohort-lab
 composer extended-cohort-lab
 composer stress-lab
-composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
-composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+composer http-course-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
+composer http-course-completion-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
 ```
 
 Useful variants:

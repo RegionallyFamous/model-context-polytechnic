@@ -5,19 +5,19 @@ The local labs prove the course logic without WordPress. The HTTP smoke test pro
 Run it after activating the plugin and flushing permalinks:
 
 ```bash
-composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+composer http-course-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
 ```
 
 For a full graduation rehearsal, run the completion smoke. It attempts every bundled exercise over MCP HTTP with the model answers, confirms `get-next-work` reports `complete=true`, and verifies `get-certificate` returns a certificate ID, verification code, and transcript:
 
 ```bash
-composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+composer http-course-completion-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
 ```
 
 JSON output is useful for CI logs:
 
 ```bash
-composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft --json
+composer http-course-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft --json
 ```
 
 If a staging site requires an extra header, pass it explicitly:

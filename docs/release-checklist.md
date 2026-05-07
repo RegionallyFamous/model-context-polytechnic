@@ -9,8 +9,8 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Run `composer test`.
 - Run `composer release:check`.
 - Run `composer extended-cohort-lab` before major curriculum releases.
-- Against a real WordPress test site, run `composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
-- For graduation-path releases, run `composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
+- Against the public WordPress test site, run `composer http-course-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft`.
+- For graduation-path releases, run `composer http-course-completion-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft`.
 - Confirm `vendor/autoload_packages.php` exists.
 - Confirm the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, and `Server::SERVER_VERSION` match the release tag.
 - Confirm the bundled course loads with the expected lesson and exercise counts.
