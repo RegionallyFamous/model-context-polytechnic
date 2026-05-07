@@ -93,13 +93,22 @@ if ( $session_id === '' ) {
 
 mcp_notification( $options['url'], 'notifications/initialized', [], $session_id, $options['protocol'], $options['headers'] );
 
-$begin = call_tool( $options, $session_id, $tool_prefix . 'begin-course', [], 2 );
+$tools_result = mcp_request( $options['url'], 'tools/list', [], $session_id, $options['protocol'], $options['headers'], 2 );
+$tool_names = array_map(
+	static function ( array $tool ): string {
+		return (string) ( $tool['name'] ?? '' );
+	},
+	$tools_result['result']['tools'] ?? []
+);
+
+$begin = call_tool( $options, $session_id, $tool_prefix . 'begin-course', [], 3 );
 $enrollment_key = (string) ( $begin['enrollment_key'] ?? '' );
 if ( $enrollment_key === '' ) {
 	fail( 'begin-course did not return an enrollment_key.' );
 }
 
 $summary['checks'][] = 'begin-course issued anonymous enrollment key';
+assert_suggested_tools_exist( $begin, $tool_names, 'begin-course' );
 
 $passed = 0;
 foreach ( $exercises as $index => $exercise ) {
@@ -113,7 +122,7 @@ foreach ( $exercises as $index => $exercise ) {
 			'enrollment_key' => $enrollment_key,
 			'answer'         => $answer,
 		],
-		3 + $index
+		4 + $index
 	);
 
 	if ( empty( $attempt['evaluation']['passed'] ) ) {
@@ -132,6 +141,7 @@ if ( empty( $next_work['complete'] ) || empty( $next_work['certificate_available
 }
 
 $summary['checks'][] = 'get-next-work reported completion';
+assert_suggested_tools_exist( $next_work, $tool_names, 'get-next-work' );
 
 $certificate = call_tool(
 	$options,
@@ -156,6 +166,7 @@ if ( count( $transcript ) !== count( $exercises ) ) {
 $summary['certificate_id'] = $certificate['certificate']['certificate_id'];
 $summary['transcript_count'] = count( $transcript );
 $summary['checks'][] = 'get-certificate issued anonymous certificate and transcript';
+assert_suggested_tools_exist( $certificate, $tool_names, 'get-certificate' );
 $summary['status'] = 'ok';
 
 if ( $options['json'] ) {
@@ -231,7 +242,7 @@ function mcp_request( string $url, string $method, array $params, ?string $sessi
 
 	$response = post_json( $url, $payload, default_headers( $session_id, $protocol, $extra_headers ) );
 	if ( $response['status'] < 200 || $response['status'] >= 300 ) {
-		fail( "{$method} returned HTTP {$response['status']}: {$response['body']}" );
+		fail( http_error_message( $method, $response ) );
 	}
 
 	$decoded = json_decode( $response['body'], true );
@@ -256,7 +267,7 @@ function mcp_notification( string $url, string $method, array $params, string $s
 
 	$response = post_json( $url, $payload, default_headers( $session_id, $protocol, $extra_headers ) );
 	if ( $response['status'] < 200 || $response['status'] >= 300 ) {
-		fail( "{$method} returned HTTP {$response['status']}: {$response['body']}" );
+		fail( http_error_message( $method, $response ) );
 	}
 }
 
@@ -337,6 +348,55 @@ function structured_content( array $result ): array {
 	}
 
 	fail( 'Tool result did not include structured content.' );
+}
+
+function assert_suggested_tools_exist( array $payload, array $tool_names, string $context ): void {
+	$suggested = collect_suggested_tools( $payload );
+	$missing = array_values( array_diff( $suggested, $tool_names ) );
+	if ( $missing ) {
+		fail( "{$context} suggested tool names not present in tools/list: " . implode( ', ', $missing ) );
+	}
+}
+
+function collect_suggested_tools( array $payload ): array {
+	$keys = [
+		'tool',
+		'next_tool',
+		'first_call',
+		'next_work_tool',
+		'memory_tool',
+		'certificate_tool',
+		'feedback_tool',
+		'signals_tool',
+		'search_tool',
+		'public_feedback_tool',
+		'public_signals_tool',
+	];
+	$tools = [];
+	foreach ( $payload as $key => $value ) {
+		if ( in_array( $key, $keys, true ) && is_string( $value ) && str_starts_with( $value, 'model-context-polytechnic-' ) ) {
+			$tools[] = $value;
+		}
+
+		if ( is_array( $value ) ) {
+			$tools = array_merge( $tools, collect_suggested_tools( $value ) );
+		}
+	}
+
+	return array_values( array_unique( $tools ) );
+}
+
+function http_error_message( string $method, array $response ): string {
+	$location = (string) ( $response['headers']['location'][0] ?? '' );
+	if ( $response['status'] >= 300 && $response['status'] < 400 && strpos( $location, 'wp-admin/install.php' ) !== false ) {
+		return "{$method} returned HTTP {$response['status']} redirecting to {$location}. WordPress is not installed at this URL; install WordPress, activate the plugin, and flush permalinks before running the completion smoke.";
+	}
+
+	if ( $response['status'] >= 300 && $response['status'] < 400 && $location !== '' ) {
+		return "{$method} returned HTTP {$response['status']} redirecting to {$location}. Confirm the URL points at the activated MCP endpoint.";
+	}
+
+	return "{$method} returned HTTP {$response['status']}: {$response['body']}";
 }
 
 function fail( string $message ): void {

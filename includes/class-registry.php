@@ -148,6 +148,10 @@ class Registry {
 		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-' . self::sanitize_slug( $ability_slug );
 	}
 
+	public static function course_tool_name( string $course_slug, string $ability_slug ): string {
+		return Server::mcp_tool_name( self::course_ability_name( $course_slug, $ability_slug ) );
+	}
+
 	public static function content_resource_name( string $course_slug, string $content_slug ): string {
 		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-content-' . self::sanitize_slug( $content_slug );
 	}
@@ -691,7 +695,7 @@ class Registry {
 				'title'          => $row['title'],
 				'score'          => $score,
 				'excerpt'        => self::search_excerpt( (string) $row['body'], $terms ),
-				'next_tool'      => self::course_ability_name( self::course_slug_for_id( $course_id ), 'get-lesson' ),
+				'next_tool'      => self::course_tool_name( self::course_slug_for_id( $course_id ), 'get-lesson' ),
 				'next_arguments' => [ 'lesson_slug' => $row['slug'] ],
 			];
 		}
@@ -722,7 +726,7 @@ class Registry {
 				'title'          => $row['title'],
 				'score'          => $score,
 				'excerpt'        => self::search_excerpt( (string) $row['prompt'], $terms ),
-				'next_tool'      => self::course_ability_name( $course_slug, 'get-exercise' ),
+				'next_tool'      => self::course_tool_name( $course_slug, 'get-exercise' ),
 				'next_arguments' => [ 'exercise_slug' => $row['slug'] ],
 			];
 		}

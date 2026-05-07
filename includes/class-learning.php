@@ -311,6 +311,14 @@ class Learning {
 		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-' . self::sanitize_slug( $ability_slug );
 	}
 
+	private static function learning_tool_name( string $course_slug, string $ability_slug ): string {
+		return Server::mcp_tool_name( self::learning_ability_name( $course_slug, $ability_slug ) );
+	}
+
+	private static function course_tool_name( string $course_slug, string $ability_slug ): string {
+		return Server::mcp_tool_name( Registry::course_ability_name( $course_slug, $ability_slug ) );
+	}
+
 	public static function learning_resource_name( string $course_slug, string $resource_slug ): string {
 		return Server::ABILITY_PREFIX . '/' . self::sanitize_slug( $course_slug ) . '-resource-' . self::sanitize_slug( $resource_slug );
 	}
@@ -379,8 +387,8 @@ class Learning {
 		$target = self::target_from_input( $input );
 		$response['course_improvement'] = [
 			'this_call_was_logged' => true,
-			'feedback_tool'        => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
-			'signals_tool'         => self::learning_ability_name( $course['slug'], 'get-course-improvement-signals' ),
+			'feedback_tool'        => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
+			'signals_tool'         => self::learning_tool_name( $course['slug'], 'get-course-improvement-signals' ),
 			'current_hint'         => self::top_improvement_hint( (int) $course['id'] ),
 			'when_to_call_feedback'=> [
 				'If a lesson, exercise, tool response, or next action was confusing.',
@@ -708,11 +716,11 @@ class Learning {
 			'student_feedback_loop' => self::student_feedback_loop_guidance( $course ),
 			'tool_calls'   => [
 				[
-					'tool'      => self::learning_ability_name( $course['slug'], 'get-next-work' ),
+					'tool'      => self::learning_tool_name( $course['slug'], 'get-next-work' ),
 					'arguments' => $enrollment_key !== '' ? [ 'enrollment_key' => $enrollment_key ] : new \stdClass(),
 				],
 				[
-					'tool'      => Registry::course_ability_name( $course['slug'], 'search-course' ),
+					'tool'      => self::course_tool_name( $course['slug'], 'search-course' ),
 					'arguments' => [ 'query' => $goal !== '' ? $goal : 'plugin architecture security storage testing' ],
 				],
 			],
@@ -750,7 +758,7 @@ class Learning {
 		$enrollment_key = self::input_enrollment_key( $input );
 		$next_actions = [
 			[
-				'tool'      => self::learning_ability_name( $course['slug'], 'attempt-exercise' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'attempt-exercise' ),
 				'arguments' => [
 					'exercise_slug'  => $exercise['slug'],
 					'answer'         => 'Replace with your structured answer.',
@@ -1127,7 +1135,7 @@ class Learning {
 			],
 			'tool_calls' => [
 				[
-					'tool'      => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
+					'tool'      => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
 					'arguments' => [
 						'feedback_type' => 'suggestion',
 						'target_type'   => $target_type !== '' ? $target_type : 'course',
@@ -1561,13 +1569,13 @@ class Learning {
 	private static function course_llm_contract( array $course ): array {
 		return [
 			'course_slug'    => $course['slug'],
-			'first_call'     => self::learning_ability_name( $course['slug'], 'begin-course' ),
-			'next_work_tool' => self::learning_ability_name( $course['slug'], 'get-next-work' ),
-			'memory_tool'    => self::learning_ability_name( $course['slug'], 'get-learning-memory' ),
-			'certificate_tool' => self::learning_ability_name( $course['slug'], 'get-certificate' ),
-			'feedback_tool'  => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
-			'signals_tool'   => self::learning_ability_name( $course['slug'], 'get-course-improvement-signals' ),
-			'search_tool'    => Registry::course_ability_name( $course['slug'], 'search-course' ),
+			'first_call'     => self::learning_tool_name( $course['slug'], 'begin-course' ),
+			'next_work_tool' => self::learning_tool_name( $course['slug'], 'get-next-work' ),
+			'memory_tool'    => self::learning_tool_name( $course['slug'], 'get-learning-memory' ),
+			'certificate_tool' => self::learning_tool_name( $course['slug'], 'get-certificate' ),
+			'feedback_tool'  => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
+			'signals_tool'   => self::learning_tool_name( $course['slug'], 'get-course-improvement-signals' ),
+			'search_tool'    => self::course_tool_name( $course['slug'], 'search-course' ),
 			'stable_handles' => [ 'enrollment_key', 'lesson_slug', 'exercise_slug' ],
 			'operating_loop' => [
 				'begin-course',
@@ -1590,8 +1598,8 @@ class Learning {
 	private static function student_feedback_loop_guidance( array $course ): array {
 		return [
 			'purpose' => __( 'Every learner can leave one small signal that makes the next learner path clearer, while course changes still require maintainer review.', 'model-context-polytechnic' ),
-			'public_feedback_tool' => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
-			'public_signals_tool' => self::learning_ability_name( $course['slug'], 'get-course-improvement-signals' ),
+			'public_feedback_tool' => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
+			'public_signals_tool' => self::learning_tool_name( $course['slug'], 'get-course-improvement-signals' ),
 			'local_cohort_lab' => 'composer course-lab',
 			'learner_loop' => [
 				'Use begin-course and preserve enrollment_key.',
@@ -1613,18 +1621,17 @@ class Learning {
 		$actions = [];
 		foreach ( self::exercises_for_lesson( (int) $lesson['course_id'], (int) $lesson['id'], true ) as $exercise ) {
 			$actions[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-exercise' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-exercise' ),
 				'arguments' => self::tool_arguments_with_enrollment(
 					[ 'exercise_slug' => $exercise['slug'] ],
 					$enrollment_key
 				),
-				'transcript'           => self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] ),
 			];
 		}
 
 		if ( ! $actions ) {
 			$actions[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-next-work' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-next-work' ),
 				'arguments' => $enrollment_key !== ''
 					? [ 'enrollment_key' => $enrollment_key ]
 					: [ 'enrollment_key' => 'Use the key returned by begin-course.' ],
@@ -1639,7 +1646,7 @@ class Learning {
 
 		if ( empty( $evaluation['passed'] ) && self::exercise_has_model_answer( $exercise ) ) {
 			$actions[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-exercise' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-exercise' ),
 				'arguments' => self::tool_arguments_with_enrollment(
 					[
 						'exercise_slug'        => $exercise['slug'],
@@ -1654,7 +1661,7 @@ class Learning {
 
 		if ( $enrollment_key !== '' ) {
 			$actions[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], empty( $evaluation['passed'] ) ? 'get-learning-memory' : 'get-next-work' ),
+				'tool'      => self::learning_tool_name( $course['slug'], empty( $evaluation['passed'] ) ? 'get-learning-memory' : 'get-next-work' ),
 				'arguments' => [ 'enrollment_key' => $enrollment_key ],
 			];
 		}
@@ -1935,6 +1942,7 @@ class Learning {
 			'completed_count'       => (int) ( $progress['completed_count'] ?? 0 ),
 			'total_exercise_count'  => count( $public_exercises ),
 			'completion_percent'    => count( $public_exercises ) > 0 ? 1.0 : 0.0,
+			'transcript'            => self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] ),
 			'exercise_slugs'        => array_map(
 				static function ( array $exercise ): string {
 					return (string) $exercise['slug'];
@@ -2002,12 +2010,12 @@ class Learning {
 			],
 			'next_actions'         => [
 				[
-					'tool'      => self::learning_ability_name( $course['slug'], 'get-learning-memory' ),
+					'tool'      => self::learning_tool_name( $course['slug'], 'get-learning-memory' ),
 					'arguments' => [ 'enrollment_key' => 'Use the key that produced this certificate.' ],
 					'why'       => __( 'Carry the final memory capsule into future plugin-building work.', 'model-context-polytechnic' ),
 				],
 				[
-					'tool'      => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
+					'tool'      => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
 					'arguments' => [
 						'enrollment_key' => 'Use the key that produced this certificate.',
 						'feedback_type'  => 'helpful',
@@ -2170,15 +2178,15 @@ class Learning {
 		$tool_calls = [];
 		if ( $course_complete ) {
 			$tool_calls[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-certificate' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-certificate' ),
 				'arguments' => [ 'enrollment_key' => $enrollment_key !== '' ? $enrollment_key : 'Use the key returned by begin-course.' ],
 			];
 			$tool_calls[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-learning-memory' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-learning-memory' ),
 				'arguments' => [ 'enrollment_key' => $enrollment_key !== '' ? $enrollment_key : 'Use the key returned by begin-course.' ],
 			];
 			$tool_calls[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
 				'arguments' => [
 					'enrollment_key' => $enrollment_key !== '' ? $enrollment_key : 'Use the key returned by begin-course.',
 					'feedback_type'  => 'helpful',
@@ -2189,7 +2197,7 @@ class Learning {
 			];
 		} elseif ( $lesson ) {
 			$tool_calls[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-lesson' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-lesson' ),
 				'arguments' => self::tool_arguments_with_enrollment(
 					[ 'lesson_slug' => $lesson['slug'] ],
 					$enrollment_key
@@ -2199,14 +2207,14 @@ class Learning {
 
 		if ( $exercise ) {
 			$tool_calls[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'get-exercise' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-exercise' ),
 				'arguments' => self::tool_arguments_with_enrollment(
 					[ 'exercise_slug' => $exercise['slug'] ],
 					$enrollment_key
 				),
 			];
 			$tool_calls[] = [
-				'tool'      => self::learning_ability_name( $course['slug'], 'attempt-exercise' ),
+				'tool'      => self::learning_tool_name( $course['slug'], 'attempt-exercise' ),
 				'arguments' => self::tool_arguments_with_enrollment(
 					[
 						'exercise_slug' => $exercise['slug'],

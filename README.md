@@ -43,7 +43,7 @@ Public course endpoints expose learning tools without login. The LLM should call
 
 The MCP HTTP adapter stores protocol sessions against a WordPress user. To keep public learning genuinely no-login, the plugin creates a plugin-owned anonymous subscriber used only for public MCP session IDs and briefly serializes public session requests to avoid user-meta races. That internal user is not a learner account, cannot authorize private write tools, and is removed on uninstall.
 
-The public registrar is LLM-first. If a model is unsure what to do, it should call `model-context-polytechnic/orient` or read the `model-context-polytechnic/llm-interface` resource. Course responses prefer stable handles, `next_actions`, `tool_calls`, and explicit recovery notes so the model does not have to infer workflow from a loose tool list.
+The public registrar is LLM-first. If a model is unsure what to do, it should call `model-context-polytechnic-orient` or read the `model-context-polytechnic/llm-interface` resource. Course responses prefer stable handles, MCP-ready `next_actions`, `tool_calls`, and explicit recovery notes so the model does not have to infer workflow from a loose tool list.
 
 The bundled flagship course is **WordPress Plugin Craft**. It is seeded automatically on activation and updated idempotently when the bundled course-pack fingerprint changes. Learner attempts and enrollment memory are not deleted by reseeding.
 
@@ -167,7 +167,7 @@ wp model-context-polytechnic auth config --access=read --client=generic --transp
 wp model-context-polytechnic auth config --access=write --client=cursor --transport=proxy --site-url=https://yoursite.com
 ```
 
-The plugin also has a public `model-context-polytechnic/client-config` tool. Pass `course_slug` to generate a config for a published course endpoint instead of the private registrar endpoint.
+The plugin also has a public `model-context-polytechnic-client-config` tool. Pass `course_slug` to generate a config for a published course endpoint instead of the private registrar endpoint.
 
 The plaintext token is shown once. Store only the plaintext token in the MCP client config; the plugin stores only a SHA-256 hash.
 
@@ -343,7 +343,7 @@ Published course endpoints automatically include these public learning tools. Wo
 - `model-context-polytechnic/{course-slug}-submit-feedback`
 - `model-context-polytechnic/{course-slug}-get-course-improvement-signals`
 
-MCP clients see sanitized tool names with the slash converted to a dash, such as `model-context-polytechnic-wordpress-plugin-craft-begin-course`.
+MCP clients see sanitized tool names with the slash converted to a dash, such as `model-context-polytechnic-wordpress-plugin-craft-begin-course`. Tool suggestions returned inside `tool_calls`, `next_actions`, and `next_tool` already use the MCP-ready dashed names.
 
 The public learning flow is intentionally light:
 

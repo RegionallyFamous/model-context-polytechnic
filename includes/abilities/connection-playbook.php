@@ -77,11 +77,11 @@ add_action(
 						],
 						'recovery_tool_calls' => [
 							[
-								'tool'      => Server::ABILITY_PREFIX . '/server-status',
+								'tool'      => Server::mcp_tool_name( Server::ABILITY_PREFIX . '/server-status' ),
 								'arguments' => new \stdClass(),
 							],
 							[
-								'tool'      => Server::ABILITY_PREFIX . '/client-config',
+								'tool'      => Server::mcp_tool_name( Server::ABILITY_PREFIX . '/client-config' ),
 								'arguments' => [
 									'site_url'    => $site_url !== '' ? $site_url : 'https://yoursite.com',
 									'client'      => $client,

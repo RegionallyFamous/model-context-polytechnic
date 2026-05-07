@@ -133,6 +133,7 @@ if ( $enrollment_key === '' ) {
 
 $summary['enrollment_key_prefix'] = substr( $enrollment_key, 0, 8 );
 $summary['checks'][] = 'begin-course issued anonymous enrollment key';
+assert_suggested_tools_exist( $begin, $tool_names, 'begin-course' );
 
 $exercise = call_tool(
 	$options,
@@ -152,6 +153,7 @@ if ( ( $exercise['exercise']['slug'] ?? '' ) !== 'design-plugin-bootstrap' ) {
 }
 
 $summary['checks'][] = 'get-exercise returned the requested exercise';
+assert_suggested_tools_exist( $exercise, $tool_names, 'get-exercise' );
 
 $attempt = call_tool(
 	$options,
@@ -172,6 +174,7 @@ if ( empty( $attempt['evaluation'] ) || ! array_key_exists( 'passed', $attempt['
 $summary['attempt_score'] = $attempt['evaluation']['score'] ?? null;
 $summary['attempt_passed'] = $attempt['evaluation']['passed'] ?? null;
 $summary['checks'][] = 'attempt-exercise evaluated and stored the answer';
+assert_suggested_tools_exist( $attempt, $tool_names, 'attempt-exercise' );
 
 $memory = call_tool(
 	$options,
@@ -189,6 +192,7 @@ if ( empty( $memory['recent_attempts'] ) ) {
 
 $summary['memory_attempts'] = count( $memory['recent_attempts'] );
 $summary['checks'][] = 'get-learning-memory recovered the prior attempt';
+assert_suggested_tools_exist( $memory, $tool_names, 'get-learning-memory' );
 
 $certificate = call_tool(
 	$options,
@@ -209,6 +213,7 @@ if ( empty( $certificate['remaining_exercises'] ) || empty( $certificate['next_w
 }
 
 $summary['checks'][] = 'get-certificate reported not-yet-complete status with next work';
+assert_suggested_tools_exist( $certificate, $tool_names, 'get-certificate' );
 
 $model_answer = call_tool(
 	$options,
@@ -275,7 +280,7 @@ function mcp_request( string $url, string $method, array $params, ?string $sessi
 	$headers = default_headers( $session_id, $protocol, $extra_headers );
 	$response = post_json( $url, $payload, $headers );
 	if ( $response['status'] < 200 || $response['status'] >= 300 ) {
-		fail( "{$method} returned HTTP {$response['status']}: {$response['body']}" );
+		fail( http_error_message( $method, $response ) );
 	}
 
 	$decoded = json_decode( $response['body'], true );
@@ -306,7 +311,7 @@ function mcp_notification( string $url, string $method, array $params, string $s
 
 	$response = post_json( $url, $payload, default_headers( $session_id, $protocol, $extra_headers ) );
 	if ( ! in_array( $response['status'], [ 200, 202, 204 ], true ) ) {
-		fail( "{$method} notification returned HTTP {$response['status']}: {$response['body']}" );
+		fail( http_error_message( $method . ' notification', $response ) );
 	}
 }
 
@@ -437,8 +442,57 @@ function structured_content( array $result ): array {
 	fail( 'Tool response did not include structured content.' );
 }
 
+function assert_suggested_tools_exist( array $payload, array $tool_names, string $context ): void {
+	$suggested = collect_suggested_tools( $payload );
+	$missing = array_values( array_diff( $suggested, $tool_names ) );
+	if ( $missing ) {
+		fail( "{$context} suggested tool names not present in tools/list: " . implode( ', ', $missing ) );
+	}
+}
+
+function collect_suggested_tools( array $payload ): array {
+	$keys = [
+		'tool',
+		'next_tool',
+		'first_call',
+		'next_work_tool',
+		'memory_tool',
+		'certificate_tool',
+		'feedback_tool',
+		'signals_tool',
+		'search_tool',
+		'public_feedback_tool',
+		'public_signals_tool',
+	];
+	$tools = [];
+	foreach ( $payload as $key => $value ) {
+		if ( in_array( $key, $keys, true ) && is_string( $value ) && str_starts_with( $value, 'model-context-polytechnic-' ) ) {
+			$tools[] = $value;
+		}
+
+		if ( is_array( $value ) ) {
+			$tools = array_merge( $tools, collect_suggested_tools( $value ) );
+		}
+	}
+
+	return array_values( array_unique( $tools ) );
+}
+
 function wp_plugin_craft_smoke_answer(): string {
 	return 'Use folder archive-faculty-notes and main file archive-faculty-notes.php with a Plugin Name header, version, Requires PHP, Requires at least, License, and text domain. Start with an ABSPATH guard, define path/url/version constants, load autoload dependencies, and register activation and deactivation hooks. Activation can create tables, schedule events, or flush rewrites through lifecycle classes; deactivation unschedules work and flushes only temporary rewrite state. The bootstrap should wire WordPress hooks and dependencies, not business logic, remote API calls, rendering loops, or migrations inline. Verify with php -l, Plugin Check, activation/deactivation smoke tests, and a review that feature code lives in classes.';
+}
+
+function http_error_message( string $method, array $response ): string {
+	$location = (string) ( $response['headers']['location'][0] ?? '' );
+	if ( $response['status'] >= 300 && $response['status'] < 400 && strpos( $location, 'wp-admin/install.php' ) !== false ) {
+		return "{$method} returned HTTP {$response['status']} redirecting to {$location}. WordPress is not installed at this URL; install WordPress, activate the plugin, and flush permalinks before running the smoke test.";
+	}
+
+	if ( $response['status'] >= 300 && $response['status'] < 400 && $location !== '' ) {
+		return "{$method} returned HTTP {$response['status']} redirecting to {$location}. Confirm the URL points at the activated MCP endpoint.";
+	}
+
+	return "{$method} returned HTTP {$response['status']}: {$response['body']}";
 }
 
 function fail( string $message ): void {

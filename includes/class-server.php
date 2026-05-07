@@ -232,6 +232,19 @@ class Server {
 		];
 	}
 
+	public static function mcp_tool_name( string $ability_name ): string {
+		$name = str_replace( '/', '-', trim( $ability_name ) );
+		$name = (string) preg_replace( '/[^a-zA-Z0-9_.-]/', '-', $name );
+		$name = (string) preg_replace( '/-+/', '-', $name );
+		$name = trim( $name, '-_' );
+
+		if ( strlen( $name ) > 128 ) {
+			$name = substr( $name, 0, 115 ) . '-' . substr( md5( $ability_name ), 0, 12 );
+		}
+
+		return $name;
+	}
+
 	public static function server_instructions(): string {
 		return implode(
 			"\n",
@@ -256,7 +269,7 @@ class Server {
 	public static function llm_interface_contract(): array {
 		return [
 			'purpose'              => 'Make MCP-hosted coursework easy for LLMs to discover, start, retrieve, practice, remember, and recover from errors without WordPress credentials.',
-			'first_call'           => Server::ABILITY_PREFIX . '/orient',
+			'first_call'           => self::mcp_tool_name( Server::ABILITY_PREFIX . '/orient' ),
 			'course_first_call'    => 'model-context-polytechnic/{course-slug}-begin-course',
 			'stable_handles'       => [
 				'course_slug'     => 'Stable public course identifier used in endpoint paths and ability names.',
