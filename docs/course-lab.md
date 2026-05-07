@@ -19,6 +19,7 @@ It checks whether a course can be taken like an MCP student:
 ```bash
 composer course-lab
 composer cohort-lab
+composer stress-lab
 ```
 
 Useful variants:
@@ -51,6 +52,26 @@ The default lab also sends ten deterministic LLM-student profiles through the co
 Each student returns feedback-shaped output: `feedback_type`, `target_type`, `target_slug`, `rating`, `comment`, and `suggested_fix`. This mirrors what a real learner would send through `submit-feedback`, but it is safe to run locally before publishing a course edit.
 
 Use the cohort to answer one question: "Would a different kind of LLM learner know what to do next, and would its next WordPress plugin answer improve?"
+
+## Stress Lab
+
+The stress lab adds two sharper feedback sources:
+
+- Scenario students in `tests/course-scenarios/*.json`.
+- Golden exams in `tests/golden-exams/*.json`.
+
+Scenario students test friction instead of simple coverage: forgotten `enrollment_key`, wrong slugs, skipped lessons, bad answers, oversized answers, public/private boundary confusion, unsafe write paths, release readiness, course-authoring feedback, and capstone planning.
+
+Golden exams compare weak and strong answers against the course's real exercise rubrics. The weak answer should fail, the strong answer should pass, and the score delta should stay large enough to prove the rubric can tell the difference.
+
+Run it with:
+
+```bash
+composer stress-lab
+php bin/stress-lab.php --json
+```
+
+Add a new stress case when a real learner gets confused, when a tool response changes, or when an exercise rubric is too easy to game.
 
 ## Parallel Student-Reviewer Loop
 

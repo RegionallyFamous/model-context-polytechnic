@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "course": "wordpress-plugin-craft",
+  "exams": [
+    {
+      "slug": "secure-write-path-golden",
+      "exercise_slug": "secure-write-path",
+      "weak_answer": "Save the setting from the form, clean it, and return success. The REST endpoint can update the value too.",
+      "strong_answer": "Summary: secure both the settings screen and REST write as separate intent-checked paths. Work: require a capability such as manage_options with current_user_can, verify a nonce for the browser form to reduce CSRF, use a REST permission_callback for the endpoint, validate the payload shape before accepting it, sanitize before storage, escape late at output, return WP_Error for unauthorized or invalid requests, and add a rate limit for public-adjacent payload pressure. Checks: test capability denial, bad nonce, invalid payload, sanitize behavior, escape output, REST permission_callback, and WP_Error responses.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
+      "slug": "storage-choice-golden",
+      "exercise_slug": "choose-storage",
+      "weak_answer": "Use one option for all plugin data because it is easy to read.",
+      "strong_answer": "Summary: choose storage by shape and access pattern. Work: store one API key as an autoload=no option, 50,000 event logs per day in a custom table with an index and retention policy, editorial case study records as a custom post type, cached remote API results in a transient because cache is not durable truth, and per-user preferences in user meta. Checks: verify indexes, cache expiry, retention cleanup, option autoload choice, and migration behavior.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
+      "slug": "rest-endpoint-golden",
+      "exercise_slug": "design-rest-endpoint",
+      "weak_answer": "Register one REST route that reads and writes diagnostics. If the user sends data, update settings.",
+      "strong_answer": "Summary: split public diagnostics reads from private diagnostic writes. Work: register a namespace such as model-context-polytechnic/v1, expose GET /status as public with a permission_callback that allows safe read-only data, expose POST /settings as private with schema validation and a capability check, return structured REST data, and return WP_Error for invalid input or unauthorized access. Checks: verify GET public shape, POST private denial, capability behavior, schema failures, and response contracts.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
+      "slug": "capstone-plan-golden",
+      "exercise_slug": "capstone-plugin-plan",
+      "weak_answer": "Build it with a page, fetch the data, and make sure it works before sending it out.",
+      "strong_answer": "Summary: plan the plugin as a WordPress-native system with explicit public reads and private writes. Work: architecture starts with a tiny bootstrap, namespaced services, hooks for activation and cron, storage in an option for settings and transient cache for external API responses, REST GET for public cached data with a permission_callback, private Settings API screen guarded by capability and nonce, validation and escaping around UI, cache invalidation, scheduled cron refresh with unschedule on deactivation, and bounded diagnostics. Checks: php -l, PHPUnit for service behavior, REST tests for permission_callback, admin nonce tests, cron smoke tests, Plugin Check, PHPCS, release readme review, and manual browser smoke.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
+      "slug": "release-readiness-golden",
+      "exercise_slug": "release-readiness-review",
+      "weak_answer": "Zip the plugin, upload it, and make sure it works.",
+      "strong_answer": "Summary: release readiness is a checklist for the reviewer and the site owner. Work: confirm GPL-compatible license, complete readme with stable tag and version, include human readable source, document privacy behavior and any external service, set Update URI when relevant, prepare assets, clarify support expectations, and verify no trademark or bundled-code problem. Checks: run Plugin Check, PHPCS, php -l, compatibility smoke tests, readme review, privacy review, and final zip install test.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
+      "slug": "llm-native-interface-golden",
+      "exercise_slug": "design-llm-native-interface",
+      "weak_answer": "Expose some tools and explain what the model can do.",
+      "strong_answer": "Summary: an LLM-native teaching plugin should reduce inference and return exact next steps. Work: include orientation in initialize instructions, public tools for begin-course, get-study-plan, get-lesson, get-exercise, attempt-exercise, and get-learning-memory, resources for syllabus and references, stable handles such as enrollment_key, lesson_slug, and exercise_slug, next_actions and tool_calls on every response, memory retrieval for returning sessions, WP_Error recovery for missing slugs or bad payloads, and private boundaries for authoring tools. Checks: verify WordPress REST registration, capability checks for private writes, schema output, php -l, Plugin Check, smoke tests, and review of error paths.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
+      "slug": "performance-audit-golden",
+      "exercise_slug": "performance-audit",
+      "weak_answer": "Make the plugin faster by caching things and loading fewer scripts.",
+      "strong_answer": "Summary: performance work starts with measurement and then removes request-wide cost. Work: measure with Query Monitor or logs, load assets only where needed, avoid expensive queries on every request, add cache or transient storage for remote calls, design invalidation, inspect indexes, move slow remote work to cron when appropriate, and keep public responses bounded. Checks: verify query count, cache hit and miss behavior, asset enqueue conditions, cron schedule, index use, and regression tests.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.45
+      }
+    },
+    {
+      "slug": "learning-loop-golden",
+      "exercise_slug": "learning-loop-retrospective",
+      "weak_answer": "Collect feedback and improve the course when someone says it is confusing.",
+      "strong_answer": "Summary: improve the course through memory, feedback, aggregate signals, cohort review, and maintainer review. Work: preserve enrollment_key, lesson_slug, exercise_slug, recent attempt score, missing_terms, and recommended next work in memory; submit feedback with target_type and target_slug; inspect get-course-improvement-signals for repeated patterns; run a student cohort reviewer or composer course-lab before changing curriculum; edit course-pack files deliberately; do not auto-edit public feedback because one complaint can poison the course. Checks: verify memory retrieval, submit-feedback shape, aggregate signals, cohort findings, maintainer review, and release checks.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    }
+  ]
+}
