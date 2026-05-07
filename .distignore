@@ -6,6 +6,7 @@
 bin
 dist
 docs
+themelet
 node_modules
 tests
 tmp

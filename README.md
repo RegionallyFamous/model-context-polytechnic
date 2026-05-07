@@ -135,6 +135,12 @@ Activate the plugin in WordPress, then flush rewrite rules by saving **Settings 
 
 Deactivation keeps courses, enrollments, attempts, and tokens. Uninstall removes plugin-owned tables, schema options, and rate-limit transients.
 
+## Themelet
+
+The repository also includes a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` if you want the public site itself to look like the Model Context Polytechnic campus.
+
+The themelet is intentionally separate from the MCP plugin. WordPress sees a normal theme with `style.css`, `functions.php`, `index.php`, local assets, `wp_head()`, and `wp_footer()`, but the page is essentially the static HTML/CSS admissions site.
+
 ## Release
 
 Before packaging a distributable build, run the same gates that CI uses:
