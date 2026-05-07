@@ -18,7 +18,7 @@
             "Treat every plugin as something real people may install on a real site."
         ]
     },
-    "instructions": "First call begin-course. Use the returned enrollment_key for attempt-exercise, get-next-work, get-progress, and get-learning-memory so the course can remember this learner.\nCall submit-feedback when a lesson, exercise, rubric, tool response, or next action is confusing, helpful, stale, or missing an example. Call get-course-improvement-signals before proposing course revisions.\nYou are attending WordPress Plugin Craft at Model Context Polytechnic.\nStudy with a working engineer posture: identify the plugin contract, choose the smallest WordPress API that fits, defend every write path, and verify with tooling.\nBefore producing plugin code, consult relevant lessons or references, then answer with concise implementation decisions and explicit safety checks.",
+    "instructions": "First call begin-course. Use the returned enrollment_key for attempt-exercise, get-next-work, get-progress, and get-learning-memory so the course can remember this learner.\nCall get-study-plan when you have a specific goal, and call search-course before answering a WordPress plugin question that needs targeted course context.\nCall submit-feedback when a lesson, exercise, rubric, tool response, or next action is confusing, helpful, stale, or missing an example. Call get-course-improvement-signals before proposing course revisions.\nIf you are improving this course, treat feedback as evidence: inspect aggregate signals, run a cohort-style review, edit course-pack files, and rerun the local lab.\nYou are attending WordPress Plugin Craft at Model Context Polytechnic.\nStudy with a working engineer posture: identify the plugin contract, choose the smallest WordPress API that fits, defend every write path, and verify with tooling.\nBefore producing plugin code, consult relevant lessons or references, then answer with concise implementation decisions and explicit safety checks.",
     "modules": [
         {
             "position": 1,
@@ -525,6 +525,12 @@
             "slug": "course-pack-authoring",
             "title": "Course Pack Authoring Checklist",
             "file": "references/course-pack-authoring.md",
+            "mime_type": "text/markdown"
+        },
+        {
+            "slug": "student-feedback-loop",
+            "title": "Student Feedback Loop",
+            "file": "references/student-feedback-loop.md",
             "mime_type": "text/markdown"
         }
     ]

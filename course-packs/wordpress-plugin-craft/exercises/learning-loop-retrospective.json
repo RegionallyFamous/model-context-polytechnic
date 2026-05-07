@@ -3,9 +3,9 @@
     "slug": "learning-loop-retrospective",
     "lesson_slug": "deliberate-practice-for-llms",
     "title": "Learning Loop Retrospective",
-    "prompt": "After three exercise attempts, design the next improvement loop for this course. Include what memory should preserve, what feedback should be submitted, what improvement signals should be inspected, and what should not be auto-edited.",
+    "prompt": "After three exercise attempts, design the next improvement loop for this course. Include what memory should preserve, what feedback should be submitted, what improvement signals should be inspected, how a small cohort review should check the change, and what should not be auto-edited.",
     "hints": [
-        "The server improves future performance through retrieval, feedback, practice, and maintainer-reviewed course edits."
+        "The server improves future performance through retrieval, feedback, practice, cohort review, and maintainer-reviewed course edits."
     ],
     "passing_score": 0.8,
     "expected_output_schema": {
@@ -28,6 +28,11 @@
                 "name": "Uses improvement signals",
                 "points": 1,
                 "any_terms": [ "get-course-improvement-signals", "signals", "aggregate", "repeated" ]
+            },
+            {
+                "name": "Uses cohort review",
+                "points": 1,
+                "any_terms": [ "cohort", "student", "reviewer", "course-lab" ]
             },
             {
                 "name": "Preserves stable handles",

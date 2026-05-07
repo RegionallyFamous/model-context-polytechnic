@@ -6,6 +6,7 @@ use ModelContextPolytechnic\Mcp\CoursePack;
 
 $options = parse_args( array_slice( $argv, 1 ) );
 $passes = max( 1, min( 50, (int) ( $options['passes'] ?? 6 ) ) );
+$students = max( 0, min( 50, (int) ( $options['students'] ?? 10 ) ) );
 $course_slug = (string) ( $options['course'] ?? '' );
 $json = ! empty( $options['json'] );
 $agent_brief = ! empty( $options['agent-brief'] );
@@ -23,7 +24,7 @@ if ( ! $course ) {
 	exit( 1 );
 }
 
-$lab = run_course_lab( $course, $passes );
+$lab = run_course_lab( $course, $passes, $students );
 
 if ( $agent_brief ) {
 	echo agent_brief( $lab ) . PHP_EOL;
@@ -83,7 +84,7 @@ function select_course( array $definitions, string $course_slug ): ?array {
 	return null;
 }
 
-function run_course_lab( array $course, int $passes ): array {
+function run_course_lab( array $course, int $passes, int $students ): array {
 	$inventory = course_inventory( $course );
 	$findings = array_merge(
 		check_public_contract( $course ),
@@ -92,6 +93,7 @@ function run_course_lab( array $course, int $passes ): array {
 		check_topic_coverage( $course, $inventory )
 	);
 	$pass_plan = build_pass_plan( $course, $inventory, $passes );
+	$student_cohort = build_student_cohort( $course, $inventory, $students );
 	$score = score_course( $findings, $inventory );
 
 	return [
@@ -110,10 +112,12 @@ function run_course_lab( array $course, int $passes ): array {
 			'unexercised_lessons' => array_values( array_diff( array_keys( $inventory['lessons'] ), array_keys( $inventory['lesson_exercises'] ) ) ),
 		],
 		'passes' => $pass_plan,
+		'student_cohort' => $student_cohort,
 		'findings' => $findings,
 		'improvement_protocol' => [
 			'Run this lab before and after course edits.',
-			'Spawn a parallel student-reviewer with the agent brief when changing lessons, exercises, or tool contracts.',
+			'Review the 10-student cohort before changing lessons, exercises, or tool contracts.',
+			'Spawn a parallel student-reviewer with the agent brief for large course changes.',
 			'Apply repeated or high-severity findings to course-pack files first, then rerun composer release:check.',
 			'Do not auto-apply public feedback to the syllabus without maintainer review.',
 		],
@@ -310,6 +314,311 @@ function build_pass_plan( array $course, array $inventory, int $passes ): array 
 	return $plans;
 }
 
+function build_student_cohort( array $course, array $inventory, int $students ): array {
+	$profiles = array_slice( student_profile_templates(), 0, $students );
+	$reports  = [];
+
+	foreach ( $profiles as $index => $profile ) {
+		$reports[] = evaluate_student_profile( $course, $inventory, $profile, $index + 1 );
+	}
+
+	return [
+		'student_count'   => count( $reports ),
+		'method'          => 'Deterministic LLM-student simulation. Each profile stresses a different learner goal and returns submit-feedback-shaped observations.',
+		'students'        => $reports,
+		'themes'          => cohort_theme_summary( $reports ),
+		'recommendations' => cohort_recommendations( $course, $reports ),
+		'how_to_use'      => [
+			'Treat the cohort as preflight friction testing, not a replacement for real learner feedback.',
+			'Apply changes when multiple students point at the same target, a public workflow step is unclear, or a rubric cannot produce actionable feedback.',
+			'After edits, rerun composer course-lab and compare the cohort themes.',
+		],
+	];
+}
+
+function student_profile_templates(): array {
+	return [
+		[
+			'id' => 'first-day-model',
+			'name' => 'Ada, First-Day Model',
+			'lens' => 'orientation',
+			'goal' => 'Connect with no prior context and find the first useful course move.',
+			'keywords' => [ 'begin-course', 'enrollment_key', 'get-next-work', 'next_actions', 'tool_calls' ],
+			'target_type' => 'course',
+			'target_slug' => 'wordpress-plugin-craft',
+		],
+		[
+			'id' => 'memory-constrained-model',
+			'name' => 'Babbage, Memory-Constrained Model',
+			'lens' => 'memory retrieval',
+			'goal' => 'Return later with only a handle and recover what changed.',
+			'keywords' => [ 'enrollment_key', 'get-learning-memory', 'progress', 'preserve', 'memory' ],
+			'target_type' => 'memory',
+			'target_slug' => 'get-learning-memory',
+		],
+		[
+			'id' => 'security-reviewer',
+			'name' => 'Grace, Security Reviewer',
+			'lens' => 'permissions and trust boundaries',
+			'goal' => 'Use the course to stop unsafe plugin write paths before code ships.',
+			'keywords' => [ 'capability', 'nonce', 'sanitize', 'escape', 'permission_callback', 'WP_Error' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'capabilities-nonces-rest-permissions',
+		],
+		[
+			'id' => 'data-migration-student',
+			'name' => 'Linus, Data Migration Student',
+			'lens' => 'storage and lifecycle',
+			'goal' => 'Choose storage and design custom table migrations without breaking sites.',
+			'keywords' => [ 'custom table', 'dbDelta', 'schema version', 'uninstall', 'retention' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'custom-tables-dbdelta',
+		],
+		[
+			'id' => 'block-builder',
+			'name' => 'Katherine, Block Builder',
+			'lens' => 'modern editor and JavaScript',
+			'goal' => 'Build block-facing plugins with current WordPress JavaScript and accessibility habits.',
+			'keywords' => [ 'block.json', 'Interactivity API', '@wordpress/scripts', 'accessibility', 'progressive' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'interactivity-and-build-tools',
+		],
+		[
+			'id' => 'performance-reliability-reviewer',
+			'name' => 'Donald, Performance Reviewer',
+			'lens' => 'speed and reliability',
+			'goal' => 'Catch expensive plugin behavior, brittle remote calls, and cron mistakes.',
+			'keywords' => [ 'transient', 'cache', 'cron', 'unschedule', 'query', 'remote' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'performance-discipline',
+		],
+		[
+			'id' => 'release-reviewer',
+			'name' => 'Radia, Release Reviewer',
+			'lens' => 'distribution readiness',
+			'goal' => 'Prepare the plugin for review, packaging, compatibility, and support.',
+			'keywords' => [ 'Plugin Check', 'readme', 'stable tag', 'license', 'compatibility', 'wordpress.org' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'wordpress-org-readiness',
+		],
+		[
+			'id' => 'course-author',
+			'name' => 'Seymour, Course Author',
+			'lens' => 'course-pack maintainability',
+			'goal' => 'Expand the course without turning it into a hidden PHP blob or a vague document dump.',
+			'keywords' => [ 'course pack', 'sources.json', 'rubric', 'expected output schema', 'stable slug' ],
+			'target_type' => 'resource',
+			'target_slug' => 'course-pack-authoring',
+		],
+		[
+			'id' => 'agent-interface-designer',
+			'name' => 'Margaret, Agent Interface Designer',
+			'lens' => 'LLM-native tool ergonomics',
+			'goal' => 'Confirm the model can infer less, retrieve more, and preserve stable handles.',
+			'keywords' => [ 'orientation', 'initialize instructions', 'stable handles', 'next_actions', 'tool_calls', 'search-course' ],
+			'target_type' => 'lesson',
+			'target_slug' => 'llm-native-plugin-interfaces',
+		],
+		[
+			'id' => 'capstone-maintainer',
+			'name' => 'Frances, Capstone Maintainer',
+			'lens' => 'end-to-end plugin judgment',
+			'goal' => 'Use the course to produce a safer plugin plan than an untrained model would.',
+			'keywords' => [ 'planning canvas', 'review cadence', 'security', 'storage', 'testing', 'release' ],
+			'target_type' => 'exercise',
+			'target_slug' => 'capstone-plugin-plan',
+		],
+	];
+}
+
+function evaluate_student_profile( array $course, array $inventory, array $profile, int $number ): array {
+	$topic = topic_match_summary( $inventory['corpus'], $profile['keywords'] );
+	$target_lesson = first_matching_lesson( $inventory, $profile );
+	$target_exercise = first_matching_exercise( $inventory, $profile );
+	$missing = $topic['missing'];
+	$coverage = $topic['coverage'];
+	$rating = $coverage >= 0.8 ? 5 : ( $coverage >= 0.6 ? 4 : ( $coverage >= 0.4 ? 3 : 2 ) );
+	$feedback_type = $rating >= 4 ? 'helpful' : ( $rating === 3 ? 'suggestion' : 'missing_example' );
+	$comment = $rating >= 4
+		? sprintf( '%s found a usable path for %s and could identify relevant stable handles or lesson material.', $profile['name'], $profile['lens'] )
+		: sprintf( '%s found %s underexplained for the %s lens.', $profile['name'], implode( ', ', $missing ), $profile['lens'] );
+	$suggested_fix = $missing
+		? 'Add a short example or checklist covering: ' . implode( ', ', $missing ) . '.'
+		: 'Preserve this path and keep returning exact next tool calls.';
+
+	if ( $profile['id'] === 'first-day-model' && strpos( $course['instructions'], 'get-study-plan' ) === false ) {
+		$rating = min( $rating, 3 );
+		$feedback_type = 'suggestion';
+		$comment = 'First-day orientation works, but top-level course instructions should name get-study-plan so goal-driven learners know it exists before reading a full response.';
+		$suggested_fix = 'Mention get-study-plan and search-course in course.json instructions, not only in later tool responses.';
+	}
+
+	if ( $profile['id'] === 'course-author' && strpos( $inventory['corpus'], 'cohort' ) === false ) {
+		$rating = min( $rating, 3 );
+		$feedback_type = 'suggestion';
+		$comment = 'Course authoring is strong, but the maintainer loop does not yet name cohort review as a first-class practice.';
+		$suggested_fix = 'Add a cohort-feedback reference and mention composer course-lab as the 10-student preflight loop.';
+	}
+
+	return [
+		'student' => $number,
+		'id' => $profile['id'],
+		'name' => $profile['name'],
+		'lens' => $profile['lens'],
+		'goal' => $profile['goal'],
+		'route' => array_values( array_filter( [
+			'begin-course',
+			'get-study-plan',
+			'get-syllabus',
+			$target_lesson ? 'get-lesson:' . $target_lesson['slug'] : null,
+			$target_exercise ? 'get-exercise:' . $target_exercise['slug'] : null,
+			$target_exercise ? 'attempt-exercise:' . $target_exercise['slug'] : null,
+			'get-learning-memory',
+			'submit-feedback',
+			'get-course-improvement-signals',
+		] ) ),
+		'targets' => [
+			'lesson_slug' => $target_lesson['slug'] ?? null,
+			'exercise_slug' => $target_exercise['slug'] ?? null,
+		],
+		'coverage' => $topic,
+		'feedback' => [
+			'feedback_type' => $feedback_type,
+			'target_type' => $profile['target_type'],
+			'target_slug' => $profile['target_slug'],
+			'rating' => $rating,
+			'comment' => $comment,
+			'suggested_fix' => $suggested_fix,
+		],
+	];
+}
+
+function topic_match_summary( string $corpus, array $keywords ): array {
+	$matched = [];
+	$missing = [];
+
+	foreach ( $keywords as $keyword ) {
+		if ( strpos( $corpus, strtolower( $keyword ) ) !== false ) {
+			$matched[] = $keyword;
+		} else {
+			$missing[] = $keyword;
+		}
+	}
+
+	$total = max( 1, count( $keywords ) );
+
+	return [
+		'matched' => $matched,
+		'missing' => $missing,
+		'coverage' => round( count( $matched ) / $total, 3 ),
+	];
+}
+
+function first_matching_lesson( array $inventory, array $profile ): ?array {
+	return first_matching_item( $inventory['lessons'], $profile );
+}
+
+function first_matching_exercise( array $inventory, array $profile ): ?array {
+	return first_matching_item( $inventory['exercises'], $profile );
+}
+
+function first_matching_item( array $items, array $profile ): ?array {
+	$target_slug = (string) ( $profile['target_slug'] ?? '' );
+	if ( isset( $items[ $target_slug ] ) ) {
+		return $items[ $target_slug ];
+	}
+
+	$best = null;
+	$best_score = 0;
+	foreach ( $items as $item ) {
+		$text = strtolower(
+			implode(
+				' ',
+				array_filter(
+					[
+						$item['slug'] ?? '',
+						$item['title'] ?? '',
+						$item['summary'] ?? '',
+						$item['body'] ?? '',
+						$item['prompt'] ?? '',
+						json_encode( $item['rubric'] ?? [], JSON_UNESCAPED_SLASHES ),
+					]
+				)
+			)
+		);
+		$score = 0;
+		foreach ( $profile['keywords'] as $keyword ) {
+			if ( strpos( $text, strtolower( $keyword ) ) !== false ) {
+				$score++;
+			}
+		}
+
+		if ( $score > $best_score ) {
+			$best = $item;
+			$best_score = $score;
+		}
+	}
+
+	return $best;
+}
+
+function cohort_theme_summary( array $reports ): array {
+	$themes = [];
+	foreach ( $reports as $report ) {
+		$type = $report['feedback']['feedback_type'];
+		$themes[ $type ] = ( $themes[ $type ] ?? 0 ) + 1;
+		foreach ( $report['coverage']['missing'] as $missing ) {
+			$key = 'missing:' . $missing;
+			$themes[ $key ] = ( $themes[ $key ] ?? 0 ) + 1;
+		}
+	}
+
+	arsort( $themes );
+	return $themes;
+}
+
+function cohort_recommendations( array $course, array $reports ): array {
+	$recommendations = [];
+	$low_rated = array_filter(
+		$reports,
+		static function ( array $report ): bool {
+			return (int) $report['feedback']['rating'] <= 3;
+		}
+	);
+
+	foreach ( $low_rated as $report ) {
+		$recommendations[] = [
+			'target_type' => $report['feedback']['target_type'],
+			'target_slug' => $report['feedback']['target_slug'],
+			'action' => $report['feedback']['suggested_fix'],
+			'source_student' => $report['id'],
+		];
+	}
+
+	if ( strpos( $course['instructions'], 'get-study-plan' ) === false ) {
+		array_unshift(
+			$recommendations,
+			[
+				'target_type' => 'course',
+				'target_slug' => $course['slug'],
+				'action' => 'Name get-study-plan and search-course directly in course instructions so first-day learners do not have to discover them later.',
+				'source_student' => 'first-day-model',
+			]
+		);
+	}
+
+	if ( ! $recommendations ) {
+		$recommendations[] = [
+			'target_type' => 'course',
+			'target_slug' => $course['slug'],
+			'action' => 'No blocking cohort friction found. Preserve current public enrollment, memory, and feedback contracts.',
+			'source_student' => 'cohort',
+		];
+	}
+
+	return array_values( $recommendations );
+}
+
 function score_course( array $findings, array $inventory ): array {
 	$score = 100;
 	foreach ( $findings as $finding ) {
@@ -378,6 +687,30 @@ function print_human_report( array $lab ): void {
 		echo '  ' . $pass['pass'] . '. ' . $pass['name'] . ' - ' . $pass['goal'] . PHP_EOL;
 	}
 
+	if ( ! empty( $lab['student_cohort']['students'] ) ) {
+		echo PHP_EOL . 'Ten-student cohort:' . PHP_EOL;
+		foreach ( $lab['student_cohort']['students'] as $student ) {
+			echo sprintf(
+				'  %d. %s (%s) rating %d/5 - %s',
+				$student['student'],
+				$student['name'],
+				$student['lens'],
+				$student['feedback']['rating'],
+				$student['feedback']['comment']
+			) . PHP_EOL;
+		}
+
+		echo PHP_EOL . 'Cohort recommendations:' . PHP_EOL;
+		foreach ( $lab['student_cohort']['recommendations'] as $recommendation ) {
+			echo sprintf(
+				'  - %s:%s - %s',
+				$recommendation['target_type'],
+				$recommendation['target_slug'],
+				$recommendation['action']
+			) . PHP_EOL;
+		}
+	}
+
 	if ( $lab['findings'] ) {
 		echo PHP_EOL . 'Findings:' . PHP_EOL;
 		foreach ( $lab['findings'] as $finding ) {
@@ -396,6 +729,8 @@ function agent_brief( array $lab ): string {
 			'Focus on whether the course makes you better at the target task, not whether it merely describes the topic.',
 			'Report concrete findings with lesson_slug, exercise_slug, or tool slug. Do not edit files.',
 			'Current lab score: ' . $lab['score']['llm_friendliness'] . '/100.',
+			'Student cohort themes: ' . json_encode( $lab['student_cohort']['themes'] ?? [], JSON_UNESCAPED_SLASHES ),
+			'Student cohort recommendations: ' . json_encode( $lab['student_cohort']['recommendations'] ?? [], JSON_UNESCAPED_SLASHES ),
 			'Known findings to inspect: ' . json_encode( array_slice( $lab['findings'], 0, 12 ), JSON_UNESCAPED_SLASHES ),
 		]
 	);

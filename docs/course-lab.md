@@ -18,12 +18,14 @@ It checks whether a course can be taken like an MCP student:
 
 ```bash
 composer course-lab
+composer cohort-lab
 ```
 
 Useful variants:
 
 ```bash
 php bin/course-lab.php --passes=12
+php bin/course-lab.php --students=10
 php bin/course-lab.php --json
 php bin/course-lab.php --agent-brief
 php bin/course-lab.php --fail-on=warning
@@ -31,9 +33,28 @@ php bin/course-lab.php --fail-on=warning
 
 The default lab fails only on critical findings. Warnings and notices are improvement signals.
 
+## Ten-Student Cohort
+
+The default lab also sends ten deterministic LLM-student profiles through the course:
+
+- First-day orientation.
+- Memory recovery.
+- Security review.
+- Storage and migration.
+- Blocks and JavaScript.
+- Performance and reliability.
+- Release readiness.
+- Course-pack authoring.
+- LLM-native interface design.
+- Capstone maintainer judgment.
+
+Each student returns feedback-shaped output: `feedback_type`, `target_type`, `target_slug`, `rating`, `comment`, and `suggested_fix`. This mirrors what a real learner would send through `submit-feedback`, but it is safe to run locally before publishing a course edit.
+
+Use the cohort to answer one question: "Would a different kind of LLM learner know what to do next, and would its next WordPress plugin answer improve?"
+
 ## Parallel Student-Reviewer Loop
 
-When making course changes, run one local lab and one parallel reviewer:
+When making large course changes, run one local cohort lab and one parallel reviewer:
 
 1. Run `composer course-lab`.
 2. Copy the brief from `php bin/course-lab.php --agent-brief`.

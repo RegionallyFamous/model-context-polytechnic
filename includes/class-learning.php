@@ -612,6 +612,7 @@ class Learning {
 				'Call get-course-improvement-signals before proposing course changes so suggestions are evidence-aware.',
 			],
 			'memory_instructions' => __( 'The enrollment_key is not a WordPress login. It is an anonymous library card for this course; whoever has it can retrieve this learner progress.', 'model-context-polytechnic' ),
+			'student_feedback_loop' => self::student_feedback_loop_guidance( $course ),
 			'preserve'            => [
 				'enrollment_key',
 				'course.slug',
@@ -675,6 +676,7 @@ class Learning {
 			'milestones'   => self::study_milestones( $course ),
 			'progress'     => $progress,
 			'next_work'    => self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key ),
+			'student_feedback_loop' => self::student_feedback_loop_guidance( $course ),
 			'tool_calls'   => [
 				[
 					'tool'      => self::learning_ability_name( $course['slug'], 'get-next-work' ),
@@ -1395,6 +1397,7 @@ class Learning {
 				'Revise and attempt again until the rubric passes. A proper education has drafts in it.',
 			],
 			'llm_contract' => self::course_llm_contract( $course ),
+			'student_feedback_loop' => self::student_feedback_loop_guidance( $course ),
 		];
 	}
 
@@ -1420,6 +1423,29 @@ class Learning {
 				'get-course-improvement-signals before course revision',
 				'revise and repeat',
 			],
+			'improvement_loop' => self::student_feedback_loop_guidance( $course ),
+		];
+	}
+
+	private static function student_feedback_loop_guidance( array $course ): array {
+		return [
+			'purpose' => __( 'Every learner can leave one small signal that makes the next learner path clearer, while course changes still require maintainer review.', 'model-context-polytechnic' ),
+			'public_feedback_tool' => self::learning_ability_name( $course['slug'], 'submit-feedback' ),
+			'public_signals_tool' => self::learning_ability_name( $course['slug'], 'get-course-improvement-signals' ),
+			'local_cohort_lab' => 'composer course-lab',
+			'learner_loop' => [
+				'Use begin-course and preserve enrollment_key.',
+				'Use get-study-plan for the current goal and search-course for targeted context.',
+				'Attempt one exercise, revise against feedback, and retrieve memory.',
+				'Submit one compact feedback item naming the target_slug when something helps or fails.',
+			],
+			'maintainer_loop' => [
+				'Inspect aggregate improvement signals before editing course files.',
+				'Run the ten-student cohort in the local course lab for preflight friction.',
+				'Change Markdown lessons, JSON exercises, rubrics, or references deliberately.',
+				'Rerun composer release:check after course edits.',
+			],
+			'safety_rule' => __( 'Do not auto-apply public learner feedback directly to curriculum. Feedback is evidence, not a patch.', 'model-context-polytechnic' ),
 		];
 	}
 

@@ -94,10 +94,12 @@ For repeated LLM-student review, run the Course Lab:
 
 ```bash
 composer course-lab
+composer cohort-lab
+php bin/course-lab.php --students=10
 php bin/course-lab.php --agent-brief
 ```
 
-The lab checks public enrollment, stable handles, practice density, exercise schemas, feedback loops, and course-improvement signals. Use the agent brief to spawn a read-only parallel student-reviewer, then fold repeated findings back into course-pack files.
+The lab checks public enrollment, stable handles, practice density, exercise schemas, feedback loops, and course-improvement signals. It also runs a deterministic ten-student cohort across orientation, memory, security, storage, blocks, performance, release, course-authoring, LLM-interface, and capstone-maintainer lenses. Use the cohort report first; use the agent brief for larger read-only parallel review; then fold repeated findings back into course-pack files.
 
 ## Requirements
 

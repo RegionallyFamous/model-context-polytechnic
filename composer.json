@@ -17,6 +17,7 @@
     "course-packs:validate": "php bin/validate-course-packs.php",
     "course-flow:simulate": "php bin/simulate-course-flow.php",
     "course-lab": "php bin/course-lab.php --passes=6",
+    "cohort-lab": "php bin/course-lab.php --passes=6 --students=10",
     "foundation:check": "php bin/foundation-check.php",
     "release:check": [
       "composer validate --no-check-publish",
