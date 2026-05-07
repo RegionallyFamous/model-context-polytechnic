@@ -732,7 +732,7 @@ pre code {
   color: rgba(255, 247, 231, 0.9);
 }
 
-.apply code {
+.apply-copy code {
   border-color: rgba(234, 211, 154, 0.34);
   background: rgba(255, 255, 255, 0.08);
   color: var(--gold-light);
@@ -742,6 +742,12 @@ pre code {
   padding: 1.25rem 1.25rem 1.25rem 1.5rem;
   background: var(--surface-strong);
   color: var(--ink);
+}
+
+.apply-card code {
+  border-color: rgba(104, 27, 32, 0.18);
+  background: #fff4da;
+  color: var(--burgundy);
 }
 
 .apply-card h3 {
