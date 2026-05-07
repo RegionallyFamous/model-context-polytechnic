@@ -137,14 +137,31 @@ Deactivation keeps courses, enrollments, attempts, and tokens. Uninstall removes
 
 ## Release
 
-Before packaging a distributable build, run:
+Before packaging a distributable build, run the same gates that CI uses:
 
 ```bash
 composer install --no-dev --optimize-autoloader
+composer lint
+composer test
 composer release:check
 ```
 
-Distributable ZIPs should include `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, and `uninstall.php`. See [release-checklist.md](docs/release-checklist.md) for the complete release and smoke-test checklist.
+Build the installable ZIP and checksum locally with:
+
+```bash
+composer release:build -- --version=1.0.0
+```
+
+The release builder creates `dist/model-context-polytechnic-1.0.0.zip` with a top-level `model-context-polytechnic/` folder. It includes `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
+
+Publishing a stable release is tag-driven:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The GitHub Actions release workflow reruns `composer release:check`, builds the ZIP, writes a `.sha256` checksum, and attaches both files to the GitHub release. See [release-checklist.md](docs/release-checklist.md) for the complete release and smoke-test checklist.
 
 ## Authentication
 

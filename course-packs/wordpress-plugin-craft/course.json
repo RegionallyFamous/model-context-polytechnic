@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "pack_version": "0.1.0",
+    "pack_version": "1.0.0",
     "slug": "wordpress-plugin-craft",
     "name": "WordPress Plugin Craft",
     "description": "A practical course that teaches LLMs to plan, build, review, and maintain high-quality WordPress plugins.",

@@ -5,14 +5,14 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 ## Before Packaging
 
 - Run `composer install --no-dev --optimize-autoloader`.
-- Run `composer foundation:check`.
-- Run `composer course-packs:validate`.
-- Run `composer course-lab`.
+- Run `composer lint`.
+- Run `composer test`.
+- Run `composer release:check`.
 - Run `composer extended-cohort-lab` before major curriculum releases.
-- Run `composer stress-lab`.
 - Against a real WordPress test site, run `composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
 - For graduation-path releases, run `composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft`.
 - Confirm `vendor/autoload_packages.php` exists.
+- Confirm the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, and `Server::SERVER_VERSION` match the release tag.
 - Confirm the bundled course loads with the expected lesson and exercise counts.
 - Confirm `README.md` names the public endpoint and public learner flow.
 - Confirm exemplar `model_answer` content is present for first-work and tradeoff-heavy exercises without being returned by default.
@@ -58,8 +58,11 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 
 ## Packaging Notes
 
+- Build the installable artifact with `composer release:build -- --version=x.y.z`.
+- Confirm the ZIP contains one top-level `model-context-polytechnic/` folder.
 - Include `vendor/` in distributable ZIPs after Composer install.
-- Include `course-packs/` and `schemas/`.
-- Exclude local logs, Git metadata, temporary files, and generated ZIPs.
+- Include `course-packs/`, `schemas/`, `includes/`, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, the bootstrap file, and `uninstall.php`.
+- Exclude local labs, docs, tests, logs, Git metadata, temporary files, workflow files, and generated ZIPs.
+- Publish by pushing a version tag such as `v1.0.0`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
 - Deactivation must keep data.
 - Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.

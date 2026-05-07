@@ -77,7 +77,7 @@ $initialize = mcp_request(
 		'capabilities'    => new stdClass(),
 		'clientInfo'      => [
 			'name'    => 'model-context-polytechnic-completion-smoke',
-			'version' => '0.1.0',
+			'version' => '1.0.0',
 		],
 	],
 	null,

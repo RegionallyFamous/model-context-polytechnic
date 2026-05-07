@@ -21,7 +21,7 @@ class Server {
 	const VANITY_PATH      = 'mcp';
 	const REQUIRED_WP      = '6.9';
 	const REQUIRED_PHP     = '8.1';
-	const SERVER_VERSION   = '0.1.0';
+	const SERVER_VERSION   = '1.0.0';
 	const REMOTE_PROXY     = '@automattic/mcp-wordpress-remote@latest';
 	const VOICE_NAME       = 'The Old Polytechnic';
 	const AUTHORING_TOOLS_ENABLED = false;
@@ -153,7 +153,7 @@ class Server {
 			'plugin'      => [
 				'name'        => self::PLUGIN_NAME,
 				'description' => self::DESCRIPTION,
-				'version'     => defined( 'MODEL_CONTEXT_POLYTECHNIC_VERSION' ) ? MODEL_CONTEXT_POLYTECHNIC_VERSION : '0.1.0',
+				'version'     => defined( 'MODEL_CONTEXT_POLYTECHNIC_VERSION' ) ? MODEL_CONTEXT_POLYTECHNIC_VERSION : self::SERVER_VERSION,
 				'requires'    => [
 					'wordpress' => self::REQUIRED_WP,
 					'php'       => self::REQUIRED_PHP,

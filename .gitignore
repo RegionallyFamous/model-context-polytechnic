@@ -1,0 +1,6 @@
+/dist/
+/tmp/
+.DS_Store
+*.log
+*.zip
+.phpcs-cache

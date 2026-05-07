@@ -14,6 +14,7 @@
     }
   },
   "scripts": {
+    "lint": "php bin/lint.php",
     "course-packs:validate": "php bin/validate-course-packs.php",
     "course-flow:simulate": "php bin/simulate-course-flow.php",
     "course-lab": "php bin/course-lab.php --passes=6",
@@ -23,13 +24,16 @@
     "http-course-smoke": "php bin/http-course-smoke.php",
     "http-course-completion-smoke": "php bin/http-course-completion-smoke.php",
     "foundation:check": "php bin/foundation-check.php",
-    "release:check": [
-      "composer validate --no-check-publish",
-      "@foundation:check",
+    "test": [
       "@course-packs:validate",
       "@course-flow:simulate",
       "@course-lab",
       "@stress-lab"
+    ],
+    "release:build": "php bin/build-release.php",
+    "release:check": [
+      "@lint",
+      "@test"
     ]
   }
 }
