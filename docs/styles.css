@@ -11,6 +11,7 @@
   --blue: #284b63;
   --line: rgba(61, 42, 24, 0.24);
   --shadow: 0 26px 70px rgba(42, 22, 13, 0.22);
+  --max: 1180px;
 }
 
 * {
@@ -104,7 +105,7 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  width: min(1180px, calc(100% - 2rem));
+  width: min(var(--max), calc(100% - 2rem));
   margin: 0 auto;
   padding: 0.82rem 0;
 }
@@ -168,14 +169,36 @@ h2 {
 }
 
 .hero {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-height: calc(100svh - 109px);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(18, 10, 7, 0.8) 0%, rgba(32, 15, 10, 0.58) 38%, rgba(32, 15, 10, 0.24) 70%),
+    linear-gradient(180deg, rgba(44, 13, 12, 0.28) 0%, rgba(44, 13, 12, 0.05) 44%, rgba(247, 240, 223, 0.08) 100%),
+    url("assets/campus-hero.webp") center / cover no-repeat;
+  color: #fff8e8;
+}
+
+.hero::after {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: -1;
+  height: 28%;
+  content: "";
+  background: linear-gradient(180deg, transparent, rgba(247, 240, 223, 0.92));
+}
+
+.hero-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
-  align-items: center;
-  gap: clamp(2rem, 5vw, 5.5rem);
-  width: min(1180px, calc(100% - 2rem));
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.36fr);
+  align-items: end;
+  gap: clamp(2rem, 5vw, 5rem);
+  width: min(var(--max), calc(100% - 2rem));
   min-height: calc(100svh - 109px);
   margin: 0 auto;
-  padding: clamp(3.2rem, 8vw, 6rem) 0 clamp(2rem, 6vw, 4rem);
+  padding: clamp(4rem, 8vw, 7.2rem) 0 clamp(4.4rem, 9vw, 7rem);
 }
 
 .eyebrow {
@@ -195,18 +218,30 @@ p {
 }
 
 h1 {
-  max-width: 13ch;
+  max-width: 10ch;
   margin: 0;
-  color: var(--burgundy-dark);
-  font-size: clamp(3.15rem, 8vw, 6.9rem);
-  line-height: 0.96;
+  color: inherit;
+  font-size: clamp(4rem, 10.4vw, 8.6rem);
+  line-height: 0.9;
+  text-wrap: balance;
 }
 
 .lede {
-  max-width: 45rem;
+  max-width: 49rem;
   margin: 1.45rem 0 0;
-  color: #4f3c2b;
-  font-size: clamp(1.08rem, 2.2vw, 1.3rem);
+  color: rgba(255, 248, 232, 0.88);
+  font-size: clamp(1.08rem, 2.2vw, 1.34rem);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.28);
+}
+
+.hero .eyebrow {
+  color: var(--gold-light);
+}
+
+.hero code {
+  border-color: rgba(234, 211, 154, 0.4);
+  background: rgba(30, 13, 9, 0.48);
+  color: #ffedba;
 }
 
 .hero-actions {
@@ -235,57 +270,41 @@ h1 {
 }
 
 .button.secondary {
-  background: rgba(255, 255, 255, 0.36);
-  color: var(--burgundy);
+  border-color: rgba(255, 248, 232, 0.76);
+  background: rgba(255, 248, 232, 0.12);
+  color: #fff8e8;
+  backdrop-filter: blur(8px);
 }
 
-.seal-stage {
-  position: relative;
-  padding: clamp(1rem, 2vw, 1.5rem);
-  border: 1px solid rgba(91, 23, 23, 0.18);
-  background: radial-gradient(circle at 50% 38%, #fff8e7 0, #f2e3c2 58%, #ddc28b 100%);
-  box-shadow: var(--shadow);
+.hero-seal {
+  justify-self: end;
+  width: min(260px, 100%);
+  padding-bottom: 0.2rem;
+  text-align: center;
 }
 
-.seal-stage::before,
-.seal-stage::after {
-  position: absolute;
-  content: "";
-  inset: 0.7rem;
-  pointer-events: none;
-  border: 1px solid rgba(91, 23, 23, 0.2);
-}
-
-.seal-stage::after {
-  inset: 1.15rem;
-  border-color: rgba(201, 163, 93, 0.55);
-}
-
-.seal-stage img {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 520px);
-  margin: 0 auto;
+.hero-seal img {
+  width: min(100%, 220px);
+  margin: 0 0 0 auto;
   border-radius: 50%;
   filter: drop-shadow(0 18px 24px rgba(35, 18, 9, 0.22));
 }
 
-.seal-stage p {
-  position: relative;
-  z-index: 1;
-  max-width: 26rem;
-  margin: 1rem auto 0;
-  color: #4a3523;
+.hero-seal p {
+  margin: 0.8rem 0 0;
+  color: rgba(255, 248, 232, 0.82);
   font-size: 0.95rem;
   font-weight: 800;
-  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
 }
 
 .crest-band {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  width: min(1180px, calc(100% - 2rem));
-  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  width: min(var(--max), calc(100% - 2rem));
+  margin: clamp(-2.4rem, -3vw, -1rem) auto 0;
   border: 1px solid rgba(234, 211, 154, 0.24);
   background: var(--burgundy-dark);
   color: #fff4d8;
@@ -316,8 +335,54 @@ h1 {
   font-weight: 800;
 }
 
+.campus-tour {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  width: min(var(--max), calc(100% - 2rem));
+  margin: clamp(3rem, 7vw, 5.5rem) auto 0;
+}
+
+.campus-tour figure {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 250, 235, 0.82);
+  box-shadow: 0 18px 44px rgba(44, 13, 12, 0.1);
+}
+
+.campus-tour img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.campus-tour figcaption {
+  padding: 1rem;
+}
+
+.campus-tour strong,
+.campus-tour span {
+  display: block;
+}
+
+.campus-tour strong {
+  color: var(--burgundy-dark);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 1.1rem;
+  line-height: 1.15;
+}
+
+.campus-tour span {
+  margin-top: 0.35rem;
+  color: #5c4936;
+  font-size: 0.96rem;
+}
+
 .section {
-  width: min(1180px, calc(100% - 2rem));
+  width: min(var(--max), calc(100% - 2rem));
   margin: 0 auto;
   padding: clamp(4rem, 8vw, 7rem) 0 0;
 }
@@ -325,6 +390,19 @@ h1 {
 .section-heading {
   max-width: 760px;
   margin-bottom: 2rem;
+}
+
+.admissions-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.admissions-layout .section-heading {
+  position: sticky;
+  top: 8rem;
+  margin-bottom: 0;
 }
 
 h2 {
@@ -351,6 +429,10 @@ h2 {
 .steps,
 .course-grid {
   grid-template-columns: repeat(3, 1fr);
+}
+
+.admissions-layout .steps {
+  grid-template-columns: 1fr;
 }
 
 .bulletin-board {
@@ -417,8 +499,25 @@ h2 {
 }
 
 .course-card.featured {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.78fr) minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
   background: linear-gradient(135deg, rgba(91, 23, 23, 0.98), rgba(44, 13, 12, 0.98));
   color: #fff6df;
+}
+
+.course-card.featured img {
+  width: 100%;
+  height: 100%;
+  min-height: 330px;
+  object-fit: cover;
+}
+
+.course-card.featured > div {
+  padding: 1.45rem;
 }
 
 .course-card.featured h3,
@@ -448,12 +547,26 @@ h2 {
 
 .registrar-panel {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
+  grid-template-columns: minmax(0, 0.78fr) minmax(340px, 1.22fr);
   gap: clamp(1.5rem, 4vw, 3rem);
   align-items: center;
   padding: clamp(1.4rem, 4vw, 3rem);
   border-block: 4px double rgba(91, 23, 23, 0.42);
   background: rgba(239, 224, 189, 0.62);
+}
+
+.registrar-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.registrar-stack > img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 1px solid rgba(91, 23, 23, 0.24);
+  border-radius: 8px;
+  box-shadow: 0 18px 40px rgba(33, 26, 20, 0.16);
 }
 
 .terminal-card {
@@ -508,18 +621,37 @@ pre code {
 }
 
 .apply {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.78fr);
   gap: clamp(1.5rem, 4vw, 3rem);
   align-items: center;
-  width: min(1180px, calc(100% - 2rem));
+  width: min(var(--max), calc(100% - 2rem));
   margin: clamp(4rem, 9vw, 7rem) auto 0;
   padding: clamp(2rem, 5vw, 4rem);
   border: 1px solid rgba(234, 211, 154, 0.22);
-  background:
-    linear-gradient(135deg, rgba(91, 23, 23, 0.95), rgba(44, 13, 12, 0.98)),
-    var(--burgundy-dark);
+  overflow: hidden;
+  background: var(--burgundy-dark);
   color: #fff7e7;
+}
+
+.apply::before {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  background: url("assets/admissions-hall.webp") center / cover no-repeat;
+}
+
+.apply::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background:
+    linear-gradient(90deg, rgba(44, 13, 12, 0.97), rgba(44, 13, 12, 0.72)),
+    linear-gradient(180deg, rgba(91, 23, 23, 0.26), rgba(44, 13, 12, 0.68));
 }
 
 .apply h2 {
@@ -563,7 +695,7 @@ pre code {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  width: min(1180px, calc(100% - 2rem));
+  width: min(var(--max), calc(100% - 2rem));
   margin: 0 auto;
   padding: 2.4rem 0 2.8rem;
   color: var(--muted);
@@ -580,7 +712,6 @@ pre code {
 @media (max-width: 920px) {
   .notice-bar,
   .nav-shell,
-  .hero,
   .registrar-panel,
   .apply,
   .site-footer {
@@ -602,13 +733,39 @@ pre code {
 
   .hero {
     min-height: auto;
+    background-position: 58% center;
+  }
+
+  .hero-inner,
+  .admissions-layout {
+    display: block;
+  }
+
+  .hero-inner {
+    min-height: auto;
+  }
+
+  .hero-seal {
+    width: 176px;
+    margin-top: 2rem;
+  }
+
+  .hero-seal img {
+    margin-left: 0;
   }
 
   h1 {
     max-width: 11ch;
   }
 
-  .seal-stage,
+  .admissions-layout .section-heading {
+    position: static;
+    margin-bottom: 1.5rem;
+  }
+
+  .campus-tour,
+  .course-card.featured,
+  .registrar-stack,
   .terminal-card,
   .apply-card {
     margin-top: 1.5rem;
@@ -617,8 +774,18 @@ pre code {
   .steps,
   .course-grid,
   .bulletin-board,
-  .crest-band {
+  .crest-band,
+  .campus-tour {
     grid-template-columns: 1fr;
+  }
+
+  .course-card.featured {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .course-card.featured img {
+    min-height: 250px;
   }
 
   .crest-band div {
@@ -655,7 +822,7 @@ pre code {
 
   h1 {
     max-width: 100%;
-    font-size: 2.8rem;
+    font-size: 3.05rem;
   }
 
   h2 {
@@ -664,6 +831,10 @@ pre code {
 
   .hero-actions .button {
     width: 100%;
+  }
+
+  .hero-seal {
+    display: none;
   }
 
   .apply {
