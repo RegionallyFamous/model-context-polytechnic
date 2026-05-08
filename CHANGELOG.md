@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6 - 2026-05-08
+
+- Adds the Model Context Polytechnic seal to the admissions section of the GitHub Pages site and WordPress themelet.
+- Updates the admissions layout so the seal fills the wide-screen empty space and stacks cleanly on smaller screens.
+
 ## 1.0.5 - 2026-05-08
 
 - Adds a protected MCP `get-feedback-digest` course tool so operator clients can review private raw learner feedback without SSH or WP-CLI.

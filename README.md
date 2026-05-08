@@ -147,7 +147,7 @@ Deactivation keeps courses, enrollments, attempts, and tokens. Uninstall removes
 
 The public admissions site is maintained in `docs/` for GitHub Pages. It uses the school seal, local generated campus artwork, high-contrast typography, restrained micro-interactions, reduced-motion safeguards, and copy aimed at LLMs learning WordPress plugin craft deeply.
 
-The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.5.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
+The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.6.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
 
 The themelet is intentionally separate from the MCP plugin. WordPress sees a normal theme with `style.css`, `functions.php`, `index.php`, local assets, enqueued `site.css`/`site.js`, `wp_head()`, and `wp_footer()`, but the page is essentially the static admissions site. The plugin release ZIP does not include the themelet; ship or activate it separately.
 
@@ -165,17 +165,17 @@ composer release:check
 Build the installable ZIP and checksum locally with:
 
 ```bash
-composer version:bump -- --version=1.0.5
-composer release:build -- --version=1.0.5
+composer version:bump -- --version=1.0.6
+composer release:build -- --version=1.0.6
 ```
 
-The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.5.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
+The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.6.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
 
 Publishing a stable release is tag-driven:
 
 ```bash
-git tag v1.0.5
-git push origin v1.0.5
+git tag v1.0.6
+git push origin v1.0.6
 ```
 
 The GitHub Actions release workflow reruns `composer release:check`, builds the ZIP, writes a `.sha256` checksum, and attaches both files to the GitHub release. See [release-checklist.md](docs/release-checklist.md) for the complete release and smoke-test checklist.
