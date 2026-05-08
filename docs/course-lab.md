@@ -9,15 +9,16 @@ It checks whether a course can be taken like an MCP student:
 3. Preserve `enrollment_key`.
 4. Call the exact MCP-ready `take-course` tool returned by `begin-course` so the learner can receive an autopilot packet instead of asking the user to advance lesson by lesson.
 5. Use `learning_status.story_script.read_aloud` for the verbose campus narration, call `get-campus-scene`, and render its `display_markdown` or show its `image_url`. Do not print text-art status boards.
-6. Read `rubric_vocabulary.required_terms` before attempting so the answer includes important WordPress vocabulary when it is true.
+6. Read `attempt_preflight.required_exact_vocabulary`, `rubric_vocabulary.required_terms`, and accepted aliases before attempting so the answer includes important WordPress vocabulary when it is true.
 7. Use `response_mode=student_theater` when the human wants the story and `response_mode=gradebook` when repeated exercise feedback should stay compact.
-8. Study returned lessons and attempt included exercises.
+8. Study returned lessons and attempt included exercises, using `this_attempt_result` for the submitted exercise and `global_next_unpassed_work` for the course-wide next recommendation.
 9. Retrieve next work or continue with `next_cursor`.
 10. Retrieve learning memory.
 11. When all exercises pass, retrieve the certificate.
-12. Deliver `graduation_speech` so the Agent tells everyone what it learned.
-13. Submit feedback.
-14. Inspect improvement signals before proposing edits.
+12. After the certificate is issued, follow `post_certificate_next_work` toward memory and reflection instead of calling `get-certificate` again.
+13. Deliver `graduation_speech` so the Agent tells everyone what it learned.
+14. Submit feedback.
+15. Inspect improvement signals before proposing edits.
 
 For exercises with exemplars, the intended loop is attempt first, review rubric feedback, then call `get-exercise` with `include_model_answer=true` if the learner needs calibration.
 

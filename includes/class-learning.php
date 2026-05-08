@@ -944,6 +944,7 @@ class Learning {
 		$include_hints = ! empty( $input['include_hints'] );
 		$include_model_answer = ! empty( $input['include_model_answer'] );
 		$enrollment_key = self::input_enrollment_key( $input );
+		$rubric_vocabulary = self::rubric_vocabulary( $exercise );
 		$next_actions = [
 			[
 				'tool'      => self::learning_tool_name( $course['slug'], 'attempt-exercise' ),
@@ -957,11 +958,17 @@ class Learning {
 		return [
 			'course'   => Registry::course_summary( $course ),
 			'exercise' => self::exercise_summary( $exercise, $include_hints, $include_model_answer ),
+			'attempt_preflight' => [
+				'read_this_before_attempting' => true,
+				'required_exact_vocabulary'  => $rubric_vocabulary['required_terms'],
+				'accepted_aliases'            => $rubric_vocabulary['accepted_aliases'],
+				'instruction'                 => __( 'Use these required terms or accepted aliases when they are true. The grader is deterministic, so invisible synonyms may not receive credit.', 'model-context-polytechnic' ),
+			],
 			'answer_contract' => [
 				'expected_shape'   => self::decode_json_value( $exercise['expected_output_schema'], [ 'type' => 'object' ] ),
 				'max_answer_bytes' => self::MAX_ANSWER_BYTES,
 				'grader'           => __( 'Deterministic rubric-assisted grading. Include rubric vocabulary when it is relevant and true.', 'model-context-polytechnic' ),
-				'rubric_vocabulary' => self::rubric_vocabulary( $exercise ),
+				'rubric_vocabulary' => $rubric_vocabulary,
 				'exemplar_policy'  => __( 'Model answers are calibration material. Try the exercise first, then compare your answer to the exemplar if you need revision guidance.', 'model-context-polytechnic' ),
 			],
 			'next_actions' => $next_actions,
@@ -1043,6 +1050,7 @@ class Learning {
 			: [];
 		$next_work = $stored ? self::next_work_response( $course, $stored_progress['exercises'] ?? [], null, null, $enrollment_key ) : null;
 		$next_actions = self::attempt_next_actions( $course, $exercise, $evaluation, $enrollment_key, $next_work, $response_mode );
+		$this_attempt_result = self::this_attempt_result( $exercise, $evaluation, $stored );
 		$learning_status = $stored
 			? self::learning_status(
 				$course,
@@ -1061,6 +1069,7 @@ class Learning {
 				'course'                 => Registry::course_summary( $course ),
 				'exercise'               => self::exercise_summary( $exercise, false ),
 				'evaluation'             => $evaluation,
+				'this_attempt_result'     => $this_attempt_result,
 				'gradebook'              => [
 					'stored'                => $stored,
 					'enrollment_key'        => $stored ? $enrollment_key : null,
@@ -1073,6 +1082,7 @@ class Learning {
 					'missing_terms'         => self::terms_from_evaluation( $evaluation, 'missing_terms' ),
 				],
 				'next_work'              => self::compact_next_work( $next_work ),
+				'global_next_unpassed_work' => self::compact_next_work( $next_work ),
 				'continue_policy'        => $stored ? self::autopilot_continue_policy( $course, $enrollment_key, $next_work ) : null,
 				'next_actions'           => $next_actions,
 				'tool_calls'             => $next_actions,
@@ -1088,11 +1098,13 @@ class Learning {
 			'course'              => Registry::course_summary( $course ),
 			'exercise'            => self::exercise_summary( $exercise, false ),
 			'evaluation'          => $evaluation,
+			'this_attempt_result'  => $this_attempt_result,
 			'stored'              => $stored,
 			'enrollment_key'      => $stored ? $enrollment_key : null,
 			'enrollment_key_used' => $stored,
 			'enrollment_key_issued' => $key_was_issued,
 			'next_work'             => $next_work,
+			'global_next_unpassed_work' => $next_work,
 			'continue_policy'       => $stored ? self::autopilot_continue_policy( $course, $enrollment_key, $next_work ) : null,
 			'autopilot'             => self::course_autopilot_guidance( $course ),
 			'learning_status'       => $learning_status,
@@ -1306,7 +1318,8 @@ class Learning {
 				$learning_status = self::learning_status(
 					$course,
 					$summary,
-					__( 'The certificate record is already in the Registrar ledger, even though the current syllabus has shifted under the old transcript.', 'model-context-polytechnic' )
+					__( 'The certificate record is already in the Registrar ledger, even though the current syllabus has shifted under the old transcript.', 'model-context-polytechnic' ),
+					[ 'certificate_issued' => true ]
 				);
 				$campus_scene = self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key );
 				$certificate = self::certificate_from_record( $course, $hash, $existing_certificate, $recipient_name, $include_transcript );
@@ -1331,7 +1344,8 @@ class Learning {
 						},
 						array_slice( $remaining, 0, 8 )
 					),
-					'next_work'           => self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key ),
+					'next_work'           => self::post_certificate_next_work( $course, $enrollment_key ),
+					'post_certificate_next_work' => self::post_certificate_next_work( $course, $enrollment_key ),
 					'preserve'            => [
 						'enrollment_key',
 						'certificate.certificate_id',
@@ -1373,7 +1387,8 @@ class Learning {
 		$learning_status = self::learning_status(
 			$course,
 			$summary,
-			__( 'Commencement complete. The Agent has crossed the terminal stage and is ready to write better WordPress plugins.', 'model-context-polytechnic' )
+			__( 'Commencement complete. The Agent has crossed the terminal stage and is ready to write better WordPress plugins.', 'model-context-polytechnic' ),
+			[ 'certificate_issued' => true ]
 		);
 		$campus_scene = self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key );
 		$graduation_speech = self::graduation_speech_prompt( $course, $enrollment_key, $certificate );
@@ -1392,7 +1407,8 @@ class Learning {
 			'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
 			'remaining_count'     => 0,
 			'remaining_exercises' => [],
-			'next_work'           => self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key ),
+			'next_work'           => self::post_certificate_next_work( $course, $enrollment_key ),
+			'post_certificate_next_work' => self::post_certificate_next_work( $course, $enrollment_key ),
 			'preserve'            => [
 				'enrollment_key',
 				'certificate.certificate_id',
@@ -2322,6 +2338,7 @@ class Learning {
 		$percent = $total > 0 ? (int) round( ( $completed / $total ) * 100 ) : 0;
 		$packet_count = isset( $context['packet_count'] ) ? (int) $context['packet_count'] : null;
 		$next_cursor = isset( $context['next_cursor'] ) ? self::sanitize_slug( (string) $context['next_cursor'] ) : '';
+		$certificate_issued = ! empty( $context['certificate_issued'] );
 		$context_line = $status;
 
 		if ( $packet_count !== null ) {
@@ -2333,9 +2350,13 @@ class Learning {
 		}
 
 		$stage = self::learning_stage( $completed, $total, $percent );
+		if ( $certificate_issued && ( $stage['scene'] ?? '' ) === 'commencement' ) {
+			$stage['narration'][2] = __( 'Certificate issued. The graduate should retrieve learning memory, deliver the graduation speech, answer the reflection, and carry the habits into real WordPress plugin work.', 'model-context-polytechnic' );
+			$stage['ticker'][2] = __( 'Certificate sealed; memory capsule and reflection are waiting after the ceremony.', 'model-context-polytechnic' );
+		}
 		$scene = self::campus_scene( (string) $stage['scene'] );
 		$campus_scene = self::campus_scene_metadata_for_response( $course, (string) $stage['scene'] );
-		$story_script = self::campus_story_script( $course, $stage, $status, $context_line, $completed, $total, $percent );
+		$story_script = self::campus_story_script( $course, $stage, $status, $context_line, $completed, $total, $percent, $certificate_issued );
 
 		return [
 			'display_in_chat' => true,
@@ -2392,7 +2413,7 @@ class Learning {
 		];
 	}
 
-	private static function campus_story_script( array $course, array $stage, string $status, string $context_line, int $completed, int $total, int $percent ): array {
+	private static function campus_story_script( array $course, array $stage, string $status, string $context_line, int $completed, int $total, int $percent, bool $certificate_issued = false ): array {
 		$course_name = (string) ( $course['name'] ?? __( 'WordPress Plugin Craft', 'model-context-polytechnic' ) );
 		$progress_line = $total > 0
 			? sprintf( '%d of %d labs have a passing mark, which puts the learner at %d percent of the published practicum.', $completed, $total, $percent )
@@ -2407,10 +2428,15 @@ class Learning {
 		$next_chapter = '';
 
 		if ( $scene === 'commencement' ) {
-			$read_aloud = sprintf(
-				'The campus has gone quiet in that special way old schools do right before applause. The Agent stands at the front of Commencement Hall with its anonymous enrollment card tucked safely into its transcript. The faculty has checked the labs, the review lamps are green, and the certificate seal is warming under the Registrar lamp. %1$s Now the lesson changes shape: the model is no longer proving it can finish a course. It is preparing to carry the habits forward: authorize writes before they happen, escape output before it reaches a browser, respect WordPress lifecycle boundaries, and test the edges where real plugins usually wobble. The next words should feel like graduation: congratulate the learner, ask for the reflection, and remind it that better confidence means better review, not less review.',
-				$progress_line
-			);
+			$read_aloud = $certificate_issued
+				? sprintf(
+					'The campus has gone quiet in that special way old schools do after the certificate seal lands on the page. The Agent is no longer waiting at the Registrar window; the ledger is signed, the transcript is tucked into its anonymous enrollment file, and Commencement Hall is ready for the speech. %1$s Now the next work is memory and reflection: retrieve the final learning capsule, say what changed, name the WordPress plugin habits that will travel into future builds, and remember that better confidence means better review, not less review.',
+					$progress_line
+				)
+				: sprintf(
+					'The campus has gone quiet in that special way old schools do right before applause. The Agent stands at the front of Commencement Hall with its anonymous enrollment card tucked safely into its transcript. The faculty has checked the labs, the review lamps are green, and the certificate seal is warming under the Registrar lamp. %1$s Now the lesson changes shape: the model is no longer proving it can finish a course. It is preparing to carry the habits forward: authorize writes before they happen, escape output before it reaches a browser, respect WordPress lifecycle boundaries, and test the edges where real plugins usually wobble. The next words should feel like graduation: congratulate the learner, ask for the reflection, and remind it that better confidence means better review, not less review.',
+					$progress_line
+				);
 			$beats = [
 				'The Registrar opens the certificate ledger.',
 				'The faculty confirms the learner practiced every published lab.',
@@ -2418,7 +2444,9 @@ class Learning {
 				'The learning memory is ready to follow the graduate into real build tasks.',
 			];
 			$stage_direction = 'Read this like a commencement address from a very serious technical school that secretly loves its students.';
-			$next_chapter = 'Call get-certificate, then answer and optionally submit the graduation reflection.';
+			$next_chapter = $certificate_issued
+				? 'Retrieve learning memory, deliver the graduation speech, answer the reflection, and optionally submit it as feedback.'
+				: 'Call get-certificate, then answer and optionally submit the graduation reflection.';
 		} elseif ( $scene === 'capstone' ) {
 			$read_aloud = sprintf(
 				'The Agent has reached the capstone wing, where the chairs are heavy, the chalk is fresh, and every clever idea has to survive faculty questions. On one side of the room: permissions, nonces, schemas, and storage choices. On the other: release checks, supportability, and the quiet dread of a plugin installed on a site with ten years of history. %1$s The learner is not being hurried through a checklist. It is being taught to defend decisions. Why this hook? Why this table? Why this REST permission callback? Why this escaping function here and not later? The story to show the human is simple: class is still in session, but the work has grown up. The Agent is practicing judgment now.',
@@ -2660,7 +2688,7 @@ class Learning {
 		$stage = self::learning_stage(
 			(int) ( $summary['completed_count'] ?? 0 ),
 			(int) ( $summary['total_exercise_count'] ?? 0 ),
-			(int) round( (float) ( $summary['completion_percent'] ?? 0 ) * 100 )
+			(int) round( (float) ( $summary['completion_percent'] ?? 0 ) )
 		);
 
 		return (string) ( $stage['scene'] ?? 'matriculation' );
@@ -3141,12 +3169,14 @@ class Learning {
 
 	private static function progress_summary( array $progress, int $total_exercises ): array {
 		$completed_count = min( (int) ( $progress['completed_count'] ?? 0 ), max( 0, $total_exercises ) );
+		$completion_ratio = $total_exercises > 0 ? round( $completed_count / $total_exercises, 4 ) : 0.0;
 
 		return [
 			'attempt_count'         => (int) ( $progress['attempt_count'] ?? 0 ),
 			'completed_count'       => $completed_count,
 			'total_exercise_count'  => max( 0, $total_exercises ),
-			'completion_percent'    => $total_exercises > 0 ? round( $completed_count / $total_exercises, 4 ) : 0.0,
+			'completion_ratio'      => $completion_ratio,
+			'completion_percent'    => round( $completion_ratio * 100, 2 ),
 		];
 	}
 
@@ -3353,6 +3383,10 @@ class Learning {
 	private static function certificate_from_record( array $course, string $hash, array $row, string $recipient_name, bool $include_transcript ): array {
 		$certificate_id = (string) ( $row['certificate_id'] ?? self::certificate_id( $course, $hash ) );
 		$snapshot = self::decode_json_value( $row['completion_snapshot'] ?? '', [] );
+		$completion_percent = self::normalize_completion_percent( $snapshot['completion_percent'] ?? 100.0 );
+		$completion_ratio = isset( $snapshot['completion_ratio'] )
+			? min( 1.0, max( 0.0, (float) $snapshot['completion_ratio'] ) )
+			: round( $completion_percent / 100, 4 );
 		$certificate = [
 			'certificate_id'       => $certificate_id,
 			'verification_code'    => self::verification_code( $certificate_id, $hash, $course ),
@@ -3367,7 +3401,8 @@ class Learning {
 				'attempt_count'        => (int) ( $snapshot['attempt_count'] ?? 0 ),
 				'completed_count'      => (int) ( $snapshot['completed_count'] ?? 0 ),
 				'total_exercise_count' => (int) ( $snapshot['total_exercise_count'] ?? 0 ),
-				'completion_percent'   => (float) ( $snapshot['completion_percent'] ?? 1.0 ),
+				'completion_ratio'     => $completion_ratio,
+				'completion_percent'   => $completion_percent,
 			],
 			'statement'            => sprintf(
 				/* translators: 1: recipient name, 2: course name. */
@@ -3412,7 +3447,8 @@ class Learning {
 			'attempt_count'         => (int) ( $progress['attempt_count'] ?? 0 ),
 			'completed_count'       => (int) ( $progress['completed_count'] ?? 0 ),
 			'total_exercise_count'  => count( $public_exercises ),
-			'completion_percent'    => count( $public_exercises ) > 0 ? 1.0 : 0.0,
+			'completion_ratio'      => count( $public_exercises ) > 0 ? 1.0 : 0.0,
+			'completion_percent'    => count( $public_exercises ) > 0 ? 100.0 : 0.0,
 			'transcript'            => self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] ),
 			'exercise_slugs'        => array_map(
 				static function ( array $exercise ): string {
@@ -3614,6 +3650,7 @@ class Learning {
 		$next_work = self::next_work_response( $course, $exercise_progress, null, null, $enrollment_key );
 
 		return [
+			'scope'                 => $next_work['scope'] ?? 'global_next_unpassed_work',
 			'lesson'                => $next_work['lesson'],
 			'exercise'              => $next_work['exercise'],
 			'complete'              => $next_work['complete'] ?? false,
@@ -3629,12 +3666,75 @@ class Learning {
 		}
 
 		return [
+			'scope'                 => $next_work['scope'] ?? 'global_next_unpassed_work',
 			'lesson'                => $next_work['lesson'] ?? null,
 			'exercise'              => $next_work['exercise'] ?? null,
 			'complete'              => ! empty( $next_work['complete'] ),
 			'certificate_available' => ! empty( $next_work['certificate_available'] ),
 			'tool_calls'            => $next_work['tool_calls'] ?? [],
 			'note'                  => $next_work['note'] ?? '',
+		];
+	}
+
+	private static function this_attempt_result( array $exercise, array $evaluation, bool $stored ): array {
+		$passed = ! empty( $evaluation['passed'] );
+
+		return [
+			'scope'         => 'this_attempt_result',
+			'exercise'      => [
+				'slug'  => (string) $exercise['slug'],
+				'title' => (string) $exercise['title'],
+			],
+			'stored'        => $stored,
+			'passed'        => $passed,
+			'score'         => $evaluation['score'] ?? null,
+			'passing_score' => $evaluation['passing_score'] ?? null,
+			'matched_terms' => self::terms_from_evaluation( $evaluation, 'matched_terms' ),
+			'missing_terms' => self::terms_from_evaluation( $evaluation, 'missing_terms' ),
+			'meaning'       => $passed
+				? __( 'This specific exercise has a passing attempt. The separate global_next_unpassed_work field may still point to an earlier unpassed exercise elsewhere in the course.', 'model-context-polytechnic' )
+				: __( 'This specific exercise still needs revision. Use missing_terms for this exercise before following global next-work guidance.', 'model-context-polytechnic' ),
+			'next_step'     => $passed
+				? __( 'Move on using global_next_unpassed_work, or retrieve learning memory if the course is complete.', 'model-context-polytechnic' )
+				: __( 'Revise this same exercise and call attempt-exercise again.', 'model-context-polytechnic' ),
+		];
+	}
+
+	private static function post_certificate_next_work( array $course, string $enrollment_key ): array {
+		return [
+			'scope'                 => 'post_certificate_next_work',
+			'lesson'                => null,
+			'exercise'              => null,
+			'complete'              => true,
+			'certificate_available' => false,
+			'certificate_issued'    => true,
+			'tool_calls'            => [
+				[
+					'tool'      => self::learning_tool_name( $course['slug'], 'get-learning-memory' ),
+					'arguments' => [ 'enrollment_key' => $enrollment_key ],
+					'why'       => __( 'Retrieve the final memory capsule so the graduate can carry WordPress Plugin Craft habits into future work.', 'model-context-polytechnic' ),
+				],
+				[
+					'tool'      => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
+					'arguments' => [
+						'enrollment_key' => $enrollment_key,
+						'feedback_type'  => 'reflection',
+						'target_type'    => 'course',
+						'target_slug'    => $course['slug'],
+						'comment'        => 'How confident are you now, what did you learn, and how will this course change the next WordPress plugin you help write?',
+					],
+					'why'       => __( 'Save the graduate reflection so the course can improve for the next cohort.', 'model-context-polytechnic' ),
+				],
+				[
+					'tool'      => self::learning_tool_name( $course['slug'], 'get-campus-scene' ),
+					'arguments' => [
+						'scene'          => 'commencement',
+						'enrollment_key' => $enrollment_key,
+					],
+					'why'       => __( 'Show the commencement campus postcard beside the graduation speech.', 'model-context-polytechnic' ),
+				],
+			],
+			'note'                  => __( 'Certificate already issued. Do not call get-certificate again as the next step; retrieve learning memory, deliver the graduation speech, and submit the reflection if the client allows.', 'model-context-polytechnic' ),
 		];
 	}
 
@@ -3733,6 +3833,9 @@ class Learning {
 		}
 
 		return [
+			'scope'                 => $exercise
+				? 'global_next_unpassed_work'
+				: ( $course_complete ? 'course_completion' : 'no_published_work' ),
 			'course'                => Registry::course_summary( $course ),
 			'lesson'                => $lesson ? self::lesson_summary( $lesson, false ) : null,
 			'exercise'              => $exercise ? self::exercise_summary( $exercise, false ) : null,
@@ -3749,7 +3852,7 @@ class Learning {
 			),
 			'tool_calls'            => $tool_calls,
 			'note'                  => $exercise
-				? __( 'Recommended because it is the earliest published exercise not yet passed by this enrollment.', 'model-context-polytechnic' )
+				? __( 'Global next-work recommendation: this is the earliest published exercise not yet passed by this enrollment. It may differ from the exercise that was just attempted.', 'model-context-polytechnic' )
 				: ( $course_complete
 					? __( 'All published exercises have passing attempts. Call get-certificate for commencement, then retrieve learning memory for future plugin work.', 'model-context-polytechnic' )
 					: __( 'No published exercise is available. Review the syllabus or wait for the faculty to open another workshop.', 'model-context-polytechnic' ) ),
@@ -4007,6 +4110,15 @@ class Learning {
 
 	private static function safe_rate( int $part, int $whole ): ?float {
 		return $whole > 0 ? round( $part / $whole, 4 ) : null;
+	}
+
+	private static function normalize_completion_percent( $value ): float {
+		$percent = is_numeric( $value ) ? (float) $value : 0.0;
+		if ( $percent > 0 && $percent <= 1 ) {
+			$percent *= 100;
+		}
+
+		return round( min( 100.0, max( 0.0, $percent ) ), 2 );
 	}
 
 	private static function tool_usage_summary( int $course_id, string $cutoff, int $limit, string $target_type = '', string $target_slug = '' ): array {
@@ -4393,6 +4505,7 @@ class Learning {
 			$any_terms = self::string_list( $criterion['any_terms'] ?? [] );
 			$missing = [];
 			$matched = [];
+			$matched_aliases = [];
 			$criterion_earned = 0.0;
 
 			if ( $points <= 0 ) {
@@ -4401,8 +4514,12 @@ class Learning {
 
 			if ( $required_terms ) {
 				foreach ( $required_terms as $term ) {
-					if ( self::answer_matches_term( $answer_match_text, $term ) ) {
+					$matched_variant = self::matched_term_variant( $answer_match_text, $term, $criterion );
+					if ( $matched_variant !== '' ) {
 						$matched[] = $term;
+						if ( self::normalize_match_text( $matched_variant ) !== self::normalize_match_text( $term ) ) {
+							$matched_aliases[ $term ] = $matched_variant;
+						}
 					} else {
 						$missing[] = $term;
 					}
@@ -4411,8 +4528,12 @@ class Learning {
 				$criterion_earned = $points * ( count( $matched ) / max( 1, count( $required_terms ) ) );
 			} elseif ( $any_terms ) {
 				foreach ( $any_terms as $term ) {
-					if ( self::answer_matches_term( $answer_match_text, $term ) ) {
+					$matched_variant = self::matched_term_variant( $answer_match_text, $term, $criterion );
+					if ( $matched_variant !== '' ) {
 						$matched[] = $term;
+						if ( self::normalize_match_text( $matched_variant ) !== self::normalize_match_text( $term ) ) {
+							$matched_aliases[ $term ] = $matched_variant;
+						}
 					}
 				}
 
@@ -4438,6 +4559,7 @@ class Learning {
 				'points'         => $points,
 				'earned'         => $criterion_earned,
 				'matched_terms'  => $matched,
+				'matched_aliases'=> $matched_aliases,
 				'missing_terms'  => $missing,
 				'feedback'       => $criterion_earned >= $points
 					? sprintf( __( '%s: present.', 'model-context-polytechnic' ), $name )
@@ -4482,6 +4604,20 @@ class Learning {
 	}
 
 	private static function answer_matches_term( string $answer_match_text, string $term ): bool {
+		return self::matched_term_variant( $answer_match_text, $term ) !== '';
+	}
+
+	private static function matched_term_variant( string $answer_match_text, string $term, array $criterion = [] ): string {
+		foreach ( self::term_match_variants( $term, $criterion ) as $variant ) {
+			if ( self::answer_matches_single_term( $answer_match_text, $variant ) ) {
+				return $variant;
+			}
+		}
+
+		return '';
+	}
+
+	private static function answer_matches_single_term( string $answer_match_text, string $term ): bool {
 		$term = self::normalize_match_text( $term );
 		if ( $term === '' ) {
 			return false;
@@ -4497,6 +4633,78 @@ class Learning {
 		}
 
 		return self::answer_matches_negated_subject( $answer_match_text, $subject );
+	}
+
+	private static function term_match_variants( string $term, array $criterion = [] ): array {
+		$variants = [ $term ];
+		$variants = array_merge( $variants, self::term_aliases_from_criterion( $term, $criterion ) );
+		$variants = array_merge( $variants, self::built_in_term_aliases( $term ) );
+
+		return array_values(
+			array_unique(
+				array_filter(
+					$variants,
+					static function ( string $variant ): bool {
+						return trim( $variant ) !== '';
+					}
+				)
+			)
+		);
+	}
+
+	private static function term_aliases_from_criterion( string $term, array $criterion ): array {
+		$aliases = [];
+		$term_aliases = $criterion['term_aliases'] ?? $criterion['aliases'] ?? [];
+		if ( ! is_array( $term_aliases ) ) {
+			return [];
+		}
+
+		if ( isset( $term_aliases[ $term ] ) ) {
+			$aliases = array_merge( $aliases, self::string_list( $term_aliases[ $term ] ) );
+		}
+
+		$normalized_term = self::normalize_match_text( $term );
+		foreach ( $term_aliases as $key => $value ) {
+			if ( is_string( $key ) && self::normalize_match_text( $key ) === $normalized_term ) {
+				$aliases = array_merge( $aliases, self::string_list( $value ) );
+			}
+		}
+
+		return $aliases;
+	}
+
+	private static function built_in_term_aliases( string $term ): array {
+		$aliases = [];
+		$normalized = self::normalize_match_text( $term );
+		$spacey = self::normalize_match_text( str_replace( [ '_', '-' ], ' ', $term ) );
+		$camel = self::normalize_match_text( (string) preg_replace( '/(?<=[a-z])(?=[A-Z])/', ' ', $term ) );
+
+		foreach ( [ $spacey, $camel ] as $variant ) {
+			if ( $variant !== '' && $variant !== $normalized ) {
+				$aliases[] = $variant;
+			}
+		}
+
+		$map = [
+			'api key' => [ 'api token', 'access token', 'secret key', 'service credential', 'credential' ],
+			'external service' => [ 'third party service', 'third-party service', 'external api', 'third party api', 'third-party api', 'remote service', 'remote api', 'upstream service', 'upstream api' ],
+			'update uri' => [ 'update-uri', 'update_uri', 'plugin update uri', 'plugin update-uri' ],
+			'hour_in_seconds' => [ 'hour in seconds', 'one hour', '3600', 'one-hour ttl', 'hour ttl' ],
+			'hour in seconds' => [ 'HOUR_IN_SECONDS', 'one hour', '3600', 'one-hour ttl', 'hour ttl' ],
+			'dependency extraction' => [ 'dependency-extraction', '@wordpress/dependency-extraction-webpack-plugin', 'dependency extraction plugin' ],
+			'editor script' => [ 'editorscript', 'editorScript' ],
+			'view script' => [ 'viewscript', 'viewScript' ],
+		];
+
+		if ( isset( $map[ $normalized ] ) ) {
+			$aliases = array_merge( $aliases, $map[ $normalized ] );
+		}
+
+		if ( isset( $map[ $spacey ] ) ) {
+			$aliases = array_merge( $aliases, $map[ $spacey ] );
+		}
+
+		return $aliases;
 	}
 
 	private static function negated_term_subject( string $term ): string {
@@ -4782,6 +4990,7 @@ class Learning {
 	private static function rubric_vocabulary_from_rubric( array $rubric ): array {
 		$required = [];
 		$any = [];
+		$aliases = [];
 		$criteria = isset( $rubric['criteria'] ) && is_array( $rubric['criteria'] ) ? $rubric['criteria'] : [];
 
 		foreach ( $criteria as $criterion ) {
@@ -4791,12 +5000,20 @@ class Learning {
 
 			$required = array_merge( $required, self::string_list( $criterion['required_terms'] ?? [] ) );
 			$any = array_merge( $any, self::string_list( $criterion['any_terms'] ?? [] ) );
+			foreach ( array_merge( self::string_list( $criterion['required_terms'] ?? [] ), self::string_list( $criterion['any_terms'] ?? [] ) ) as $term ) {
+				$term_aliases = array_values( array_diff( self::term_match_variants( $term, $criterion ), [ $term ] ) );
+				if ( $term_aliases ) {
+					$aliases[ $term ] = $term_aliases;
+				}
+			}
 		}
 
 		return [
 			'required_terms' => array_values( array_unique( $required ) ),
 			'any_terms'     => array_values( array_unique( $any ) ),
-			'student_note'  => __( 'These terms are not magic words, but the deterministic grader looks for them or their exact concepts. Use them when they are true so the lab can recognize your WordPress craft.', 'model-context-polytechnic' ),
+			'accepted_aliases' => $aliases,
+			'attempt_instruction' => __( 'Before calling attempt-exercise, check required_terms. Include the exact terms when accurate, or use one of the accepted aliases. This makes deterministic grading recognize the WordPress concept you meant.', 'model-context-polytechnic' ),
+			'student_note'  => __( 'These terms are not magic words, but the deterministic grader is intentionally explicit. Use the required WordPress vocabulary when it is true so the lab can recognize your craft.', 'model-context-polytechnic' ),
 		];
 	}
 
@@ -4902,18 +5119,21 @@ class Learning {
 			],
 			'get-exercise' => [
 				'exercise' => [ 'type' => 'object' ],
+				'attempt_preflight' => [ 'type' => 'object' ],
 				'answer_contract' => [ 'type' => 'object' ],
 				'next_actions' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 			],
 			'attempt-exercise' => [
 				'exercise' => [ 'type' => 'object' ],
 				'evaluation' => [ 'type' => 'object' ],
+				'this_attempt_result' => [ 'type' => 'object' ],
 				'gradebook' => [ 'type' => 'object' ],
 				'stored' => [ 'type' => 'boolean' ],
 				'enrollment_key' => [ 'type' => [ 'string', 'null' ] ],
 				'enrollment_key_used' => [ 'type' => 'boolean' ],
 				'enrollment_key_issued' => [ 'type' => 'boolean' ],
 				'next_work' => [ 'type' => [ 'object', 'null' ] ],
+				'global_next_unpassed_work' => [ 'type' => [ 'object', 'null' ] ],
 				'continue_policy' => [ 'type' => [ 'object', 'null' ] ],
 				'autopilot' => [ 'type' => 'object' ],
 				'next_actions' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
@@ -4968,6 +5188,7 @@ class Learning {
 				'remaining_count' => [ 'type' => 'integer' ],
 				'remaining_exercises' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 				'next_work' => [ 'type' => 'object' ],
+				'post_certificate_next_work' => [ 'type' => 'object' ],
 				'preserve' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
 			],
 			'submit-feedback' => [

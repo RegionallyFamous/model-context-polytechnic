@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.14 - 2026-05-08
+
+- Normalizes progress fields so `completion_percent` is always 0-100 and `completion_ratio` is always 0-1.
+- Adds exercise attempt preflight vocabulary plus accepted aliases, and expands deterministic grading to recognize common synonyms and negated phrasing such as "must not contain business logic."
+- Separates per-submission `this_attempt_result` from course-wide `global_next_unpassed_work` to make parallel or out-of-order attempts easier for agents to reason about.
+- Updates post-certificate responses so commencement points to learning memory, reflection, campus scene, and feedback instead of asking for `get-certificate` again.
+- Extends HTTP smoke documentation and stress tests for the new progress, vocabulary, and post-certificate contracts.
+
 ## 1.0.13 - 2026-05-08
 
 - Adds private operator-only `get-course-stats` for enrollment, attempt, completion, certificate, feedback, event, daily activity, and exercise outcome metrics.

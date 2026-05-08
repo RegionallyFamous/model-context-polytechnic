@@ -173,9 +173,21 @@ if ( count( $transcript ) !== count( $exercises ) ) {
 	fail( sprintf( 'Certificate transcript count %d did not match exercise count %d.', count( $transcript ), count( $exercises ) ) );
 }
 
+$completion_percent = $certificate['progress']['completion_percent'] ?? null;
+$completion_ratio = $certificate['progress']['completion_ratio'] ?? null;
+if ( ! is_numeric( $completion_percent ) || ! is_numeric( $completion_ratio ) || (float) $completion_percent !== 100.0 || (float) $completion_ratio !== 1.0 ) {
+	fail( 'Completed certificate response should expose completion_percent=100 and completion_ratio=1.' );
+}
+
+$post_certificate_tools = collect_suggested_tools( $certificate['next_work'] ?? [] );
+if ( in_array( $tool_prefix . 'get-certificate', $post_certificate_tools, true ) || ! in_array( $tool_prefix . 'get-learning-memory', $post_certificate_tools, true ) ) {
+	fail( 'Post-certificate next_work should point to get-learning-memory/reflection, not back to get-certificate.' );
+}
+
 $summary['certificate_id'] = $certificate['certificate']['certificate_id'];
 $summary['transcript_count'] = count( $transcript );
 $summary['checks'][] = 'get-certificate issued anonymous certificate, transcript, graduation speech, and graduation reflection';
+$summary['checks'][] = 'get-certificate returned post-certificate memory/reflection next work';
 assert_suggested_tools_exist( $certificate, $tool_names, 'get-certificate' );
 $summary['status'] = 'ok';
 

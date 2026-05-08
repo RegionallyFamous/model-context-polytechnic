@@ -462,7 +462,7 @@ function score_answer( array $exercise, string $answer ): array {
 			$matched = [];
 			$missing = [];
 			foreach ( $required_terms as $term ) {
-				if ( contains_term( $answer_lower, $term ) ) {
+				if ( contains_term( $answer_lower, $term, $criterion ) ) {
 					$matched[] = $term;
 					$matched_terms[] = $term;
 				} else {
@@ -474,7 +474,7 @@ function score_answer( array $exercise, string $answer ): array {
 		} elseif ( $any_terms ) {
 			$matched = [];
 			foreach ( $any_terms as $term ) {
-				if ( contains_term( $answer_lower, $term ) ) {
+				if ( contains_term( $answer_lower, $term, $criterion ) ) {
 					$matched[] = $term;
 					$matched_terms[] = $term;
 				}
@@ -538,7 +538,17 @@ function string_list( $value ): array {
 	);
 }
 
-function contains_term( string $haystack, string $term ): bool {
+function contains_term( string $haystack, string $term, array $criterion = [] ): bool {
+	foreach ( term_match_variants( $term, $criterion ) as $variant ) {
+		if ( contains_single_term( $haystack, $variant ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function contains_single_term( string $haystack, string $term ): bool {
 	$term = normalize_text( $term );
 	if ( $term === '' ) {
 		return false;
@@ -554,6 +564,78 @@ function contains_term( string $haystack, string $term ): bool {
 	}
 
 	return contains_negated_subject( $haystack, $subject );
+}
+
+function term_match_variants( string $term, array $criterion = [] ): array {
+	$variants = [ $term ];
+	$variants = array_merge( $variants, term_aliases_from_criterion( $term, $criterion ) );
+	$variants = array_merge( $variants, built_in_term_aliases( $term ) );
+
+	return array_values(
+		array_unique(
+			array_filter(
+				$variants,
+				static function ( string $variant ): bool {
+					return trim( $variant ) !== '';
+				}
+			)
+		)
+	);
+}
+
+function term_aliases_from_criterion( string $term, array $criterion ): array {
+	$aliases = [];
+	$term_aliases = $criterion['term_aliases'] ?? $criterion['aliases'] ?? [];
+	if ( ! is_array( $term_aliases ) ) {
+		return [];
+	}
+
+	if ( isset( $term_aliases[ $term ] ) ) {
+		$aliases = array_merge( $aliases, string_list( $term_aliases[ $term ] ) );
+	}
+
+	$normalized_term = normalize_text( $term );
+	foreach ( $term_aliases as $key => $value ) {
+		if ( is_string( $key ) && normalize_text( $key ) === $normalized_term ) {
+			$aliases = array_merge( $aliases, string_list( $value ) );
+		}
+	}
+
+	return $aliases;
+}
+
+function built_in_term_aliases( string $term ): array {
+	$aliases = [];
+	$normalized = normalize_text( $term );
+	$spacey = normalize_text( str_replace( [ '_', '-' ], ' ', $term ) );
+	$camel = normalize_text( (string) preg_replace( '/(?<=[a-z])(?=[A-Z])/', ' ', $term ) );
+
+	foreach ( [ $spacey, $camel ] as $variant ) {
+		if ( $variant !== '' && $variant !== $normalized ) {
+			$aliases[] = $variant;
+		}
+	}
+
+	$map = [
+		'api key' => [ 'api token', 'access token', 'secret key', 'service credential', 'credential' ],
+		'external service' => [ 'third party service', 'third-party service', 'external api', 'third party api', 'third-party api', 'remote service', 'remote api', 'upstream service', 'upstream api' ],
+		'update uri' => [ 'update-uri', 'update_uri', 'plugin update uri', 'plugin update-uri' ],
+		'hour_in_seconds' => [ 'hour in seconds', 'one hour', '3600', 'one-hour ttl', 'hour ttl' ],
+		'hour in seconds' => [ 'HOUR_IN_SECONDS', 'one hour', '3600', 'one-hour ttl', 'hour ttl' ],
+		'dependency extraction' => [ 'dependency-extraction', '@wordpress/dependency-extraction-webpack-plugin', 'dependency extraction plugin' ],
+		'editor script' => [ 'editorscript', 'editorScript' ],
+		'view script' => [ 'viewscript', 'viewScript' ],
+	];
+
+	if ( isset( $map[ $normalized ] ) ) {
+		$aliases = array_merge( $aliases, $map[ $normalized ] );
+	}
+
+	if ( isset( $map[ $spacey ] ) ) {
+		$aliases = array_merge( $aliases, $map[ $spacey ] );
+	}
+
+	return $aliases;
 }
 
 function normalize_text( string $text ): string {

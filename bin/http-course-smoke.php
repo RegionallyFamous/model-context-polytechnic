@@ -199,8 +199,13 @@ if ( empty( $exercise['exercise']['rubric_vocabulary']['required_terms'] ) ) {
 	fail( 'get-exercise did not expose rubric_vocabulary.required_terms.' );
 }
 
+if ( empty( $exercise['attempt_preflight']['required_exact_vocabulary'] ) || ! isset( $exercise['attempt_preflight']['accepted_aliases'] ) ) {
+	fail( 'get-exercise did not expose attempt_preflight vocabulary guidance.' );
+}
+
 $summary['checks'][] = 'get-exercise returned the requested exercise';
 $summary['checks'][] = 'get-exercise exposed rubric vocabulary before grading';
+$summary['checks'][] = 'get-exercise exposed attempt preflight vocabulary guidance';
 assert_suggested_tools_exist( $exercise, $tool_names, 'get-exercise' );
 
 $attempt = call_tool(
@@ -224,10 +229,15 @@ if ( ( $attempt['response_mode'] ?? '' ) !== 'gradebook' || empty( $attempt['gra
 	fail( 'attempt-exercise response_mode=gradebook did not return compact gradebook output.' );
 }
 
+if ( empty( $attempt['this_attempt_result'] ) || empty( $attempt['global_next_unpassed_work'] ) ) {
+	fail( 'attempt-exercise did not separate this_attempt_result from global_next_unpassed_work.' );
+}
+
 $summary['attempt_score'] = $attempt['evaluation']['score'] ?? null;
 $summary['attempt_passed'] = $attempt['evaluation']['passed'] ?? null;
 $summary['checks'][] = 'attempt-exercise evaluated and stored the answer';
 $summary['checks'][] = 'attempt-exercise gradebook mode stayed compact';
+$summary['checks'][] = 'attempt-exercise separated attempt result from global next work';
 assert_suggested_tools_exist( $attempt, $tool_names, 'attempt-exercise' );
 
 $memory = call_tool(
@@ -244,8 +254,16 @@ if ( empty( $memory['recent_attempts'] ) ) {
 	fail( 'get-learning-memory did not include the prior attempt.' );
 }
 
+$completion_percent = $memory['progress']['completion_percent'] ?? null;
+$completion_ratio = $memory['progress']['completion_ratio'] ?? null;
+$completed_count = (int) ( $memory['progress']['completed_count'] ?? 0 );
+if ( ! is_numeric( $completion_percent ) || ! is_numeric( $completion_ratio ) || ( $completed_count > 0 && (float) $completion_percent <= 1 ) || abs( (float) $completion_percent - ( (float) $completion_ratio * 100 ) ) > 0.02 ) {
+	fail( 'get-learning-memory progress should expose completion_percent as 0-100 and completion_ratio as 0-1.' );
+}
+
 $summary['memory_attempts'] = count( $memory['recent_attempts'] );
 $summary['checks'][] = 'get-learning-memory recovered the prior attempt';
+$summary['checks'][] = 'get-learning-memory uses completion_percent 0-100 and completion_ratio 0-1';
 assert_suggested_tools_exist( $memory, $tool_names, 'get-learning-memory' );
 
 $certificate = call_tool(

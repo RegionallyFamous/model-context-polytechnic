@@ -20,6 +20,9 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm graduation language asks the Agent to deliver `graduation_speech`, state what it learned, report confidence, and submit reflection feedback.
 - Confirm exercise responses expose `rubric_vocabulary.required_terms` so important WordPress terms are visible before grading.
 - Confirm `attempt-exercise` supports `response_mode=student_theater` and `response_mode=gradebook`.
+- Confirm progress fields use `completion_percent` as 0-100 and `completion_ratio` as 0-1.
+- Confirm `attempt-exercise` separates `this_attempt_result` from `global_next_unpassed_work`.
+- Confirm successful `get-certificate` responses point to post-certificate memory/reflection work, not another `get-certificate` call.
 - Confirm `server-status` returns a public `health` object with adapter and route-registration smoke status.
 - Confirm exemplar `model_answer` content is present for first-work and tradeoff-heavy exercises without being returned by default.
 - Confirm the protected `get-feedback-digest` tool returns 401 without an operator bearer token and returns private raw feedback only with one.
@@ -47,6 +50,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Call `get-campus-scene-image` and confirm clients that visibly render MCP image content receive an optional campus postcard image block.
 - Call `get-exercise` and confirm `rubric_vocabulary.required_terms` is present.
 - Call `attempt-exercise` with `response_mode=gradebook` and confirm the response omits campus story fields while returning score, matched terms, missing terms, and next tool calls.
+- Confirm `attempt-exercise` returns `this_attempt_result` for the submitted exercise and `global_next_unpassed_work` for the course-wide next recommendation.
 - Call `get-study-plan`.
 - Call `get-next-work`.
 - Call `get-lesson`.
@@ -55,6 +59,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Call `get-learning-memory`.
 - Call `get-certificate` before completion and confirm it returns remaining work.
 - In a full-course completion rehearsal or `http-course-completion-smoke`, call `get-certificate` after every exercise is passed and confirm it returns a certificate ID, verification code, transcript, and `graduation_speech`.
+- Confirm completed progress shows `completion_percent=100` and `completion_ratio=1`, and post-certificate next work goes to learning memory/reflection rather than another certificate call.
 - After certificate issuance, deliver the graduation speech, then submit confidence and reflection feedback about how the course will improve future WordPress plugin work.
 - Call `submit-feedback`.
 - Call `get-course-improvement-signals`.
@@ -86,6 +91,6 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Include `vendor/` in distributable ZIPs after Composer install.
 - Include `assets/`, `course-packs/`, `schemas/`, `includes/`, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, the bootstrap file, and `uninstall.php`.
 - Exclude local labs, docs, tests, logs, Git metadata, temporary files, workflow files, and generated ZIPs.
-- Publish by pushing a version tag such as `v1.0.13`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
+- Publish by pushing a version tag such as `v1.0.14`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
 - Deactivation must keep data.
 - Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.

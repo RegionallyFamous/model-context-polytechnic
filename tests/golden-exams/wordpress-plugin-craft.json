@@ -14,6 +14,17 @@
       }
     },
     {
+      "slug": "bootstrap-negated-vocabulary-golden",
+      "exercise_slug": "design-plugin-bootstrap",
+      "weak_answer": "Make a plugin file and add some code there. Activate it and see whether it works.",
+      "strong_answer": "Summary: the bootstrap is a boring loading contract. Work: create the folder archive-faculty-notes with the main file archive-faculty-notes.php, add a Plugin Name header, ABSPATH guard, version constants, an autoload step for Composer or bundled classes, a text domain, activation and deactivation hooks, and delegate real features into classes. The main file must not contain business logic, rendering loops, remote calls, or migrations beyond calling lifecycle services. Checks: verify the header and text domain, run php -l, review that hooks only wire lifecycle work, and activate/deactivate in a disposable WordPress install.",
+      "expect": {
+        "weak_passes": false,
+        "strong_passes": true,
+        "min_delta": 0.55
+      }
+    },
+    {
       "slug": "storage-choice-golden",
       "exercise_slug": "choose-storage",
       "weak_answer": "Use one option for all plugin data because it is easy to read.",
