@@ -23,6 +23,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm `server-status` returns a public `health` object with adapter and route-registration smoke status.
 - Confirm exemplar `model_answer` content is present for first-work and tradeoff-heavy exercises without being returned by default.
 - Confirm the protected `get-feedback-digest` tool returns 401 without an operator bearer token and returns private raw feedback only with one.
+- Confirm the protected `get-course-stats` tool returns 401 without an operator bearer token and returns private enrollment, attempt, completion, certificate, feedback, and activity counts with one.
 - Confirm the README and feedback docs describe the no-WP-CLI operator-token flow.
 - Confirm no real tokens, enrollment keys, Authorization headers, or local site URLs are committed.
 - Confirm every shown public URL uses `joinmcpoly.com`.
@@ -57,6 +58,10 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - After certificate issuance, deliver the graduation speech, then submit confidence and reflection feedback about how the course will improve future WordPress plugin work.
 - Call `submit-feedback`.
 - Call `get-course-improvement-signals`.
+- Call protected `get-feedback-digest` without an operator token and confirm 401.
+- Call protected `get-feedback-digest` with `Authorization: Bearer <operator-token>` and confirm raw feedback is private.
+- Call protected `get-course-stats` without an operator token and confirm 401.
+- Call protected `get-course-stats` with `Authorization: Bearer <operator-token>` and confirm private stats include enrollments, attempts, completion, feedback, and daily activity.
 
 ## Public Boundary Review
 
@@ -64,7 +69,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - The plugin-owned anonymous public session user exists after activation and cannot pass write-capability checks.
 - Public learner tools do not expose secrets or raw Authorization headers.
 - Public improvement summaries do not expose raw feedback comments.
-- Private feedback digest requires `Auth::require_operator_access` and accepts only an operator bearer token or an explicitly minted stored bearer token.
+- Private feedback digest and course stats require `Auth::require_operator_access` and accept only an operator bearer token or an explicitly minted stored bearer token.
 - Public certificates do not expose answers, plaintext enrollment hashes, tokens, or WordPress user identity.
 - Write/authoring tools remain hidden unless `model_context_polytechnic_authoring_tools_enabled` is enabled.
 - Write/authoring tools require `Auth::require_write_access`.
@@ -81,6 +86,6 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Include `vendor/` in distributable ZIPs after Composer install.
 - Include `assets/`, `course-packs/`, `schemas/`, `includes/`, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, the bootstrap file, and `uninstall.php`.
 - Exclude local labs, docs, tests, logs, Git metadata, temporary files, workflow files, and generated ZIPs.
-- Publish by pushing a version tag such as `v1.0.12`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
+- Publish by pushing a version tag such as `v1.0.13`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
 - Deactivation must keep data.
 - Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.

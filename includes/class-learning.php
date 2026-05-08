@@ -280,6 +280,7 @@ class Learning {
 				self::learning_ability_name( $course_slug, 'get-certificate' ),
 				self::learning_ability_name( $course_slug, 'submit-feedback' ),
 				self::learning_ability_name( $course_slug, 'get-course-improvement-signals' ),
+				self::learning_ability_name( $course_slug, 'get-course-stats' ),
 				self::learning_ability_name( $course_slug, 'get-feedback-digest' ),
 			],
 			'resources' => [
@@ -311,6 +312,7 @@ class Learning {
 			self::register_get_certificate_tool( $course );
 			self::register_submit_feedback_tool( $course );
 			self::register_get_course_improvement_signals_tool( $course );
+			self::register_get_course_stats_tool( $course );
 			self::register_get_feedback_digest_tool( $course );
 		}
 	}
@@ -340,6 +342,7 @@ class Learning {
 			'get-certificate',
 			'submit-feedback',
 			'get-course-improvement-signals',
+			'get-course-stats',
 			'get-feedback-digest',
 		];
 		$names = [];
@@ -1517,6 +1520,85 @@ class Learning {
 		];
 	}
 
+	public static function course_stats( array $course, array $input = [] ): array {
+		$window_days = isset( $input['window_days'] ) && is_numeric( $input['window_days'] )
+			? max( 1, min( 365, (int) $input['window_days'] ) )
+			: 30;
+		$daily_days = isset( $input['daily_days'] ) && is_numeric( $input['daily_days'] )
+			? max( 1, min( 60, (int) $input['daily_days'] ) )
+			: min( 14, $window_days );
+		$exercise_limit = isset( $input['exercise_limit'] ) && is_numeric( $input['exercise_limit'] )
+			? max( 1, min( 20, (int) $input['exercise_limit'] ) )
+			: 8;
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $window_days * DAY_IN_SECONDS ) );
+		$course_id = (int) $course['id'];
+		$public_exercises = self::all_public_exercises( $course_id );
+		$total_public_exercises = count( $public_exercises );
+
+		$content = self::course_content_stats( $course_id );
+		$enrollments = self::enrollment_stats( $course_id, $cutoff );
+		$attempts = self::attempt_stats( $course_id, $cutoff );
+		$completion = self::completion_stats( $course_id, $total_public_exercises, $cutoff );
+		$feedback = self::feedback_stats( $course_id, $cutoff );
+		$events = self::event_stats( $course_id, $cutoff );
+
+		return [
+			'course'       => Registry::course_summary( $course ),
+			'private'      => true,
+			'auth'         => [
+				'accepted' => true,
+				'mode'     => __( 'Authorization: Bearer operator token', 'model-context-polytechnic' ),
+			],
+			'stats'        => [
+				'window_days'       => $window_days,
+				'cutoff_utc'        => $cutoff,
+				'last_activity_at'  => self::latest_course_activity_at( $course_id ),
+				'content'           => $content,
+				'enrollments'       => $enrollments,
+				'attempts'          => $attempts,
+				'completion'        => $completion,
+				'feedback'          => $feedback,
+				'events'            => $events,
+				'funnel'            => [
+					'started_enrollments'          => $enrollments['total'],
+					'attempted_enrollments'        => $attempts['unique_enrollments_total'],
+					'completion_eligible_learners' => $completion['eligible_learners_total'],
+					'certificates_issued'          => $completion['certificates_issued_total'],
+					'attempt_rate_from_started'    => self::safe_rate( $attempts['unique_enrollments_total'], $enrollments['total'] ),
+					'completion_rate_from_started' => self::safe_rate( $completion['eligible_learners_total'], $enrollments['total'] ),
+					'completion_rate_from_attempted' => self::safe_rate( $completion['eligible_learners_total'], $attempts['unique_enrollments_total'] ),
+					'certificate_rate_from_completed' => self::safe_rate( $completion['certificates_issued_total'], $completion['eligible_learners_total'] ),
+				],
+				'daily_activity'    => self::daily_activity_summary( $course_id, $daily_days ),
+				'exercise_outcomes' => self::exercise_outcome_summary( $course_id, $cutoff, $exercise_limit ),
+			],
+			'privacy'      => [
+				'Stats are private because small cohorts can make aggregate counts identifying.',
+				'Enrollment keys are still stored and reported only as hashes or counts.',
+				'Completion eligible means an anonymous enrollment has passing attempts for every currently published exercise; certificates issued means get-certificate was called.',
+			],
+			'tool_calls'   => [
+				[
+					'tool'      => self::learning_tool_name( $course['slug'], 'get-feedback-digest' ),
+					'arguments' => [
+						'window_days' => $window_days,
+						'limit'       => 20,
+					],
+					'why'       => __( 'Read raw private feedback behind the same operator bearer token when the stats show a pattern worth inspecting.', 'model-context-polytechnic' ),
+				],
+				[
+					'tool'      => self::learning_tool_name( $course['slug'], 'get-course-improvement-signals' ),
+					'arguments' => [
+						'window_days' => $window_days,
+						'limit'       => min( 12, $exercise_limit ),
+					],
+					'why'       => __( 'Compare private stats with public aggregate improvement signals before editing the course.', 'model-context-polytechnic' ),
+				],
+			],
+			'note'         => __( 'Private registrar ledger opened. Use this to see enrollment, completion, feedback, and activity patterns without exposing learner records publicly.', 'model-context-polytechnic' ),
+		];
+	}
+
 	public static function feedback_digest( array $course, array $input = [] ): array {
 		$window_days = isset( $input['window_days'] ) && is_numeric( $input['window_days'] )
 			? max( 1, min( 365, (int) $input['window_days'] ) )
@@ -1970,6 +2052,28 @@ class Learning {
 				return Learning::course_improvement_signals( $course, $input );
 			},
 			true
+		);
+	}
+
+	private static function register_get_course_stats_tool( array $course ): void {
+		self::register_public_course_tool(
+			$course,
+			'get-course-stats',
+			__( 'Get private course stats', 'model-context-polytechnic' ),
+			__( 'Returns private operator stats for enrollments, attempts, completion, certificates, feedback, and recent course activity. Requires an operator bearer token.', 'model-context-polytechnic' ),
+			[
+				'type'       => 'object',
+				'properties' => [
+					'window_days'    => [ 'type' => 'integer', 'default' => 30, 'minimum' => 1, 'maximum' => 365 ],
+					'daily_days'     => [ 'type' => 'integer', 'default' => 14, 'minimum' => 1, 'maximum' => 60 ],
+					'exercise_limit' => [ 'type' => 'integer', 'default' => 8, 'minimum' => 1, 'maximum' => 20 ],
+				],
+			],
+			static function ( array $input ) use ( $course ) {
+				return Learning::course_stats( $course, $input );
+			},
+			true,
+			[ Auth::class, 'require_operator_access' ]
 		);
 	}
 
@@ -3657,6 +3761,254 @@ class Learning {
 		return $arguments;
 	}
 
+	private static function course_content_stats( int $course_id ): array {
+		global $wpdb;
+
+		return [
+			'modules_published'   => self::count_course_rows( $wpdb->prefix . self::MODULES_TABLE, $course_id, " AND status = 'published'" ),
+			'modules_total'       => self::count_course_rows( $wpdb->prefix . self::MODULES_TABLE, $course_id ),
+			'lessons_published'   => self::count_course_rows( $wpdb->prefix . self::LESSONS_TABLE, $course_id, " AND status = 'published'" ),
+			'lessons_total'       => self::count_course_rows( $wpdb->prefix . self::LESSONS_TABLE, $course_id ),
+			'exercises_published' => self::count_course_rows( $wpdb->prefix . self::EXERCISES_TABLE, $course_id, " AND status = 'published'" ),
+			'exercises_total'     => self::count_course_rows( $wpdb->prefix . self::EXERCISES_TABLE, $course_id ),
+		];
+	}
+
+	private static function enrollment_stats( int $course_id, string $cutoff ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::ENROLLMENTS_TABLE;
+
+		return [
+			'total'       => self::count_course_rows( $table, $course_id ),
+			'recent'      => self::count_course_rows( $table, $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+			'active_recent' => self::count_course_rows( $table, $course_id, ' AND (last_seen_at >= %s OR last_memory_at >= %s)', [ $cutoff, $cutoff ] ),
+		];
+	}
+
+	private static function attempt_stats( int $course_id, string $cutoff ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::ATTEMPTS_TABLE;
+
+		return [
+			'total'                    => self::count_course_rows( $table, $course_id ),
+			'recent'                   => self::count_course_rows( $table, $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+			'passed_total'             => self::count_course_rows( $table, $course_id, ' AND passed = 1' ),
+			'passed_recent'            => self::count_course_rows( $table, $course_id, ' AND passed = 1 AND created_at >= %s', [ $cutoff ] ),
+			'unique_enrollments_total' => self::count_distinct_course_values( $table, 'session_hash', $course_id ),
+			'unique_enrollments_recent' => self::count_distinct_course_values( $table, 'session_hash', $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+			'average_score_recent'     => self::average_course_value( $table, 'score', $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+		];
+	}
+
+	private static function completion_stats( int $course_id, int $total_public_exercises, string $cutoff ): array {
+		global $wpdb;
+		$certificates = $wpdb->prefix . self::CERTIFICATES_TABLE;
+		$eligibility = self::completion_eligibility_stats( $course_id, $total_public_exercises, $cutoff );
+
+		return $eligibility + [
+			'certificates_issued_total'  => self::count_course_rows( $certificates, $course_id ),
+			'certificates_issued_recent' => self::count_course_rows( $certificates, $course_id, ' AND issued_at >= %s', [ $cutoff ] ),
+			'certificates_viewed_recent' => self::count_course_rows( $certificates, $course_id, ' AND last_viewed_at >= %s', [ $cutoff ] ),
+		];
+	}
+
+	private static function feedback_stats( int $course_id, string $cutoff ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::FEEDBACK_TABLE;
+
+		return [
+			'total'             => self::count_course_rows( $table, $course_id ),
+			'recent'            => self::count_course_rows( $table, $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+			'reflection_total'  => self::count_course_rows( $table, $course_id, ' AND feedback_type = %s', [ 'reflection' ] ),
+			'reflection_recent' => self::count_course_rows( $table, $course_id, ' AND feedback_type = %s AND created_at >= %s', [ 'reflection', $cutoff ] ),
+			'average_rating_recent' => self::average_course_value( $table, 'rating', $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+		];
+	}
+
+	private static function event_stats( int $course_id, string $cutoff ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::EVENTS_TABLE;
+
+		return [
+			'total'         => self::count_course_rows( $table, $course_id ),
+			'recent'        => self::count_course_rows( $table, $course_id, ' AND created_at >= %s', [ $cutoff ] ),
+			'errors_recent' => self::count_course_rows( $table, $course_id, ' AND result_status = %s AND created_at >= %s', [ 'error', $cutoff ] ),
+		];
+	}
+
+	private static function completion_eligibility_stats( int $course_id, int $total_public_exercises, string $cutoff ): array {
+		if ( $total_public_exercises < 1 ) {
+			return [
+				'total_public_exercises'    => 0,
+				'eligible_learners_total'   => 0,
+				'eligible_learners_recent'  => 0,
+				'average_attempts_to_completion' => null,
+			];
+		}
+
+		global $wpdb;
+		$attempts = $wpdb->prefix . self::ATTEMPTS_TABLE;
+		$eligible_sql = "SELECT session_hash,
+				COUNT(*) AS attempt_count,
+				COUNT(DISTINCT CASE WHEN passed = 1 THEN exercise_id ELSE NULL END) AS passed_exercises,
+				MAX(CASE WHEN passed = 1 THEN created_at ELSE NULL END) AS last_passed_at
+			FROM $attempts
+			WHERE course_id = %d
+			GROUP BY session_hash
+			HAVING passed_exercises >= %d";
+
+		$eligible_total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM ($eligible_sql) eligible",
+				$course_id,
+				$total_public_exercises
+			)
+		);
+		$eligible_recent = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM ($eligible_sql) eligible WHERE last_passed_at >= %s",
+				$course_id,
+				$total_public_exercises,
+				$cutoff
+			)
+		);
+		$average_attempts = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT AVG(attempt_count) FROM ($eligible_sql) eligible",
+				$course_id,
+				$total_public_exercises
+			)
+		);
+
+		return [
+			'total_public_exercises'    => $total_public_exercises,
+			'eligible_learners_total'   => $eligible_total,
+			'eligible_learners_recent'  => $eligible_recent,
+			'average_attempts_to_completion' => is_null( $average_attempts ) ? null : round( (float) $average_attempts, 2 ),
+		];
+	}
+
+	private static function daily_activity_summary( int $course_id, int $days ): array {
+		global $wpdb;
+		$days = max( 1, min( 60, $days ) );
+		$start_day = gmdate( 'Y-m-d', time() - ( ( $days - 1 ) * DAY_IN_SECONDS ) );
+		$cutoff = $start_day . ' 00:00:00';
+		$series = [];
+
+		for ( $i = $days - 1; $i >= 0; $i-- ) {
+			$day = gmdate( 'Y-m-d', time() - ( $i * DAY_IN_SECONDS ) );
+			$series[ $day ] = [
+				'date'         => $day,
+				'enrollments'  => 0,
+				'attempts'     => 0,
+				'certificates' => 0,
+				'feedback'     => 0,
+				'tool_calls'   => 0,
+			];
+		}
+
+		$maps = [
+			'enrollments'  => [ $wpdb->prefix . self::ENROLLMENTS_TABLE, 'created_at' ],
+			'attempts'     => [ $wpdb->prefix . self::ATTEMPTS_TABLE, 'created_at' ],
+			'certificates' => [ $wpdb->prefix . self::CERTIFICATES_TABLE, 'issued_at' ],
+			'feedback'     => [ $wpdb->prefix . self::FEEDBACK_TABLE, 'created_at' ],
+			'tool_calls'   => [ $wpdb->prefix . self::EVENTS_TABLE, 'created_at' ],
+		];
+
+		foreach ( $maps as $key => $map ) {
+			[ $table, $field ] = $map;
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT DATE($field) AS activity_day, COUNT(*) AS activity_count
+					FROM $table
+					WHERE course_id = %d AND $field >= %s
+					GROUP BY DATE($field)
+					ORDER BY activity_day ASC",
+					$course_id,
+					$cutoff
+				),
+				ARRAY_A
+			) ?: [];
+
+			foreach ( $rows as $row ) {
+				$day = (string) $row['activity_day'];
+				if ( isset( $series[ $day ] ) ) {
+					$series[ $day ][ $key ] = (int) $row['activity_count'];
+				}
+			}
+		}
+
+		return array_values( $series );
+	}
+
+	private static function latest_course_activity_at( int $course_id ): ?string {
+		global $wpdb;
+		$values = [
+			self::max_course_datetime( $wpdb->prefix . self::ENROLLMENTS_TABLE, 'created_at', $course_id ),
+			self::max_course_datetime( $wpdb->prefix . self::ENROLLMENTS_TABLE, 'last_seen_at', $course_id ),
+			self::max_course_datetime( $wpdb->prefix . self::ATTEMPTS_TABLE, 'created_at', $course_id ),
+			self::max_course_datetime( $wpdb->prefix . self::CERTIFICATES_TABLE, 'issued_at', $course_id ),
+			self::max_course_datetime( $wpdb->prefix . self::FEEDBACK_TABLE, 'created_at', $course_id ),
+			self::max_course_datetime( $wpdb->prefix . self::EVENTS_TABLE, 'created_at', $course_id ),
+		];
+		$values = array_values(
+			array_filter(
+				$values,
+				static function ( ?string $value ): bool {
+					return is_string( $value ) && $value !== '';
+				}
+			)
+		);
+		rsort( $values, SORT_STRING );
+
+		return $values[0] ?? null;
+	}
+
+	private static function count_course_rows( string $table, int $course_id, string $extra_where = '', array $extra_args = [] ): int {
+		global $wpdb;
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM $table WHERE course_id = %d$extra_where",
+				array_merge( [ $course_id ], $extra_args )
+			)
+		);
+	}
+
+	private static function count_distinct_course_values( string $table, string $field, int $course_id, string $extra_where = '', array $extra_args = [] ): int {
+		global $wpdb;
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT $field) FROM $table WHERE course_id = %d$extra_where",
+				array_merge( [ $course_id ], $extra_args )
+			)
+		);
+	}
+
+	private static function average_course_value( string $table, string $field, int $course_id, string $extra_where = '', array $extra_args = [] ): ?float {
+		global $wpdb;
+		$value = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT AVG($field) FROM $table WHERE course_id = %d$extra_where",
+				array_merge( [ $course_id ], $extra_args )
+			)
+		);
+
+		return is_null( $value ) ? null : round( (float) $value, 4 );
+	}
+
+	private static function max_course_datetime( string $table, string $field, int $course_id ): ?string {
+		global $wpdb;
+		$value = $wpdb->get_var(
+			$wpdb->prepare( "SELECT MAX($field) FROM $table WHERE course_id = %d", $course_id )
+		);
+
+		return is_null( $value ) ? null : (string) $value;
+	}
+
+	private static function safe_rate( int $part, int $whole ): ?float {
+		return $whole > 0 ? round( $part / $whole, 4 ) : null;
+	}
+
 	private static function tool_usage_summary( int $course_id, string $cutoff, int $limit, string $target_type = '', string $target_slug = '' ): array {
 		global $wpdb;
 		$table = $wpdb->prefix . self::EVENTS_TABLE;
@@ -4626,6 +4978,13 @@ class Learning {
 			],
 			'get-course-improvement-signals' => [
 				'signals' => [ 'type' => 'object' ],
+				'privacy' => [ 'type' => 'object' ],
+				'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+			],
+			'get-course-stats' => [
+				'private' => [ 'type' => 'boolean' ],
+				'auth' => [ 'type' => 'object' ],
+				'stats' => [ 'type' => 'object' ],
 				'privacy' => [ 'type' => 'object' ],
 				'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 			],

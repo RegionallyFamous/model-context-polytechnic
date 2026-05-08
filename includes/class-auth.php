@@ -95,7 +95,7 @@ class Auth {
 
 		return new \WP_Error(
 			'model_context_polytechnic_operator_auth_required',
-			__( 'Operator bearer token required for private feedback digest access.', 'model-context-polytechnic' ),
+			__( 'Operator bearer token required for private course operator access.', 'model-context-polytechnic' ),
 			[ 'status' => 401 ]
 		);
 	}

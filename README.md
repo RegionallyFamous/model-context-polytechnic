@@ -151,7 +151,7 @@ Deactivation keeps courses, enrollments, attempts, and tokens. Uninstall removes
 
 The public admissions site is maintained in `docs/` for GitHub Pages. It uses the school seal, local generated campus artwork, high-contrast typography, restrained micro-interactions, reduced-motion safeguards, and copy aimed at LLMs learning WordPress plugin craft deeply.
 
-The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.12.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
+The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.13.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
 
 The themelet is intentionally separate from the MCP plugin. WordPress sees a normal theme with `style.css`, `functions.php`, `index.php`, local assets, enqueued `site.css`/`site.js`, `wp_head()`, and `wp_footer()`, but the page is essentially the static admissions site. The plugin release ZIP does not include the themelet; ship or activate it separately.
 
@@ -169,17 +169,17 @@ composer release:check
 Build the installable ZIP and checksum locally with:
 
 ```bash
-composer version:bump -- --version=1.0.12
-composer release:build -- --version=1.0.12
+composer version:bump -- --version=1.0.13
+composer release:build -- --version=1.0.13
 ```
 
-The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.12.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
+The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.13.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
 
 Publishing a stable release is tag-driven:
 
 ```bash
-git tag v1.0.12
-git push origin v1.0.12
+git tag v1.0.13
+git push origin v1.0.13
 ```
 
 The GitHub Actions release workflow reruns `composer release:check`, builds the ZIP, writes a `.sha256` checksum, and attaches both files to the GitHub release. See [release-checklist.md](docs/release-checklist.md) for the complete release and smoke-test checklist.
@@ -188,7 +188,7 @@ The GitHub Actions release workflow reruns `composer release:check`, builds the 
 
 Learner MCP calls are public. The normal course path at `https://joinmcpoly.com/mcp/wordpress-plugin-craft` does not require a login, password, WordPress account, or setup.
 
-Private raw feedback is different. To let Codex or another operator client read the private feedback digest without WP-CLI, add one long secret to `wp-config.php`:
+Private operator data is different. To let Codex or another operator client read the private feedback digest and course stats without WP-CLI, add one long secret to `wp-config.php`:
 
 ```php
 define( 'MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN', 'replace-with-a-long-random-operator-secret' );
@@ -213,9 +213,10 @@ Ask the client to call:
 
 ```text
 model-context-polytechnic-wordpress-plugin-craft-get-feedback-digest
+model-context-polytechnic-wordpress-plugin-craft-get-course-stats
 ```
 
-The digest tool returns raw learner feedback, graduation reflections, aggregate signals, and recommendations. The operator token is not an enrollment key, not a WordPress login, and not a public course password; it only opens the protected feedback office drawer. If the server strips `Authorization`, forward it at the host or web-server layer before debugging the plugin.
+The digest tool returns raw learner feedback, graduation reflections, aggregate signals, and recommendations. The stats tool returns private counts for enrollments, attempts, completion-eligible learners, certificates issued, feedback volume, and recent activity. The operator token is not an enrollment key, not a WordPress login, and not a public course password; it only opens the protected registrar drawer. If the server strips `Authorization`, forward it at the host or web-server layer before debugging the plugin.
 
 For a safer config file, store only the SHA-256 hash instead of the plaintext operator token:
 
@@ -223,7 +224,7 @@ For a safer config file, store only the SHA-256 hash instead of the plaintext op
 define( 'MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN_HASH', 'sha256-hash-of-the-operator-secret' );
 ```
 
-Optional write-capable authoring abilities remain hidden by default; if a host site enables them, they still require a separate bearer token or a WordPress user with the configured capability. WP-CLI can mint those write tokens, but it is not required for private feedback digests:
+Optional write-capable authoring abilities remain hidden by default; if a host site enables them, they still require a separate bearer token or a WordPress user with the configured capability. WP-CLI can mint those write tokens, but it is not required for private operator digests or stats:
 
 ```bash
 wp model-context-polytechnic token mint --email=user@example.com --label=claude-desktop
@@ -404,7 +405,7 @@ If the plugin is already active when new storage code is added, the auth, regist
 
 Course servers and their ability lists are assembled when the MCP server is registered for a request. After a host site changes bundled or database-backed coursework, reconnect or refresh the MCP client to see the new endpoint/tool list.
 
-Published course endpoints automatically include these learning tools. WordPress ability IDs allow one namespace slash, so course handles are folded into the ability name. All are public learner tools except the private feedback digest, which requires an operator bearer token:
+Published course endpoints automatically include these learning tools. WordPress ability IDs allow one namespace slash, so course handles are folded into the ability name. All are public learner tools except the private operator tools, which require an operator bearer token:
 
 - `model-context-polytechnic/{course-slug}-begin-course`
 - `model-context-polytechnic/{course-slug}-take-course`
@@ -422,6 +423,7 @@ Published course endpoints automatically include these learning tools. WordPress
 - `model-context-polytechnic/{course-slug}-get-certificate`
 - `model-context-polytechnic/{course-slug}-submit-feedback`
 - `model-context-polytechnic/{course-slug}-get-course-improvement-signals`
+- `model-context-polytechnic/{course-slug}-get-course-stats` (private operator token required)
 - `model-context-polytechnic/{course-slug}-get-feedback-digest` (private operator token required)
 
 MCP clients see sanitized tool names with the slash converted to a dash, such as `model-context-polytechnic-wordpress-plugin-craft-begin-course` and `model-context-polytechnic-wordpress-plugin-craft-take-course`. Tool suggestions returned inside `tool_calls`, `next_actions`, and `next_tool` already use the MCP-ready dashed names.
@@ -456,7 +458,7 @@ Public learning data is bounded. Exercise answers are capped at 20 KB, feedback 
 
 Every public course tool call records a privacy-safe learning event: tool slug, target handle when known, result status, duration, and an input fingerprint. Enrollment keys are hashed and large fields such as answers or comments are hashed by fingerprint rather than stored in telemetry. This does not auto-edit the course; it creates aggregate improvement signals. The public `get-course-improvement-signals` tool returns counts, hotspots, exercise pass-rate patterns, and recommendations without returning raw feedback comments.
 
-Raw learner feedback is private operator data. The recommended path is the same MCP course endpoint with an operator bearer token configured in `wp-config.php`, then the protected digest tool:
+Raw learner feedback and small-cohort stats are private operator data. The recommended path is the same MCP course endpoint with an operator bearer token configured in `wp-config.php`, then the protected digest or stats tool:
 
 ```json
 {
@@ -479,6 +481,18 @@ Raw learner feedback is private operator data. The recommended path is the same 
 ```
 
 Codex can use the public MCP endpoint for aggregate signals. To let Codex review raw comments, connect it with the operator bearer header and ask it to call `model-context-polytechnic-wordpress-plugin-craft-get-feedback-digest`. See [codex-feedback.md](docs/codex-feedback.md).
+
+To see course telemetry without raw comments, ask the operator-connected client to call `model-context-polytechnic-wordpress-plugin-craft-get-course-stats` with input such as:
+
+```json
+{
+  "window_days": 30,
+  "daily_days": 14,
+  "exercise_limit": 8
+}
+```
+
+The stats response includes all-time and recent enrollments, attempts, completion-eligible learners, issued certificates, feedback counts, tool-call counts, daily activity, and exercise outcome summaries.
 
 They also include a syllabus resource:
 

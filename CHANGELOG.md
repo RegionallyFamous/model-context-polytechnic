@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.13 - 2026-05-08
+
+- Adds private operator-only `get-course-stats` for enrollment, attempt, completion, certificate, feedback, event, daily activity, and exercise outcome metrics.
+- Reports both completion-eligible learners and issued certificates so operators can distinguish learners who finished the labs from learners who also called `get-certificate`.
+- Updates operator-token docs so Codex can retrieve private stats through MCP without WP-CLI.
+
 ## 1.0.12 - 2026-05-08
 
 - Adds `response_mode=gradebook` for compact exercise attempts while keeping `response_mode=student_theater` as the full campus-story default.
