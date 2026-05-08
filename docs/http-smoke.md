@@ -33,7 +33,7 @@ The smoke test performs these MCP JSON-RPC calls:
 3. `tools/list` and verify the public learning tools are exposed.
 4. `resources/list` and verify the syllabus plus public references are exposed.
 5. `tools/call` for `begin-course`.
-6. `tools/call` for the exact MCP-ready `take-course` tool returned by `begin-course` and verify an autopilot material packet plus markdown activity indicator are returned.
+6. `tools/call` for the exact MCP-ready `take-course` tool returned by `begin-course` and verify an autopilot material packet, concise `learning_status`, and optional `get-campus-scene` visual call are returned.
 7. `tools/call` for `get-exercise`.
 8. `tools/call` for `attempt-exercise`.
 9. `tools/call` for `get-learning-memory`.

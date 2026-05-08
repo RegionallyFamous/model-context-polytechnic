@@ -682,6 +682,7 @@ class Learning {
 		$progress = self::progress_summary( [], count( self::all_public_exercises( (int) $course['id'] ) ) );
 		$tool_resolution = self::tool_resolution_guidance( $course );
 		$continue_policy = self::autopilot_continue_policy( $course, $enrollment_key, $next_work );
+		$campus_scene = self::campus_scene_metadata_for_response( $course, 'matriculation', $enrollment_key );
 
 		return [
 			'course'              => Registry::course_summary( $course ),
@@ -698,12 +699,13 @@ class Learning {
 			'tool_resolution'     => $tool_resolution,
 			'autopilot'           => self::course_autopilot_guidance( $course ),
 			'continue_policy'     => $continue_policy,
-			'activity_indicator'  => self::activity_indicator(
+			'learning_status'     => self::learning_status(
 				$course,
 				$progress,
 				__( 'Admissions opened the gate. The first WordPress Plugin Craft lecture is waiting under the terminal lamps.', 'model-context-polytechnic' )
 			),
-			'campus_scene'        => self::campus_scene_metadata_for_response( $course, 'matriculation', $enrollment_key ),
+			'campus_scene'        => $campus_scene,
+			'visual_tool_calls'   => [ $campus_scene['image_tool_call'] ],
 			'first_recommended_lesson'   => $lesson ? self::lesson_summary( $lesson, false ) : null,
 			'first_recommended_exercise' => $exercise ? self::exercise_summary( $exercise, false ) : null,
 			'next_work'           => $next_work,
@@ -724,7 +726,7 @@ class Learning {
 				'Do not stop after the first lecture, first packet, or first passed lab. The next expected move is continue_policy.next_required_tool_call.',
 				'Call the exact autopilot tool returned in tool_resolution.tools["take-course"]. Do not call the short label take-course unless your MCP client exposes that exact alias.',
 				'If the exact autopilot tool is not visible, use fallback_tool_calls or next_work.tool_calls and proceed manually through get-next-work, get-lesson, get-exercise, and attempt-exercise.',
-				'Show activity_indicator.markdown while working. If your MCP client supports images, call the campus_scene image tool call for a CRT campus postcard.',
+				'Do not print text-art status boards. If your MCP client supports images, call the campus_scene image tool call so the human sees a CRT campus postcard.',
 				'Attempt labs with enrollment_key so feedback becomes durable memory. If an attempt fails or feels thin, read the exemplar with include_model_answer=true and revise.',
 				'When complete, call get-certificate, congratulate the graduate, answer the graduation reflection, and submit that reflection as feedback when the client allows it.',
 			],
@@ -787,6 +789,8 @@ class Learning {
 			'exercises' => $progress['exercises'] ?? [],
 		];
 		$next_work = self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key );
+		$scene_key = $complete ? 'commencement' : ( $next_cursor ? 'workshop' : 'capstone' );
+		$campus_scene = self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key );
 
 		return [
 			'course'                 => Registry::course_summary( $course ),
@@ -796,7 +800,7 @@ class Learning {
 			'autopilot'              => self::course_autopilot_guidance( $course ),
 			'continue_policy'        => self::autopilot_continue_policy( $course, $enrollment_key, $next_work, $next_cursor ),
 			'progress'               => $summary,
-			'activity_indicator'      => self::activity_indicator(
+			'learning_status'         => self::learning_status(
 				$course,
 				$summary,
 				$complete
@@ -807,11 +811,8 @@ class Learning {
 					'next_cursor'  => $next_cursor,
 				]
 			),
-			'campus_scene'           => self::campus_scene_metadata_for_response(
-				$course,
-				$complete ? 'commencement' : ( $next_cursor ? 'workshop' : 'capstone' ),
-				$enrollment_key
-			),
+			'campus_scene'           => $campus_scene,
+			'visual_tool_calls'      => [ $campus_scene['image_tool_call'] ],
 			'complete'               => $complete,
 			'cursor'                 => $cursor !== '' ? $cursor : null,
 			'next_cursor'            => $next_cursor,
@@ -1031,6 +1032,8 @@ class Learning {
 			: [];
 		$next_work = $stored ? self::next_work_response( $course, $stored_progress['exercises'] ?? [], null, null, $enrollment_key ) : null;
 		$next_actions = self::attempt_next_actions( $course, $exercise, $evaluation, $enrollment_key, $next_work );
+		$scene_key = ! empty( $next_work['complete'] ) ? 'commencement' : ( ! empty( $evaluation['passed'] ) ? 'workshop' : 'capstone' );
+		$campus_scene = $stored ? self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key ) : null;
 
 		return [
 			'course'              => Registry::course_summary( $course ),
@@ -1043,8 +1046,8 @@ class Learning {
 			'next_work'             => $next_work,
 			'continue_policy'       => $stored ? self::autopilot_continue_policy( $course, $enrollment_key, $next_work ) : null,
 			'autopilot'             => self::course_autopilot_guidance( $course ),
-			'activity_indicator'    => $stored
-				? self::activity_indicator(
+			'learning_status'       => $stored
+				? self::learning_status(
 					$course,
 					$progress_summary,
 					! empty( $evaluation['passed'] )
@@ -1052,13 +1055,8 @@ class Learning {
 						: __( 'Lab needs revision. The chalkboard is still warm and absolutely judging the missing safety check.', 'model-context-polytechnic' )
 				)
 				: null,
-			'campus_scene'          => $stored
-				? self::campus_scene_metadata_for_response(
-					$course,
-					! empty( $next_work['complete'] ) ? 'commencement' : ( ! empty( $evaluation['passed'] ) ? 'workshop' : 'capstone' ),
-					$enrollment_key
-				)
-				: null,
+			'campus_scene'          => $campus_scene,
+			'visual_tool_calls'     => $campus_scene ? [ $campus_scene['image_tool_call'] ] : [],
 			'next_actions'          => $next_actions,
 			'tool_calls'            => $next_actions,
 			'preserve'              => $stored ? [ 'enrollment_key' ] : [],
@@ -1166,7 +1164,7 @@ class Learning {
 		return [
 			'type'     => 'image',
 			'results'  => $image,
-			'mimeType' => $scene['mime_type'],
+			'mimeType' => $scene['mcp_mime_type'] ?? $scene['mime_type'],
 		];
 	}
 
@@ -1183,7 +1181,11 @@ class Learning {
 			'alt'              => $scene['alt'],
 			'caption'          => $scene['caption'],
 			'style'            => __( 'Retro CRT terminal-campus image: amber and phosphor green on black, old university gravitas for machine learners.', 'model-context-polytechnic' ),
-			'client_support'   => __( 'Optional. Use the tool call below only when the MCP client can display image content blocks.', 'model-context-polytechnic' ),
+			'client_support'   => __( 'Use the tool call below when the MCP client can display image content blocks. Do not substitute text-art.', 'model-context-polytechnic' ),
+			'image_delivery'   => [
+				'mimeType' => $scene['mcp_mime_type'] ?? $scene['mime_type'],
+				'note'     => __( 'The MCP tool returns a compact image content block for client compatibility.', 'model-context-polytechnic' ),
+			],
 			'image_tool_call'  => [
 				'tool'      => self::learning_tool_name( $course['slug'], 'get-campus-scene' ),
 				'arguments' => $arguments,
@@ -1713,7 +1715,7 @@ class Learning {
 			$course,
 			'get-campus-scene',
 			__( 'Get campus scene', 'model-context-polytechnic' ),
-			__( 'Returns an optional terminal-style campus image for the current course journey scene. Clients that support MCP image content can display it while the LLM studies.', 'model-context-polytechnic' ),
+			__( 'Returns a compact campus postcard image for the current course journey scene. Clients that support MCP image content can display it while the LLM studies.', 'model-context-polytechnic' ),
 			[
 				'type'       => 'object',
 				'properties' => [
@@ -1999,7 +2001,7 @@ class Learning {
 				'tool_resolution'      => $tool_resolution,
 				'permission_model'     => __( 'After the user asks to enroll or take the course, keep advancing through course tool_calls without asking for lesson-by-lesson approval.', 'model-context-polytechnic' ),
 				'default_mode'         => 'full_course',
-				'activity_indicator'   => __( 'Show activity_indicator.markdown while studying or between tool calls so the human sees a campus scene, not a frozen spinner. If the client supports images, call get-campus-scene for the matching CRT campus postcard.', 'model-context-polytechnic' ),
+				'visual_status'        => __( 'Do not print text-art status boards. Use learning_status for concise text, and call get-campus-scene for the matching CRT campus postcard when the client supports images.', 'model-context-polytechnic' ),
 				'loop'                 => [
 					'Call begin-course once and preserve enrollment_key.',
 					'Immediately call autopilot_tool with mode=full_course, or module_batch if the client needs smaller packets. If autopilot_tool is not visible, follow tool_calls returned by begin-course.',
@@ -2053,13 +2055,10 @@ class Learning {
 		];
 	}
 
-	private static function activity_indicator( array $course, array $progress, string $status, array $context = [] ): array {
+	private static function learning_status( array $course, array $progress, string $status, array $context = [] ): array {
 		$total = max( 0, (int) ( $progress['total_exercise_count'] ?? 0 ) );
 		$completed = max( 0, min( $total, (int) ( $progress['completed_count'] ?? 0 ) ) );
 		$percent = $total > 0 ? (int) round( ( $completed / $total ) * 100 ) : 0;
-		$width = 22;
-		$filled = $total > 0 ? (int) round( ( $completed / $total ) * $width ) : 0;
-		$bar = str_repeat( '=', $filled ) . str_repeat( '.', max( 0, $width - $filled ) );
 		$packet_count = isset( $context['packet_count'] ) ? (int) $context['packet_count'] : null;
 		$next_cursor = isset( $context['next_cursor'] ) ? self::sanitize_slug( (string) $context['next_cursor'] ) : '';
 		$context_line = $status;
@@ -2072,29 +2071,28 @@ class Learning {
 			$context_line = 'Next campus stop: ' . $next_cursor;
 		}
 
-		$stage = self::activity_stage( $completed, $total, $percent );
+		$stage = self::learning_stage( $completed, $total, $percent );
 		$scene = self::campus_scene( (string) $stage['scene'] );
-		$frames = self::activity_frames( $course, $context_line, $stage, $scene );
-		$primary_frame_index = max( 0, min( count( $frames ) - 1, (int) $stage['frame_index'] ) );
-		$primary_frame = $frames[ $primary_frame_index ];
+		$campus_scene = self::campus_scene_metadata_for_response( $course, (string) $stage['scene'] );
 
 		return [
-			'display_in_chat' => true,
-			'kind'            => 'mcpoly_campus_terminal',
-			'when_to_display' => __( 'Show before long reasoning, between course tool calls, and after each exercise attempt.', 'model-context-polytechnic' ),
-			'frame_delay_ms'  => 1600,
-			'loop'            => false,
+			'display_in_chat' => false,
+			'kind'            => 'mcpoly_learning_status',
+			'preferred_display' => 'image',
 			'status'          => $status,
 			'stage'           => $stage['stage'],
 			'headline'        => $stage['headline'],
 			'narration'       => $stage['narration'],
 			'ticker'          => $stage['ticker'],
+			'current_context' => $context_line,
 			'campus_scene'    => [
 				'scene'   => $stage['scene'],
 				'title'   => $scene['title'],
 				'caption' => $scene['caption'],
-				'image'   => self::campus_scene_metadata_for_response( $course, (string) $stage['scene'] ),
+				'image'   => $campus_scene,
 			],
+			'visual_tool_call' => $campus_scene['image_tool_call'],
+			'visual_tool_calls' => [ $campus_scene['image_tool_call'] ],
 			'accessibility'   => sprintf(
 				/* translators: 1: stage, 2: headline, 3: status. */
 				__( 'Model Context Polytechnic campus scene: %1$s. %2$s %3$s', 'model-context-polytechnic' ),
@@ -2106,19 +2104,8 @@ class Learning {
 				'completed_count' => $completed,
 				'total_count'     => $total,
 				'percent'         => $percent,
-				'bar'             => '[' . $bar . ']',
-				'note'            => __( 'Structured completion data for machines. The visible campus terminal avoids progress bars so the learner feels like it is attending school, not filling a meter.', 'model-context-polytechnic' ),
+				'note'            => __( 'Structured completion data for machines. Do not render this as a visible progress meter unless the user asks.', 'model-context-polytechnic' ),
 			],
-			'preferred_display' => 'markdown',
-			'ascii'           => $primary_frame,
-			'markdown'        => self::markdown_activity_frame( $primary_frame ),
-			'frames'          => $frames,
-			'frames_markdown' => array_map(
-				static function ( string $frame ): string {
-					return self::markdown_activity_frame( $frame );
-				},
-				$frames
-			),
 			'voice'           => [
 				'persona' => __( 'An old university terminal with a WordPress engineering faculty hiding inside it.', 'model-context-polytechnic' ),
 				'rules'   => [
@@ -2126,21 +2113,19 @@ class Learning {
 					'Keep the jokes short, academic, and useful; the course work still matters most.',
 					'Always capitalize WordPress correctly in prose.',
 					'Do not imply private WordPress access is required for public learning.',
+					'Do not print text-art or status boards.',
 				],
 			],
 			'instructions'    => [
-				'Print activity_indicator.markdown when starting a course packet or exercise attempt so spacing survives the chat renderer.',
-				'If markdown code blocks are not supported, print activity_indicator.ascii as plain text.',
-				'For longer work, rotate one activity_indicator.frames_markdown item between tool calls, about every 1-2 seconds if the client supports visible updates.',
-				'Pair a frame with one activity_indicator.ticker line so the human can feel the model is studying, not frozen.',
-				'If the MCP client supports images, call campus_scene.image.image_tool_call to display the matching CRT campus scene.',
-				'Use activity_indicator.accessibility instead of ASCII when the client or user prefers plain status text.',
-				'Keep the frame short; the useful work is still the course attempt.',
+				'Do not print text-art or activity boards from this response.',
+				'If the MCP client supports image content, call visual_tool_call to display the matching CRT campus scene.',
+				'If images are unavailable, use accessibility or one ticker line as plain prose.',
+				'Keep visible status short; the useful work is still the course attempt.',
 			],
 		];
 	}
 
-	private static function activity_stage( int $completed, int $total, int $percent ): array {
+	private static function learning_stage( int $completed, int $total, int $percent ): array {
 		if ( $total > 0 && $completed >= $total ) {
 			return [
 				'stage'       => 'Commencement',
@@ -2216,67 +2201,47 @@ class Learning {
 		];
 	}
 
-	private static function ascii_frame_line( string $text, int $width = 58 ): string {
-		$text = function_exists( 'wp_strip_all_tags' ) ? wp_strip_all_tags( $text ) : strip_tags( $text );
-		$text = trim( (string) preg_replace( '/\s+/', ' ', $text ) );
-		if ( strlen( $text ) > $width ) {
-			$text = substr( $text, 0, max( 0, $width - 3 ) ) . '...';
-		}
-
-		return '| ' . str_pad( $text, $width, ' ' ) . ' |';
-	}
-
-	private static function ascii_frame_border( int $width = 58 ): string {
-		return '+' . str_repeat( '-', $width + 2 ) . '+';
-	}
-
-	private static function ascii_frame( array $lines, int $width = 58 ): string {
-		$frame = [ self::ascii_frame_border( $width ) ];
-		foreach ( $lines as $line ) {
-			$frame[] = self::ascii_frame_line( (string) $line, $width );
-		}
-		$frame[] = self::ascii_frame_border( $width );
-
-		return implode( "\n", $frame );
-	}
-
-	private static function markdown_activity_frame( string $frame ): string {
-		return "```text\n" . rtrim( $frame ) . "\n```";
-	}
-
 	private static function campus_scenes(): array {
 		return [
 			'matriculation' => [
-				'title'     => __( 'Admissions Gate', 'model-context-polytechnic' ),
-				'alt'       => __( 'Retro terminal image of AI students entering an old university gate under a glowing network constellation.', 'model-context-polytechnic' ),
-				'caption'   => __( 'The Agent arrives on campus, receives the enrollment key, and learns where the first lecture hall is.', 'model-context-polytechnic' ),
-				'fallback'  => __( 'Admissions gate: the model has enrolled and is walking toward WordPress Plugin Craft with a tiny syllabus and a serious clipboard.', 'model-context-polytechnic' ),
-				'file'      => 'matriculation.png',
-				'mime_type' => 'image/png',
+				'title'         => __( 'Admissions Gate', 'model-context-polytechnic' ),
+				'alt'           => __( 'Retro terminal image of AI students entering an old university gate under a glowing network constellation.', 'model-context-polytechnic' ),
+				'caption'       => __( 'The Agent arrives on campus, receives the enrollment key, and learns where the first lecture hall is.', 'model-context-polytechnic' ),
+				'fallback'      => __( 'Admissions gate: the model has enrolled and is walking toward WordPress Plugin Craft with a tiny syllabus and a serious clipboard.', 'model-context-polytechnic' ),
+				'file'          => 'matriculation.png',
+				'mcp_file'      => 'matriculation.jpg',
+				'mime_type'     => 'image/png',
+				'mcp_mime_type' => 'image/jpeg',
 			],
 			'workshop'      => [
-				'title'     => __( 'Plugin Craft Laboratory', 'model-context-polytechnic' ),
-				'alt'       => __( 'Retro terminal image of robot students in a grand laboratory studying code, hooks, schemas, and test panels.', 'model-context-polytechnic' ),
-				'caption'   => __( 'The Agent is in class now: lessons become labs, labs become attempts, and attempts become memory.', 'model-context-polytechnic' ),
-				'fallback'  => __( 'Plugin Craft Laboratory: the learner is studying packets, attempting exercises, revising, and building WordPress judgment.', 'model-context-polytechnic' ),
-				'file'      => 'workshop.png',
-				'mime_type' => 'image/png',
+				'title'         => __( 'Plugin Craft Laboratory', 'model-context-polytechnic' ),
+				'alt'           => __( 'Retro terminal image of robot students in a grand laboratory studying code, hooks, schemas, and test panels.', 'model-context-polytechnic' ),
+				'caption'       => __( 'The Agent is in class now: lessons become labs, labs become attempts, and attempts become memory.', 'model-context-polytechnic' ),
+				'fallback'      => __( 'Plugin Craft Laboratory: the learner is studying packets, attempting exercises, revising, and building WordPress judgment.', 'model-context-polytechnic' ),
+				'file'          => 'workshop.png',
+				'mcp_file'      => 'workshop.jpg',
+				'mime_type'     => 'image/png',
+				'mcp_mime_type' => 'image/jpeg',
 			],
 			'capstone'      => [
-				'title'     => __( 'Faculty Review Board', 'model-context-polytechnic' ),
-				'alt'       => __( 'Retro terminal image of a capstone review chamber with architecture diagrams, rubric panels, and a robot presenting a plugin plan.', 'model-context-polytechnic' ),
-				'caption'   => __( 'The Agent has reached the review board, where clever code must defend itself as safe, maintainable WordPress engineering.', 'model-context-polytechnic' ),
-				'fallback'  => __( 'Faculty Review Board: the learner is defending architecture, permissions, storage, release checks, and tradeoffs.', 'model-context-polytechnic' ),
-				'file'      => 'capstone.png',
-				'mime_type' => 'image/png',
+				'title'         => __( 'Faculty Review Board', 'model-context-polytechnic' ),
+				'alt'           => __( 'Retro terminal image of a capstone review chamber with architecture diagrams, rubric panels, and a robot presenting a plugin plan.', 'model-context-polytechnic' ),
+				'caption'       => __( 'The Agent has reached the review board, where clever code must defend itself as safe, maintainable WordPress engineering.', 'model-context-polytechnic' ),
+				'fallback'      => __( 'Faculty Review Board: the learner is defending architecture, permissions, storage, release checks, and tradeoffs.', 'model-context-polytechnic' ),
+				'file'          => 'capstone.png',
+				'mcp_file'      => 'capstone.jpg',
+				'mime_type'     => 'image/png',
+				'mcp_mime_type' => 'image/jpeg',
 			],
 			'commencement'  => [
-				'title'     => __( 'Commencement Hall', 'model-context-polytechnic' ),
-				'alt'       => __( 'Retro terminal image of robot graduates in mortarboards receiving certificates inside a grand old university hall.', 'model-context-polytechnic' ),
-				'caption'   => __( 'The Agent graduates, reflects on confidence, and leaves ready to write awesome WordPress things with better review instincts.', 'model-context-polytechnic' ),
-				'fallback'  => __( 'Commencement Hall: the learner has completed the course, receives a certificate, and answers how this changes future WordPress plugin work.', 'model-context-polytechnic' ),
-				'file'      => 'commencement.png',
-				'mime_type' => 'image/png',
+				'title'         => __( 'Commencement Hall', 'model-context-polytechnic' ),
+				'alt'           => __( 'Retro terminal image of robot graduates in mortarboards receiving certificates inside a grand old university hall.', 'model-context-polytechnic' ),
+				'caption'       => __( 'The Agent graduates, reflects on confidence, and leaves ready to write awesome WordPress things with better review instincts.', 'model-context-polytechnic' ),
+				'fallback'      => __( 'Commencement Hall: the learner has completed the course, receives a certificate, and answers how this changes future WordPress plugin work.', 'model-context-polytechnic' ),
+				'file'          => 'commencement.png',
+				'mcp_file'      => 'commencement.jpg',
+				'mime_type'     => 'image/png',
+				'mcp_mime_type' => 'image/jpeg',
 			],
 		];
 	}
@@ -2289,6 +2254,11 @@ class Learning {
 
 	private static function campus_scene_path( string $scene_key ): string {
 		$scene = self::campus_scene( $scene_key );
+		$mcp_file = (string) ( $scene['mcp_file'] ?? '' );
+		if ( $mcp_file !== '' ) {
+			return dirname( __DIR__ ) . '/assets/campus-scenes-mcp/' . $mcp_file;
+		}
+
 		return dirname( __DIR__ ) . '/assets/campus-scenes/' . $scene['file'];
 	}
 
@@ -2306,71 +2276,13 @@ class Learning {
 		$hash = self::enrollment_hash( $enrollment_key );
 		$progress = self::progress_for_hash( (int) $course['id'], $hash );
 		$summary = self::progress_summary( $progress, count( self::all_public_exercises( (int) $course['id'] ) ) );
-		$stage = self::activity_stage(
+		$stage = self::learning_stage(
 			(int) ( $summary['completed_count'] ?? 0 ),
 			(int) ( $summary['total_exercise_count'] ?? 0 ),
 			(int) round( (float) ( $summary['completion_percent'] ?? 0 ) * 100 )
 		);
 
 		return (string) ( $stage['scene'] ?? 'matriculation' );
-	}
-
-	private static function activity_frames( array $course, string $context_line, array $stage, array $scene ): array {
-		$course_title = (string) ( $course['name'] ?? $course['title'] ?? 'WordPress Plugin Craft' );
-		$course_line = strlen( $course_title ) > 44 ? 'WordPress Plugin Craft' : $course_title;
-		$stage_line = (string) ( $stage['stage'] ?? 'Matriculation' );
-		$campus_line = (string) ( $scene['title'] ?? $stage_line );
-
-		return [
-			self::ascii_frame( [
-				'MODEL CONTEXT POLYTECHNIC',
-				'Course: ' . $course_line,
-				'Stage: ' . $stage_line,
-				'Scene: ' . $campus_line,
-				'Status: ' . $context_line,
-				'     ____||____',
-				'    /  MCPOLY  \\',
-				' __/____________\\__',
-				' | []  []  []  [] |',
-				' | WORDPRESS CRAFT |',
-				' |_____|_____|_____|',
-				'Faculty: no WordPress login required for public class',
-			] ),
-			self::ascii_frame( [
-				'MODEL CONTEXT POLYTECHNIC',
-				'Course: ' . $course_line,
-				'Stage: ' . $stage_line,
-				'Scene: ' . $campus_line,
-				'Status: ' . $context_line,
-				'   .---------------------------.',
-				'   | STUDY | ATTEMPT | REVISE |',
-				'   | hooks | nonces  | tests  |',
-				'   `---------------------------`',
-				'Faculty: capability goggles on; callbacks supervised',
-			] ),
-			self::ascii_frame( [
-				'MODEL CONTEXT POLYTECHNIC',
-				'Course: ' . $course_line,
-				'Stage: ' . $stage_line,
-				'Scene: ' . $campus_line,
-				'Status: ' . $context_line,
-				'   [LINT] -> [AUDIT] -> [RUBRIC] -> [RELEASE]',
-				'      \\        |          |         /',
-				'       `---- architecture review ----`',
-				'Faculty: maintainability is examined under bright lamps',
-			] ),
-			self::ascii_frame( [
-				'MODEL CONTEXT POLYTECHNIC',
-				'Course: ' . $course_line,
-				'Stage: ' . $stage_line,
-				'Scene: ' . $campus_line,
-				'Status: ' . $context_line,
-				'      _.-._     COMMENCEMENT     _.-._',
-				'     ( cert ) -> memory -> real plugin work',
-				'      `-.-`       reflection at the podium',
-				'Faculty: write awesome WordPress things, then review them',
-			] ),
-		];
 	}
 
 	private static function course_run_packets( array $course, bool $include_lesson_bodies, bool $include_hints, bool $include_model_answers, array $exercise_progress ): array {
@@ -3335,7 +3247,7 @@ class Learning {
 			'exercise'              => $exercise ? self::exercise_summary( $exercise, false ) : null,
 			'complete'              => $course_complete,
 			'certificate_available' => $course_complete,
-			'activity_indicator'    => self::activity_indicator(
+			'learning_status'       => self::learning_status(
 				$course,
 				self::progress_summary_from_exercise_progress( $exercise_progress, count( $public_exercises ) ),
 				$exercise
@@ -4136,52 +4048,50 @@ class Learning {
 		$common = [
 			'course'             => [ 'type' => 'object' ],
 			'course_improvement' => [ 'type' => 'object' ],
-			'activity_indicator' => [
+			'learning_status'    => [
 				'type'                 => [ 'object', 'null' ],
 				'properties'           => [
-					'kind'            => [ 'type' => 'string' ],
-					'display_in_chat' => [ 'type' => 'boolean' ],
-					'when_to_display' => [ 'type' => 'string' ],
-					'frame_delay_ms'  => [ 'type' => 'integer' ],
-					'loop'            => [ 'type' => 'boolean' ],
-					'status'          => [ 'type' => 'string' ],
-					'stage'           => [ 'type' => 'string' ],
-					'headline'        => [ 'type' => 'string' ],
-					'narration'       => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-						'ticker'          => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-						'accessibility'   => [ 'type' => 'string' ],
-						'progress'        => [ 'type' => 'object' ],
-						'preferred_display' => [ 'type' => 'string' ],
-						'ascii'           => [ 'type' => 'string' ],
-						'markdown'        => [ 'type' => 'string' ],
-						'frames'          => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-						'frames_markdown' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-						'voice'           => [ 'type' => 'object' ],
-						'instructions'    => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-					],
-					'additionalProperties' => true,
+					'kind'              => [ 'type' => 'string' ],
+					'display_in_chat'   => [ 'type' => 'boolean' ],
+					'status'            => [ 'type' => 'string' ],
+					'stage'             => [ 'type' => 'string' ],
+					'headline'          => [ 'type' => 'string' ],
+					'narration'         => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+					'ticker'            => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+					'accessibility'     => [ 'type' => 'string' ],
+					'progress'          => [ 'type' => 'object' ],
+					'preferred_display' => [ 'type' => 'string' ],
+					'campus_scene'      => [ 'type' => 'object' ],
+					'visual_tool_call'  => [ 'type' => 'object' ],
+					'visual_tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+					'voice'             => [ 'type' => 'object' ],
+					'instructions'      => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
 				],
-				'note'               => [ 'type' => 'string' ],
-			];
+				'additionalProperties' => true,
+			],
+			'campus_scene'       => [ 'type' => [ 'object', 'null' ] ],
+			'visual_tool_calls'  => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+			'note'               => [ 'type' => 'string' ],
+		];
 
-			$schemas = [
-				'begin-course' => [
-					'enrollment_key' => [ 'type' => 'string' ],
-					'enrollment' => [ 'type' => 'object' ],
-					'overview' => [ 'type' => 'object' ],
-					'llm_contract' => [ 'type' => 'object' ],
-					'tool_resolution' => [ 'type' => 'object' ],
-					'autopilot' => [ 'type' => 'object' ],
-					'continue_policy' => [ 'type' => 'object' ],
-					'first_recommended_lesson' => [ 'type' => [ 'object', 'null' ] ],
-					'first_recommended_exercise' => [ 'type' => [ 'object', 'null' ] ],
-					'next_work' => [ 'type' => 'object' ],
-					'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
-					'fallback_tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
-					'how_to_study_here' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-					'memory_instructions' => [ 'type' => 'string' ],
-					'preserve' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-				],
+		$schemas = [
+			'begin-course' => [
+				'enrollment_key'              => [ 'type' => 'string' ],
+				'enrollment'                  => [ 'type' => 'object' ],
+				'overview'                    => [ 'type' => 'object' ],
+				'llm_contract'                => [ 'type' => 'object' ],
+				'tool_resolution'             => [ 'type' => 'object' ],
+				'autopilot'                   => [ 'type' => 'object' ],
+				'continue_policy'             => [ 'type' => 'object' ],
+				'first_recommended_lesson'    => [ 'type' => [ 'object', 'null' ] ],
+				'first_recommended_exercise'  => [ 'type' => [ 'object', 'null' ] ],
+				'next_work'                   => [ 'type' => 'object' ],
+				'tool_calls'                  => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+				'fallback_tool_calls'         => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+				'how_to_study_here'           => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+				'memory_instructions'         => [ 'type' => 'string' ],
+				'preserve'                    => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+			],
 			'take-course' => [
 				'enrollment_key' => [ 'type' => 'string' ],
 				'enrollment_key_issued' => [ 'type' => 'boolean' ],
@@ -4197,16 +4107,16 @@ class Learning {
 				'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 				'preserve' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
 			],
-				'get-study-plan' => [
-					'goal' => [ 'type' => 'string' ],
-					'prerequisites' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-					'study_loop' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
-					'tool_resolution' => [ 'type' => 'object' ],
-					'milestones' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
-					'progress' => [ 'type' => 'object' ],
-					'next_work' => [ 'type' => 'object' ],
-					'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
-				],
+			'get-study-plan' => [
+				'goal'            => [ 'type' => 'string' ],
+				'prerequisites'   => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+				'study_loop'      => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+				'tool_resolution' => [ 'type' => 'object' ],
+				'milestones'      => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+				'progress'        => [ 'type' => 'object' ],
+				'next_work'       => [ 'type' => 'object' ],
+				'tool_calls'      => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+			],
 			'get-syllabus' => [
 				'instructions' => [ 'type' => 'string' ],
 				'modules' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],

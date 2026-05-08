@@ -133,7 +133,7 @@ if ( $enrollment_key === '' ) {
 	fail( 'begin-course did not return an enrollment_key.' );
 }
 
-assert_activity_indicator_shape( $begin, 'begin-course' );
+assert_learning_status_shape( $begin, 'begin-course' );
 
 $summary['enrollment_key_prefix'] = substr( $enrollment_key, 0, 8 );
 $summary['checks'][] = 'begin-course issued anonymous enrollment key';
@@ -155,7 +155,7 @@ if ( empty( $take_course['materials'] ) || empty( $take_course['autopilot'] ) ) 
 	fail( 'take-course did not return an autopilot course packet.' );
 }
 
-assert_activity_indicator_shape( $take_course, 'take-course' );
+assert_learning_status_shape( $take_course, 'take-course' );
 
 $summary['checks'][] = 'take-course returned autopilot materials';
 assert_suggested_tools_exist( $take_course, $tool_names, 'take-course' );
@@ -504,27 +504,33 @@ function collect_suggested_tools( array $payload ): array {
 	return array_values( array_unique( $tools ) );
 }
 
-function assert_activity_indicator_shape( array $payload, string $context ): void {
-	$indicator = $payload['activity_indicator'] ?? null;
-	if ( ! is_array( $indicator ) ) {
-		fail( "{$context} did not return an activity_indicator object." );
+function assert_learning_status_shape( array $payload, string $context ): void {
+	$status = $payload['learning_status'] ?? null;
+	if ( ! is_array( $status ) ) {
+		fail( "{$context} did not return a learning_status object." );
 	}
 
 	$status_fields = [ 'status', 'accessibility', 'headline', 'narration' ];
 	$has_status = false;
 	foreach ( $status_fields as $field ) {
-		if ( ! empty( $indicator[ $field ] ) ) {
+		if ( ! empty( $status[ $field ] ) ) {
 			$has_status = true;
 			break;
 		}
 	}
 
 	if ( ! $has_status ) {
-		fail( "{$context} activity_indicator did not include semantic status text." );
+		fail( "{$context} learning_status did not include semantic status text." );
 	}
 
-	if ( isset( $indicator['progress'] ) && ! is_array( $indicator['progress'] ) ) {
-		fail( "{$context} activity_indicator progress should be structured when present." );
+	foreach ( [ 'ascii', 'markdown', 'frames', 'frames_markdown' ] as $removed_key ) {
+		if ( array_key_exists( $removed_key, $status ) ) {
+			fail( "{$context} learning_status should not include {$removed_key}." );
+		}
+	}
+
+	if ( isset( $status['progress'] ) && ! is_array( $status['progress'] ) ) {
+		fail( "{$context} learning_status progress should be structured when present." );
 	}
 }
 

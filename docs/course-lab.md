@@ -8,7 +8,7 @@ It checks whether a course can be taken like an MCP student:
 2. Call `begin-course`.
 3. Preserve `enrollment_key`.
 4. Call the exact MCP-ready `take-course` tool returned by `begin-course` so the learner can receive an autopilot packet instead of asking the user to advance lesson by lesson.
-5. Show `activity_indicator.markdown` or one `activity_indicator.frames_markdown` item with a ticker line while the model works.
+5. Use `learning_status` for concise semantic state, and call `get-campus-scene` when the client can display images. Do not print text-art status boards.
 6. Study returned lessons and attempt included exercises.
 7. Retrieve next work or continue with `next_cursor`.
 8. Retrieve learning memory.

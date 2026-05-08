@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.7 - 2026-05-08
+
+- Replaces visible course status boards with concise `learning_status` metadata.
+- Adds top-level `visual_tool_calls` so image-capable MCP clients have a clearer path to display campus scenes.
+- Switches MCP campus scene delivery to compact JPEG image content for better client rendering.
+- Updates course instructions, docs, and smoke checks so LLMs call `get-campus-scene` instead of printing text-art.
+
 ## 1.0.6 - 2026-05-08
 
 - Adds the Model Context Polytechnic seal to the admissions section of the GitHub Pages site and WordPress themelet.
