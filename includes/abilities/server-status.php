@@ -31,6 +31,7 @@ add_action(
 						'voice'       => [ 'type' => 'object' ],
 						'instructions' => [ 'type' => 'string' ],
 						'llm_interface' => [ 'type' => 'object' ],
+						'health'      => [ 'type' => 'object' ],
 						'courses'     => [
 							'type'  => 'array',
 							'items' => [ 'type' => 'object' ],

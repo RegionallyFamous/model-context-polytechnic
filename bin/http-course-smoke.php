@@ -195,7 +195,12 @@ if ( ( $exercise['exercise']['slug'] ?? '' ) !== 'design-plugin-bootstrap' ) {
 	fail( 'get-exercise did not return design-plugin-bootstrap.' );
 }
 
+if ( empty( $exercise['exercise']['rubric_vocabulary']['required_terms'] ) ) {
+	fail( 'get-exercise did not expose rubric_vocabulary.required_terms.' );
+}
+
 $summary['checks'][] = 'get-exercise returned the requested exercise';
+$summary['checks'][] = 'get-exercise exposed rubric vocabulary before grading';
 assert_suggested_tools_exist( $exercise, $tool_names, 'get-exercise' );
 
 $attempt = call_tool(
@@ -206,6 +211,7 @@ $attempt = call_tool(
 		'exercise_slug'  => 'design-plugin-bootstrap',
 		'enrollment_key' => $enrollment_key,
 		'answer'         => wp_plugin_craft_smoke_answer(),
+		'response_mode'  => 'gradebook',
 	],
 	8
 );
@@ -214,9 +220,14 @@ if ( empty( $attempt['evaluation'] ) || ! array_key_exists( 'passed', $attempt['
 	fail( 'attempt-exercise did not return an evaluation.' );
 }
 
+if ( ( $attempt['response_mode'] ?? '' ) !== 'gradebook' || empty( $attempt['gradebook'] ) || isset( $attempt['campus_story'] ) ) {
+	fail( 'attempt-exercise response_mode=gradebook did not return compact gradebook output.' );
+}
+
 $summary['attempt_score'] = $attempt['evaluation']['score'] ?? null;
 $summary['attempt_passed'] = $attempt['evaluation']['passed'] ?? null;
 $summary['checks'][] = 'attempt-exercise evaluated and stored the answer';
+$summary['checks'][] = 'attempt-exercise gradebook mode stayed compact';
 assert_suggested_tools_exist( $attempt, $tool_names, 'attempt-exercise' );
 
 $memory = call_tool(

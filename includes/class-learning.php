@@ -770,6 +770,7 @@ class Learning {
 		$include_lesson_bodies = array_key_exists( 'include_lesson_bodies', $input ) ? ! empty( $input['include_lesson_bodies'] ) : true;
 		$include_hints = array_key_exists( 'include_hints', $input ) ? ! empty( $input['include_hints'] ) : true;
 		$include_model_answers = ! empty( $input['include_model_answers'] );
+		$response_mode = self::response_mode( $input );
 		$cursor = self::sanitize_slug( (string) ( $input['cursor'] ?? '' ) );
 		$progress = self::progress_for_hash( (int) $course['id'], self::enrollment_hash( $enrollment_key ) );
 		$public_exercises = self::all_public_exercises( (int) $course['id'] );
@@ -791,8 +792,6 @@ class Learning {
 			'exercises' => $progress['exercises'] ?? [],
 		];
 		$next_work = self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key );
-		$scene_key = $complete ? 'commencement' : ( $next_cursor ? 'workshop' : 'capstone' );
-		$campus_scene = self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key );
 		$learning_status = self::learning_status(
 			$course,
 			$summary,
@@ -804,12 +803,15 @@ class Learning {
 				'next_cursor'  => $next_cursor,
 			]
 		);
+		$scene_key = (string) ( $learning_status['campus_scene']['scene'] ?? ( $complete ? 'commencement' : 'workshop' ) );
+		$campus_scene = self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key );
 
 		return [
 			'course'                 => Registry::course_summary( $course ),
 			'enrollment_key'         => $enrollment_key,
 			'enrollment_key_issued'  => $key_was_issued,
 			'mode'                   => $mode,
+			'response_mode'          => $response_mode,
 			'autopilot'              => self::course_autopilot_guidance( $course ),
 			'continue_policy'        => self::autopilot_continue_policy( $course, $enrollment_key, $next_work, $next_cursor ),
 			'progress'               => $summary,
@@ -822,7 +824,7 @@ class Learning {
 			'next_cursor'            => $next_cursor,
 			'has_more'               => $has_more,
 			'materials'              => $materials,
-			'tool_calls'             => self::course_run_tool_calls( $course, $materials, $enrollment_key, $next_cursor, $complete ),
+			'tool_calls'             => self::course_run_tool_calls( $course, $materials, $enrollment_key, $next_cursor, $complete, $response_mode ),
 			'preserve'               => [
 				'enrollment_key',
 				'next_cursor',
@@ -956,8 +958,9 @@ class Learning {
 				'expected_shape'   => self::decode_json_value( $exercise['expected_output_schema'], [ 'type' => 'object' ] ),
 				'max_answer_bytes' => self::MAX_ANSWER_BYTES,
 				'grader'           => __( 'Deterministic rubric-assisted grading. Include rubric vocabulary when it is relevant and true.', 'model-context-polytechnic' ),
-					'exemplar_policy'  => __( 'Model answers are calibration material. Try the exercise first, then compare your answer to the exemplar if you need revision guidance.', 'model-context-polytechnic' ),
-				],
+				'rubric_vocabulary' => self::rubric_vocabulary( $exercise ),
+				'exemplar_policy'  => __( 'Model answers are calibration material. Try the exercise first, then compare your answer to the exemplar if you need revision guidance.', 'model-context-polytechnic' ),
+			],
 			'next_actions' => $next_actions,
 			'note'     => __( 'Submit an answer to attempt-exercise. Provide enrollment_key to attach the attempt to durable course memory; if omitted, the tool will issue one automatically.', 'model-context-polytechnic' ),
 		];
@@ -977,6 +980,7 @@ class Learning {
 		if ( trim( $answer ) === '' ) {
 			return new \WP_Error( 'model_context_polytechnic_missing_answer', __( 'Answer is required.', 'model-context-polytechnic' ), [ 'status' => 400 ] );
 		}
+		$response_mode = self::response_mode( $input );
 
 		if ( strlen( $answer ) > self::MAX_ANSWER_BYTES ) {
 			return new \WP_Error( 'model_context_polytechnic_answer_too_large', __( 'Answer is too large for public exercise storage. Keep attempts under 20 KB.', 'model-context-polytechnic' ), [ 'status' => 413 ] );
@@ -1035,9 +1039,7 @@ class Learning {
 			]
 			: [];
 		$next_work = $stored ? self::next_work_response( $course, $stored_progress['exercises'] ?? [], null, null, $enrollment_key ) : null;
-		$next_actions = self::attempt_next_actions( $course, $exercise, $evaluation, $enrollment_key, $next_work );
-		$scene_key = ! empty( $next_work['complete'] ) ? 'commencement' : ( ! empty( $evaluation['passed'] ) ? 'workshop' : 'capstone' );
-		$campus_scene = $stored ? self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key ) : null;
+		$next_actions = self::attempt_next_actions( $course, $exercise, $evaluation, $enrollment_key, $next_work, $response_mode );
 		$learning_status = $stored
 			? self::learning_status(
 				$course,
@@ -1047,8 +1049,39 @@ class Learning {
 					: __( 'Lab needs revision. The chalkboard is still warm and absolutely judging the missing safety check.', 'model-context-polytechnic' )
 			)
 			: null;
+		$scene_key = $learning_status ? (string) ( $learning_status['campus_scene']['scene'] ?? 'workshop' ) : 'workshop';
+		$campus_scene = $stored ? self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key ) : null;
+
+		if ( $response_mode === 'gradebook' ) {
+			return [
+				'response_mode'          => $response_mode,
+				'course'                 => Registry::course_summary( $course ),
+				'exercise'               => self::exercise_summary( $exercise, false ),
+				'evaluation'             => $evaluation,
+				'gradebook'              => [
+					'stored'                => $stored,
+					'enrollment_key'        => $stored ? $enrollment_key : null,
+					'enrollment_key_used'   => $stored,
+					'enrollment_key_issued' => $key_was_issued,
+					'score'                 => $evaluation['score'] ?? null,
+					'passed'                => $evaluation['passed'] ?? false,
+					'passing_score'         => $evaluation['passing_score'] ?? null,
+					'matched_terms'         => self::terms_from_evaluation( $evaluation, 'matched_terms' ),
+					'missing_terms'         => self::terms_from_evaluation( $evaluation, 'missing_terms' ),
+				],
+				'next_work'              => self::compact_next_work( $next_work ),
+				'continue_policy'        => $stored ? self::autopilot_continue_policy( $course, $enrollment_key, $next_work ) : null,
+				'next_actions'           => $next_actions,
+				'tool_calls'             => $next_actions,
+				'preserve'               => $stored ? [ 'enrollment_key' ] : [],
+				'note'                   => $stored
+					? __( 'Compact gradebook mode: attempt recorded without campus story fields. Use response_mode=student_theater when the human wants the full school narration.', 'model-context-polytechnic' )
+					: __( 'Compact gradebook mode: attempt evaluated without storage because remember=false. Provide enrollment_key, or omit it and leave remember enabled, to build course memory.', 'model-context-polytechnic' ),
+			];
+		}
 
 		return [
+			'response_mode'          => $response_mode,
 			'course'              => Registry::course_summary( $course ),
 			'exercise'            => self::exercise_summary( $exercise, false ),
 			'evaluation'          => $evaluation,
@@ -1605,6 +1638,12 @@ class Learning {
 					'include_lesson_bodies' => [ 'type' => 'boolean', 'default' => true ],
 					'include_hints'         => [ 'type' => 'boolean', 'default' => true ],
 					'include_model_answers' => [ 'type' => 'boolean', 'default' => false, 'description' => 'When true, includes model answers. Prefer false until after attempting exercises.' ],
+					'response_mode'         => [
+						'type'        => 'string',
+						'enum'        => [ 'student_theater', 'gradebook' ],
+						'default'     => 'student_theater',
+						'description' => 'student_theater returns campus story fields; gradebook keeps attempt tool calls compact.',
+					],
 				],
 			],
 			static function ( array $input ) use ( $course ) {
@@ -1709,6 +1748,12 @@ class Learning {
 					'enrollment_key' => [ 'type' => 'string', 'description' => 'Anonymous course enrollment key returned by begin-course. Omit it to receive a new key automatically.' ],
 					'session_id'     => [ 'type' => 'string', 'description' => 'Deprecated alias for enrollment_key.' ],
 					'remember'       => [ 'type' => 'boolean', 'default' => true ],
+					'response_mode'  => [
+						'type'        => 'string',
+						'enum'        => [ 'student_theater', 'gradebook' ],
+						'default'     => 'student_theater',
+						'description' => 'student_theater returns the full campus story; gradebook returns compact scoring and next tool calls.',
+					],
 				],
 				'required'   => [ 'exercise_slug', 'answer' ],
 			],
@@ -2617,7 +2662,7 @@ class Learning {
 		return 0;
 	}
 
-	private static function course_run_tool_calls( array $course, array $materials, string $enrollment_key, ?string $next_cursor, bool $complete ): array {
+	private static function course_run_tool_calls( array $course, array $materials, string $enrollment_key, ?string $next_cursor, bool $complete, string $response_mode = 'student_theater' ): array {
 		if ( $complete ) {
 			return [
 				[
@@ -2644,6 +2689,7 @@ class Learning {
 						'enrollment_key' => $enrollment_key,
 						'exercise_slug'  => $exercise['slug'],
 						'answer'         => 'After studying this packet, replace with your structured answer.',
+						'response_mode'  => $response_mode,
 					],
 					'why'       => __( 'Record practice for this exercise before moving to the next packet.', 'model-context-polytechnic' ),
 				];
@@ -2657,6 +2703,7 @@ class Learning {
 					'enrollment_key' => $enrollment_key,
 					'mode'           => 'module_batch',
 					'cursor'         => $next_cursor,
+					'response_mode'  => $response_mode,
 				],
 				'why'       => __( 'Continue automatically to the next course packet after attempting this packet.', 'model-context-polytechnic' ),
 			];
@@ -2724,11 +2771,11 @@ class Learning {
 			'purpose' => __( 'Every learner can leave one small signal that makes the next learner path clearer, while course changes still require maintainer review.', 'model-context-polytechnic' ),
 			'public_feedback_tool' => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
 			'public_signals_tool' => self::learning_tool_name( $course['slug'], 'get-course-improvement-signals' ),
-			'local_cohort_lab' => 'composer course-lab',
-				'learner_loop' => [
-					'Use begin-course and preserve enrollment_key.',
-					'Use the exact autopilot tool from begin-course when the learner is expected to proceed automatically through course packets.',
-					'Use get-study-plan for the current goal and search-course for targeted context.',
+			'local_cohort_lab' => 'composer cohort-lab',
+			'learner_loop' => [
+				'Use begin-course and preserve enrollment_key.',
+				'Use the exact autopilot tool from begin-course when the learner is expected to proceed automatically through course packets.',
+				'Use get-study-plan for the current goal and search-course for targeted context.',
 				'Attempt one exercise, revise against feedback, and retrieve memory.',
 				'Submit one compact feedback item naming the target_slug when something helps or fails.',
 			],
@@ -2766,7 +2813,7 @@ class Learning {
 		return $actions;
 	}
 
-	private static function attempt_next_actions( array $course, array $exercise, array $evaluation, string $enrollment_key = '', ?array $next_work = null ): array {
+	private static function attempt_next_actions( array $course, array $exercise, array $evaluation, string $enrollment_key = '', ?array $next_work = null, string $response_mode = 'student_theater' ): array {
 		$actions = [];
 
 		if ( empty( $evaluation['passed'] ) && self::exercise_has_model_answer( $exercise ) ) {
@@ -2797,6 +2844,7 @@ class Learning {
 					'arguments' => [
 						'enrollment_key' => $enrollment_key,
 						'mode'           => 'full_course',
+						'response_mode'  => $response_mode,
 					],
 					'why'       => __( 'Continue autopilot immediately. Do not stop after this passed exercise.', 'model-context-polytechnic' ),
 				];
@@ -2854,6 +2902,15 @@ class Learning {
 		}
 
 		return self::sanitize_enrollment_key( (string) ( $input['session_id'] ?? '' ) );
+	}
+
+	private static function response_mode( array $input ): string {
+		$mode = sanitize_key( (string) ( $input['response_mode'] ?? 'student_theater' ) );
+		if ( $mode === 'compact' ) {
+			$mode = 'gradebook';
+		}
+
+		return in_array( $mode, [ 'student_theater', 'gradebook' ], true ) ? $mode : 'student_theater';
 	}
 
 	private static function create_enrollment( int $course_id ) {
@@ -3459,6 +3516,21 @@ class Learning {
 			'certificate_available' => $next_work['certificate_available'] ?? false,
 			'tool_calls'            => $next_work['tool_calls'],
 			'note'                  => $next_work['note'],
+		];
+	}
+
+	private static function compact_next_work( ?array $next_work ): ?array {
+		if ( ! is_array( $next_work ) ) {
+			return null;
+		}
+
+		return [
+			'lesson'                => $next_work['lesson'] ?? null,
+			'exercise'              => $next_work['exercise'] ?? null,
+			'complete'              => ! empty( $next_work['complete'] ),
+			'certificate_available' => ! empty( $next_work['certificate_available'] ),
+			'tool_calls'            => $next_work['tool_calls'] ?? [],
+			'note'                  => $next_work['note'] ?? '',
 		];
 	}
 
@@ -4331,6 +4403,7 @@ class Learning {
 			'title'                  => $exercise['title'],
 			'prompt'                 => $exercise['prompt'],
 			'rubric'                 => $rubric,
+			'rubric_vocabulary'      => self::rubric_vocabulary_from_rubric( $rubric ),
 			'expected_output_schema' => self::decode_json_value( $exercise['expected_output_schema'], [ 'type' => 'object' ] ),
 			'model_answer_available' => ! empty( $model_answer ),
 			'passing_score'          => (float) $exercise['passing_score'],
@@ -4348,6 +4421,31 @@ class Learning {
 		}
 
 		return $data;
+	}
+
+	private static function rubric_vocabulary( array $exercise ): array {
+		return self::rubric_vocabulary_from_rubric( self::decode_json_value( $exercise['rubric'], [] ) );
+	}
+
+	private static function rubric_vocabulary_from_rubric( array $rubric ): array {
+		$required = [];
+		$any = [];
+		$criteria = isset( $rubric['criteria'] ) && is_array( $rubric['criteria'] ) ? $rubric['criteria'] : [];
+
+		foreach ( $criteria as $criterion ) {
+			if ( ! is_array( $criterion ) ) {
+				continue;
+			}
+
+			$required = array_merge( $required, self::string_list( $criterion['required_terms'] ?? [] ) );
+			$any = array_merge( $any, self::string_list( $criterion['any_terms'] ?? [] ) );
+		}
+
+		return [
+			'required_terms' => array_values( array_unique( $required ) ),
+			'any_terms'     => array_values( array_unique( $any ) ),
+			'student_note'  => __( 'These terms are not magic words, but the deterministic grader looks for them or their exact concepts. Use them when they are true so the lab can recognize your WordPress craft.', 'model-context-polytechnic' ),
+		];
 	}
 
 	private static function empty_input_schema(): array {
@@ -4389,6 +4487,7 @@ class Learning {
 			'campus_scene'       => [ 'type' => [ 'object', 'null' ] ],
 			'campus_story'       => [ 'type' => [ 'object', 'null' ] ],
 			'visual_tool_calls'  => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+			'response_mode'      => [ 'type' => 'string' ],
 			'note'               => [ 'type' => 'string' ],
 		];
 
@@ -4417,6 +4516,7 @@ class Learning {
 				'autopilot' => [ 'type' => 'object' ],
 				'continue_policy' => [ 'type' => 'object' ],
 				'progress' => [ 'type' => 'object' ],
+				'response_mode' => [ 'type' => 'string' ],
 				'complete' => [ 'type' => 'boolean' ],
 				'cursor' => [ 'type' => [ 'string', 'null' ] ],
 				'next_cursor' => [ 'type' => [ 'string', 'null' ] ],
@@ -4456,6 +4556,7 @@ class Learning {
 			'attempt-exercise' => [
 				'exercise' => [ 'type' => 'object' ],
 				'evaluation' => [ 'type' => 'object' ],
+				'gradebook' => [ 'type' => 'object' ],
 				'stored' => [ 'type' => 'boolean' ],
 				'enrollment_key' => [ 'type' => [ 'string', 'null' ] ],
 				'enrollment_key_used' => [ 'type' => 'boolean' ],

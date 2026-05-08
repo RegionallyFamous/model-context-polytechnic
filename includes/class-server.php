@@ -21,7 +21,7 @@ class Server {
 	const VANITY_PATH      = 'mcp';
 	const REQUIRED_WP      = '6.9';
 	const REQUIRED_PHP     = '8.1';
-	const SERVER_VERSION   = '1.0.11';
+	const SERVER_VERSION   = '1.0.12';
 	const REMOTE_PROXY     = '@automattic/mcp-wordpress-remote@latest';
 	const VOICE_NAME       = 'The Old Polytechnic';
 	const AUTHORING_TOOLS_ENABLED = false;
@@ -189,6 +189,7 @@ class Server {
 			'voice'       => self::voice_profile(),
 			'instructions' => self::server_instructions(),
 			'llm_interface' => self::llm_interface_contract(),
+			'health'      => self::health_status(),
 			'adapter'     => [
 				'available' => class_exists( McpAdapter::class ),
 				'class'     => McpAdapter::class,
@@ -204,6 +205,42 @@ class Server {
 				'idempotentHint'  => true,
 				'openWorldHint'   => false,
 			],
+		];
+	}
+
+	private static function health_status(): array {
+		$course_component_smoke = [
+			'checked' => false,
+			'ok'      => null,
+			'note'    => 'Learning class is not loaded yet.',
+		];
+
+		if ( class_exists( Learning::class ) ) {
+			try {
+				$components = Learning::course_components( 1, 'wordpress-plugin-craft' );
+				$required_tool = self::ABILITY_PREFIX . '/wordpress-plugin-craft-take-course';
+				$course_component_smoke = [
+					'checked' => true,
+					'ok'      => isset( $components['tools'] ) && in_array( $required_tool, $components['tools'], true ),
+					'note'    => 'Course component registration can enumerate the WordPress Plugin Craft tools.',
+				];
+			} catch ( \Throwable $e ) {
+				$course_component_smoke = [
+					'checked' => true,
+					'ok'      => false,
+					'note'    => 'Course component registration threw an exception.',
+					'error'   => $e->getMessage(),
+				];
+			}
+		}
+
+		return [
+			'status'                   => class_exists( McpAdapter::class ) && ( $course_component_smoke['ok'] !== false ) ? 'ok' : 'attention',
+			'adapter_available'        => class_exists( McpAdapter::class ),
+			'route_registration_smoke' => $course_component_smoke,
+			'public_endpoint'          => self::vanity_endpoint(),
+			'course_endpoint'          => trailingslashit( self::vanity_endpoint() ) . 'wordpress-plugin-craft',
+			'monitoring_note'          => 'If /wp-json/ or /mcp returns a WordPress critical error, check PHP fatal logs first, then run composer release:check before shipping the next ZIP.',
 		];
 	}
 

@@ -18,6 +18,9 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm docs frame the learner flow as a hands-off school journey with verbose `learning_status.story_script` narration and visible `get-campus-scene` markdown image packets, not visible text-art status boards.
 - Confirm docs mention `get-campus-scene-image` as optional raw MCP image content for clients that visibly render image blocks.
 - Confirm graduation language asks the Agent to deliver `graduation_speech`, state what it learned, report confidence, and submit reflection feedback.
+- Confirm exercise responses expose `rubric_vocabulary.required_terms` so important WordPress terms are visible before grading.
+- Confirm `attempt-exercise` supports `response_mode=student_theater` and `response_mode=gradebook`.
+- Confirm `server-status` returns a public `health` object with adapter and route-registration smoke status.
 - Confirm exemplar `model_answer` content is present for first-work and tradeoff-heavy exercises without being returned by default.
 - Confirm the protected `get-feedback-digest` tool returns 401 without an operator bearer token and returns private raw feedback only with one.
 - Confirm the README and feedback docs describe the no-WP-CLI operator-token flow.
@@ -41,6 +44,8 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm the learner flow can proceed hands-off through returned `tool_calls` without using a visible progress widget as the main framing device.
 - Call `get-campus-scene` and confirm it returns `display_markdown` plus `image_url`.
 - Call `get-campus-scene-image` and confirm clients that visibly render MCP image content receive an optional campus postcard image block.
+- Call `get-exercise` and confirm `rubric_vocabulary.required_terms` is present.
+- Call `attempt-exercise` with `response_mode=gradebook` and confirm the response omits campus story fields while returning score, matched terms, missing terms, and next tool calls.
 - Call `get-study-plan`.
 - Call `get-next-work`.
 - Call `get-lesson`.
@@ -76,6 +81,6 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Include `vendor/` in distributable ZIPs after Composer install.
 - Include `assets/`, `course-packs/`, `schemas/`, `includes/`, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, the bootstrap file, and `uninstall.php`.
 - Exclude local labs, docs, tests, logs, Git metadata, temporary files, workflow files, and generated ZIPs.
-- Publish by pushing a version tag such as `v1.0.11`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
+- Publish by pushing a version tag such as `v1.0.12`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
 - Deactivation must keep data.
 - Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.

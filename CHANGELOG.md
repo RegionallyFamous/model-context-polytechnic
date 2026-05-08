@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.12 - 2026-05-08
+
+- Adds `response_mode=gradebook` for compact exercise attempts while keeping `response_mode=student_theater` as the full campus-story default.
+- Exposes `rubric_vocabulary.required_terms` before grading so LLM learners can include important WordPress terms when they are conceptually correct.
+- Aligns top-level campus scene metadata with `learning_status` to prevent stage/scene drift during autopilot runs.
+- Adds a `server-status.health` diagnostic snapshot for adapter availability, course component registration, and endpoint monitoring notes.
+- Updates smoke tests, course instructions, and docs around compact grading, rubric hinting, and reliability checks.
+
 ## 1.0.11 - 2026-05-08
 
 - Makes campus scene visuals client-friendly by returning `display_markdown` and a public `image_url` from `get-campus-scene`.
