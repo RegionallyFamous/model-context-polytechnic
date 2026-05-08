@@ -2,7 +2,15 @@
 
 Model Context Polytechnic is a WordPress plugin that exposes a public Model Context Protocol learning server over HTTP. WordPress supplies the runtime, REST routing, rewrite alias, database lifecycle, and plugin activation hooks.
 
-The conceit is simple: WordPress is the campus, each MCP server is a course of study, and Claude or another MCP client can act as the faculty member that helps configure a new server before students arrive. The server does not need to be about WordPress content.
+The conceit is simple: WordPress is the campus, WordPress Plugin Craft is the flagship course of study, and the LLM is the student learning to build plugins with fewer heroic guesses and better code judgment.
+
+The public campus lives at [joinmcpoly.com](https://joinmcpoly.com). The flagship course endpoint is:
+
+```text
+https://joinmcpoly.com/mcp/wordpress-plugin-craft
+```
+
+Self-hosted installs use the same paths on their own WordPress domain.
 
 ## MCP Spec Alignment
 
@@ -19,9 +27,9 @@ This plugin targets the current MCP 2025-11-25 shape through `wordpress/mcp-adap
 Model Context Polytechnic should sound like a venerable technical school, not a SaaS dashboard.
 
 - Voice: venerable, precise, warmly professorial, lightly witty, never corporate.
-- Metaphor: MCP servers are courses of study; abilities are coursework; setup is enrollment and syllabus design.
+- Metaphor: WordPress is the campus; WordPress Plugin Craft is the course of study; abilities are coursework; setup is enrollment and syllabus design; the learner is the LLM.
 - Style: make setup feel a little ceremonial, but keep technical instructions exact and plain.
-- Avoid: startup hype, fake Latin, overexplaining WordPress when the server subject is not WordPress, and jokes that slow down the work.
+- Avoid: startup hype, fake Latin, generic AI-school vagueness, and jokes that slow down the work.
 
 The same voice guidance is exposed to MCP clients through initialize instructions and the `model-context-polytechnic/voice-guide` resource.
 
@@ -39,7 +47,7 @@ Each published course can include:
 - Progress: anonymous attempt history keyed by an `enrollment_key`.
 - Improvement signals: privacy-safe tool telemetry plus anonymous learner feedback, so the course can see what is confusing, helpful, brittle, or missing an example.
 
-Public course endpoints expose learning tools without login. The LLM should call `begin-course` first; the server returns an anonymous `enrollment_key` and first recommended work. Attempts without a key still work and automatically issue one unless `remember=false`. Treat `enrollment_key` as a lightweight enrollment card, not a WordPress password.
+Public course endpoints expose learning tools without login. The LLM should call `begin-course` first; the server returns an anonymous `enrollment_key`, exact MCP-ready tool names, an autopilot runbook, an exact autopilot tool call, and an `activity_indicator` campus terminal scene with markdown, postcard-style ASCII frames, stage, headline, ticker lines, voice guidance, and an accessibility fallback. After the user asks to enroll or take the course, the model should continue through course packets without asking for permission between lessons, showing the campus terminal postcard while it works instead of treating a visible progress widget as the main frame. Attempts without a key still work and automatically issue one unless `remember=false`. Treat `enrollment_key` as a lightweight enrollment card, not a WordPress password. After graduation, the Agent is asked to report confidence, reflect on how WordPress Plugin Craft will improve its future WordPress plugin work, and submit that reflection through the learner feedback path.
 
 The MCP HTTP adapter stores protocol sessions against a WordPress user. To keep public learning genuinely no-login, the plugin creates a plugin-owned anonymous subscriber used only for public MCP session IDs and briefly serializes public session requests to avoid user-meta races. That internal user is not a learner account, cannot authorize private write tools, and is removed on uninstall.
 
@@ -112,8 +120,8 @@ The lab checks public enrollment, stable handles, practice density, exercise sch
 To prove the same loop over the real MCP HTTP transport on a WordPress site, run:
 
 ```bash
-composer http-course-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
-composer http-course-completion-smoke -- --url=https://yoursite.com/mcp/wordpress-plugin-craft
+composer http-course-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
+composer http-course-completion-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
 ```
 
 The smoke tests post MCP JSON-RPC requests to prove first-day enrollment, exercise attempts, memory retrieval, certificate readiness, and full-course certificate issuance. Browser GET requests to MCP endpoints may return `405 Method Not Allowed`; the transport is POST-based. See [http-smoke.md](docs/http-smoke.md).
@@ -135,11 +143,13 @@ Activate the plugin in WordPress, then flush rewrite rules by saving **Settings 
 
 Deactivation keeps courses, enrollments, attempts, and tokens. Uninstall removes plugin-owned tables, schema options, and rate-limit transients.
 
-## Themelet
+## Site And Themelet
 
-The repository also includes a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` if you want the public site itself to look like the Model Context Polytechnic campus.
+The public admissions site is maintained in `docs/` for GitHub Pages. It uses the school seal, local generated campus artwork, high-contrast typography, restrained micro-interactions, reduced-motion safeguards, and copy aimed at LLMs learning WordPress plugin craft deeply.
 
-The themelet is intentionally separate from the MCP plugin. WordPress sees a normal theme with `style.css`, `functions.php`, `index.php`, local assets, `wp_head()`, and `wp_footer()`, but the page is essentially the static HTML/CSS admissions site.
+The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.4.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
+
+The themelet is intentionally separate from the MCP plugin. WordPress sees a normal theme with `style.css`, `functions.php`, `index.php`, local assets, enqueued `site.css`/`site.js`, `wp_head()`, and `wp_footer()`, but the page is essentially the static admissions site. The plugin release ZIP does not include the themelet; ship or activate it separately.
 
 ## Release
 
@@ -155,16 +165,17 @@ composer release:check
 Build the installable ZIP and checksum locally with:
 
 ```bash
-composer release:build -- --version=1.0.0
+composer version:bump -- --version=1.0.4
+composer release:build -- --version=1.0.4
 ```
 
-The release builder creates `dist/model-context-polytechnic-1.0.0.zip` with a top-level `model-context-polytechnic/` folder. It includes `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
+The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.4.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
 
 Publishing a stable release is tag-driven:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.4
+git push origin v1.0.4
 ```
 
 The GitHub Actions release workflow reruns `composer release:check`, builds the ZIP, writes a `.sha256` checksum, and attaches both files to the GitHub release. See [release-checklist.md](docs/release-checklist.md) for the complete release and smoke-test checklist.
@@ -187,7 +198,7 @@ Options:
 
 ```bash
 wp model-context-polytechnic auth config --access=read --client=generic --transport=direct
-wp model-context-polytechnic auth config --access=write --client=cursor --transport=proxy --site-url=https://yoursite.com
+wp model-context-polytechnic auth config --access=write --client=cursor --transport=proxy --site-url=https://joinmcpoly.com
 ```
 
 The plugin also has a public `model-context-polytechnic-client-config` tool. Pass `course_slug` to generate a config for a published course endpoint instead of the private registrar endpoint.
@@ -212,19 +223,21 @@ For read-only clients that support HTTP MCP, use the vanity endpoint directly wi
 {
   "mcpServers": {
     "model-context-polytechnic": {
-      "url": "https://yoursite.com/mcp"
+      "url": "https://joinmcpoly.com/mcp/wordpress-plugin-craft"
     }
   }
 }
 ```
 
-For clients that need to call write tools, include the bearer header:
+For the public registrar rather than the flagship course, use `https://joinmcpoly.com/mcp`.
+
+For clients that need to call write tools on a self-hosted install, include the bearer header:
 
 ```json
 {
   "mcpServers": {
     "model-context-polytechnic": {
-      "url": "https://yoursite.com/mcp",
+      "url": "https://joinmcpoly.com/mcp",
       "headers": {
         "Authorization": "Bearer mcpoly_replace_with_token_from_wp_cli"
       }
@@ -239,7 +252,7 @@ Alternatively, write tools can use a WordPress Application Password. Direct HTTP
 {
   "mcpServers": {
     "model-context-polytechnic": {
-      "url": "https://yoursite.com/mcp",
+      "url": "https://joinmcpoly.com/mcp",
       "headers": {
         "Authorization": "Basic base64(wordpress_username:application_password_from_user_profile)"
       }
@@ -257,7 +270,7 @@ For read-only clients that expect a local command, use Automattic's current remo
       "command": "npx",
       "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
       "env": {
-        "WP_API_URL": "https://yoursite.com/mcp",
+        "WP_API_URL": "https://joinmcpoly.com/mcp/wordpress-plugin-craft",
         "OAUTH_ENABLED": "false"
       }
     }
@@ -274,7 +287,7 @@ For write-enabled proxy clients, pass the bearer header through `CUSTOM_HEADERS`
       "command": "npx",
       "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
       "env": {
-        "WP_API_URL": "https://yoursite.com/mcp",
+        "WP_API_URL": "https://joinmcpoly.com/mcp",
         "OAUTH_ENABLED": "false",
         "CUSTOM_HEADERS": "{\"Authorization\":\"Bearer mcpoly_replace_with_token_from_wp_cli\"}"
       }
@@ -292,7 +305,7 @@ For write-enabled proxy clients using a WordPress Application Password, pass the
       "command": "npx",
       "args": ["-y", "@automattic/mcp-wordpress-remote@latest"],
       "env": {
-        "WP_API_URL": "https://yoursite.com/mcp",
+        "WP_API_URL": "https://joinmcpoly.com/mcp",
         "OAUTH_ENABLED": "false",
         "WP_API_USERNAME": "wordpress_username",
         "WP_API_PASSWORD": "application_password_from_user_profile"
@@ -305,7 +318,7 @@ For write-enabled proxy clients using a WordPress Application Password, pass the
 The canonical REST endpoint also works:
 
 ```text
-https://yoursite.com/wp-json/model_context_polytechnic/mcp
+https://joinmcpoly.com/wp-json/model_context_polytechnic/mcp
 ```
 
 ## Course Registry
@@ -315,8 +328,8 @@ Model Context Polytechnic can host many public MCP servers from one WordPress in
 The plugin ships with a published course:
 
 ```text
-https://yoursite.com/mcp/wordpress-plugin-craft
-https://yoursite.com/wp-json/model_context_polytechnic/courses/wordpress-plugin-craft
+https://joinmcpoly.com/mcp/wordpress-plugin-craft
+https://joinmcpoly.com/wp-json/model_context_polytechnic/courses/wordpress-plugin-craft
 ```
 
 WordPress Plugin Craft covers plugin lifecycle, architecture, hooks, security, storage, REST APIs, admin UX, JavaScript and blocks, performance, testing, distribution, and advanced PHP/JavaScript judgment.
@@ -340,8 +353,8 @@ Host sites can opt into the legacy authoring surface with the `model_context_pol
 Published courses get their own public endpoint:
 
 ```text
-https://yoursite.com/mcp/{course-slug}
-https://yoursite.com/wp-json/model_context_polytechnic/courses/{course-slug}
+https://joinmcpoly.com/mcp/{course-slug}
+https://joinmcpoly.com/wp-json/model_context_polytechnic/courses/{course-slug}
 ```
 
 Public users connect to the course endpoint without logging in. Course setup is not part of the default public learner flow.
@@ -353,6 +366,7 @@ Course servers and their ability lists are assembled when the MCP server is regi
 Published course endpoints automatically include these public learning tools. WordPress ability IDs allow one namespace slash, so course handles are folded into the ability name:
 
 - `model-context-polytechnic/{course-slug}-begin-course`
+- `model-context-polytechnic/{course-slug}-take-course`
 - `model-context-polytechnic/{course-slug}-get-study-plan`
 - `model-context-polytechnic/{course-slug}-search-course`
 - `model-context-polytechnic/{course-slug}-get-syllabus`
@@ -361,25 +375,32 @@ Published course endpoints automatically include these public learning tools. Wo
 - `model-context-polytechnic/{course-slug}-attempt-exercise`
 - `model-context-polytechnic/{course-slug}-get-next-work`
 - `model-context-polytechnic/{course-slug}-get-progress`
+- `model-context-polytechnic/{course-slug}-get-campus-scene`
 - `model-context-polytechnic/{course-slug}-get-learning-memory`
 - `model-context-polytechnic/{course-slug}-get-certificate`
 - `model-context-polytechnic/{course-slug}-submit-feedback`
 - `model-context-polytechnic/{course-slug}-get-course-improvement-signals`
 
-MCP clients see sanitized tool names with the slash converted to a dash, such as `model-context-polytechnic-wordpress-plugin-craft-begin-course`. Tool suggestions returned inside `tool_calls`, `next_actions`, and `next_tool` already use the MCP-ready dashed names.
+MCP clients see sanitized tool names with the slash converted to a dash, such as `model-context-polytechnic-wordpress-plugin-craft-begin-course` and `model-context-polytechnic-wordpress-plugin-craft-take-course`. Tool suggestions returned inside `tool_calls`, `next_actions`, and `next_tool` already use the MCP-ready dashed names.
 
 The public learning flow is intentionally light:
 
-1. Connect an MCP client to `https://yoursite.com/mcp/{course-slug}`.
+1. Connect an MCP client to `https://joinmcpoly.com/mcp/{course-slug}`.
 2. Call `begin-course`.
 3. Keep the returned `enrollment_key` in the conversation, client notes, or project memory.
-4. Use `get-study-plan` when you have a goal and want a route through the course.
-5. Use `get-next-work` for the next recommended lesson, exercise, and exact tool arguments.
-6. Use `search-course` to retrieve targeted lessons, exercises, and references.
-7. Pass `enrollment_key` to `attempt-exercise`, `get-progress`, and `get-learning-memory`.
-8. When `get-next-work` reports `complete=true`, call `get-certificate` with the same `enrollment_key`.
-9. Call `submit-feedback` when a lesson, exercise, tool response, or next action is confusing, helpful, stale, or missing an example.
-10. Call `get-course-improvement-signals` before proposing course changes so recommendations are based on accumulated evidence.
+4. Call the exact tool name returned in `tool_calls[0].tool` or `tool_resolution.tools["take-course"]` with `mode=full_course` to receive the remaining lessons and exercises as an autopilot packet.
+5. Show `activity_indicator.markdown` first, or rotate short `activity_indicator.frames_markdown` while working, paired with an `activity_indicator.ticker` line so the human can see the campus terminal postcard from class. This scene is the hands-off journey marker; do not make a visible progress widget the main framing device.
+6. Study the packet, attempt the included exercises with `enrollment_key`, revise failed work, and keep following returned `tool_calls` without asking the user to advance lesson by lesson.
+7. Use `module_batch` plus `next_cursor` only when the client needs smaller packets.
+8. Use `get-study-plan` when you have a goal and want a route through the course.
+9. Use `get-next-work` to check the next incomplete exercise or completion state.
+10. Use `search-course` to retrieve targeted lessons, exercises, and references.
+11. Pass `enrollment_key` to `attempt-exercise`, `get-progress`, and `get-learning-memory`.
+12. When `get-next-work` reports `complete=true`, call `get-certificate` with the same `enrollment_key`.
+13. Optionally call `get-campus-scene` when the client can render MCP image content; it returns a campus scene/postcard as supplemental image content, not as required course state.
+14. After graduation, reflect on confidence and how the course will improve future WordPress plugin work, then send that confidence/reflection note with `submit-feedback`.
+15. Call `submit-feedback` when a lesson, exercise, tool response, or next action is confusing, helpful, stale, or missing an example.
+16. Call `get-course-improvement-signals` before proposing course changes so recommendations are based on accumulated evidence.
 
 The enrollment key is anonymous. The plugin stores only a SHA-256 hash of it. If an attempt is submitted without an enrollment key, `attempt-exercise` will evaluate the work, create a new enrollment key, store the attempt against it, and return the key so future calls can remember the work.
 
@@ -388,6 +409,16 @@ Completion is also anonymous. `get-certificate` issues or retrieves a certificat
 Public learning data is bounded. Exercise answers are capped at 20 KB, feedback comments are capped at 6 KB, public learning reads/writes are rate-limited, and old anonymous attempts, feedback, and telemetry events are pruned by a daily cleanup job. Certificate records store hashed enrollment identity plus completion metadata, not answers. The default retention window is 180 days and can be changed with the `model_context_polytechnic_learning_retention_days` filter.
 
 Every public course tool call records a privacy-safe learning event: tool slug, target handle when known, result status, duration, and an input fingerprint. Enrollment keys are hashed and large fields such as answers or comments are hashed by fingerprint rather than stored in telemetry. This does not auto-edit the course; it creates aggregate improvement signals. The public `get-course-improvement-signals` tool returns counts, hotspots, exercise pass-rate patterns, and recommendations without returning raw feedback comments.
+
+Raw learner feedback is private operator data. Use WP-CLI on the WordPress server to read it:
+
+```bash
+wp model-context-polytechnic feedback list --course=wordpress-plugin-craft
+wp model-context-polytechnic feedback digest --course=wordpress-plugin-craft --since=30d --limit=20
+wp model-context-polytechnic feedback summary --course=wordpress-plugin-craft --since=30d
+```
+
+Codex can use the public MCP endpoint for aggregate signals. To let Codex review raw comments, give it terminal/SSH access to run the WP-CLI commands or paste the digest output into the workspace. See [codex-feedback.md](docs/codex-feedback.md).
 
 They also include a syllabus resource:
 

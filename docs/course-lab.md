@@ -7,13 +7,14 @@ It checks whether a course can be taken like an MCP student:
 1. Connect to the course endpoint.
 2. Call `begin-course`.
 3. Preserve `enrollment_key`.
-4. Retrieve next work.
-5. Read the lesson.
-6. Attempt the exercise.
-7. Retrieve learning memory.
-8. When all exercises pass, retrieve the certificate.
-9. Submit feedback.
-10. Inspect improvement signals before proposing edits.
+4. Call the exact MCP-ready `take-course` tool returned by `begin-course` so the learner can receive an autopilot packet instead of asking the user to advance lesson by lesson.
+5. Show `activity_indicator.markdown` or one `activity_indicator.frames_markdown` item with a ticker line while the model works.
+6. Study returned lessons and attempt included exercises.
+7. Retrieve next work or continue with `next_cursor`.
+8. Retrieve learning memory.
+9. When all exercises pass, retrieve the certificate.
+10. Submit feedback.
+11. Inspect improvement signals before proposing edits.
 
 For exercises with exemplars, the intended loop is attempt first, review rubric feedback, then call `get-exercise` with `include_model_answer=true` if the learner needs calibration.
 

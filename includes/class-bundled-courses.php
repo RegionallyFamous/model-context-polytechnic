@@ -2,7 +2,7 @@
 namespace ModelContextPolytechnic\Mcp;
 
 class BundledCourses {
-	const SEED_VERSION   = '5';
+	const SEED_VERSION   = '6';
 	const VERSION_OPTION = 'model_context_polytechnic_bundled_courses_version';
 
 	public static function init(): void {

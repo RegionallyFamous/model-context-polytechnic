@@ -40,6 +40,7 @@ $include_paths = [
 	'composer.lock',
 	'README.md',
 	'CHANGELOG.md',
+	'assets',
 	'includes',
 	'vendor',
 	'course-packs',

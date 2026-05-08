@@ -75,6 +75,37 @@ if ( ! $failed ) {
 	$print( 'ok', 'JSON parsed for ' . count( $json_files ) . ' non-vendor files.' );
 }
 
+$brand_files = [];
+$brand_extensions = [ 'php', 'json', 'md', 'html', 'css', 'js', 'svg', 'txt', 'xml', 'yml', 'yaml' ];
+foreach ( $iterator as $file ) {
+	$path = $file->getPathname();
+	if ( ! $file->isFile() ) {
+		continue;
+	}
+
+	if ( strpos( $path, $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR ) === 0 ) {
+		continue;
+	}
+
+	$extension = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+	if ( in_array( $extension, $brand_extensions, true ) ) {
+		$brand_files[] = $path;
+	}
+}
+
+$bad_brand = 'Word' . 'press';
+foreach ( $brand_files as $brand_file ) {
+	$contents = (string) file_get_contents( $brand_file );
+	if ( strpos( $contents, $bad_brand ) !== false ) {
+		$failed = true;
+		$print( 'fail', 'Brand casing: ' . substr( $brand_file, strlen( $root ) + 1 ) . ' contains ' . $bad_brand . '; use WordPress.' );
+	}
+}
+
+if ( ! $failed ) {
+	$print( 'ok', 'WordPress brand casing passed for ' . count( $brand_files ) . ' text files.' );
+}
+
 $audit = CoursePack::audit_all();
 if ( ! $audit['valid'] ) {
 	$failed = true;

@@ -5,7 +5,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const MCPOLY_THEMELET_VERSION = '1.0.0';
+const MCPOLY_THEMELET_VERSION = '1.0.4';
 
 add_action( 'after_setup_theme', 'mcpoly_themelet_setup' );
 add_action( 'wp_enqueue_scripts', 'mcpoly_themelet_enqueue_assets' );
@@ -18,6 +18,11 @@ function mcpoly_themelet_setup(): void {
 }
 
 function mcpoly_themelet_enqueue_assets(): void {
+	$style_path  = get_template_directory() . '/site.css';
+	$script_path = get_template_directory() . '/site.js';
+	$style_ver   = file_exists( $style_path ) ? (string) filemtime( $style_path ) : MCPOLY_THEMELET_VERSION;
+	$script_ver  = file_exists( $script_path ) ? (string) filemtime( $script_path ) : MCPOLY_THEMELET_VERSION;
+
 	wp_enqueue_style(
 		'mcpoly-themelet-fonts',
 		'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;600;700;800&display=swap',
@@ -29,7 +34,15 @@ function mcpoly_themelet_enqueue_assets(): void {
 		'mcpoly-themelet-site',
 		get_template_directory_uri() . '/site.css',
 		[ 'mcpoly-themelet-fonts' ],
-		MCPOLY_THEMELET_VERSION
+		$style_ver
+	);
+
+	wp_enqueue_script(
+		'mcpoly-themelet-site',
+		get_template_directory_uri() . '/site.js',
+		[],
+		$script_ver,
+		true
 	);
 }
 

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 650" role="img" aria-labelledby="title desc">
+  <title id="title">Model Context Polytechnic activity terminal</title>
+  <desc id="desc">A centered terminal poster showing an LLM enrolled in WordPress Plugin Craft at Model Context Polytechnic.</desc>
+  <defs>
+    <linearGradient id="screen" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#1d2418"/>
+      <stop offset="0.58" stop-color="#15110c"/>
+      <stop offset="1" stop-color="#0f0d09"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="62%">
+      <stop offset="0" stop-color="#f4d98b" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#236044" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="scan" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="1" fill="#f4d98b" opacity="0.055"/>
+    </pattern>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="960" height="650" rx="22" fill="#11100c"/>
+  <rect width="960" height="650" rx="22" fill="url(#screen)"/>
+  <rect width="960" height="650" rx="22" fill="url(#glow)"/>
+  <rect width="960" height="650" rx="22" fill="url(#scan)"/>
+  <rect x="34" y="34" width="892" height="582" rx="16" fill="none" stroke="#f4d98b" stroke-opacity="0.24"/>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="112" y="78" width="736" height="494" rx="14" fill="#16110d" fill-opacity="0.82" stroke="#f4d98b" stroke-opacity="0.34"/>
+    <rect x="112" y="78" width="736" height="44" rx="14" fill="#241a10"/>
+    <circle cx="142" cy="100" r="8" fill="#b8822c"/>
+    <circle cx="168" cy="100" r="8" fill="#b8822c" opacity="0.78"/>
+    <circle cx="194" cy="100" r="8" fill="#b8822c" opacity="0.58"/>
+  </g>
+
+  <g xml:space="preserve" text-anchor="middle" font-family="Fira Code, SFMono-Regular, Consolas, monospace" fill="#fff0c8">
+    <text x="480" y="170" font-size="26" font-weight="700">+------------------------------------------+</text>
+    <text x="480" y="204" font-size="26" font-weight="700">| MODEL CONTEXT POLYTECHNIC                |</text>
+    <text x="480" y="238" font-size="26" font-weight="700">| WordPress Plugin Craft autopilot         |</text>
+    <text x="480" y="272" font-size="26" font-weight="700">| [#########.........] 14/28 PASSED        |</text>
+    <text x="480" y="306" font-size="26" font-weight="700">| Workshop Term: study lamps are on        |</text>
+    <text x="480" y="340" font-size="26" font-weight="700">+------------------------------------------+</text>
+
+    <text x="480" y="392" font-size="24" font-weight="700">       ___      ___      ___      ___</text>
+    <text x="480" y="424" font-size="24" font-weight="700">  ____|___|____|___|____|___|____|___|__</text>
+    <text x="480" y="456" font-size="24" font-weight="700"> /  lesson / rubric / retry / pass       \</text>
+    <text x="480" y="488" font-size="24" font-weight="700">|_________|________|_______|_____________|</text>
+    <text x="480" y="520" font-size="24" font-weight="700">      O          O          O        O</text>
+  </g>
+
+  <g text-anchor="middle" font-family="Source Sans 3, Arial, sans-serif">
+    <text x="480" y="566" fill="#f4d98b" font-size="24" font-weight="800">THE MODEL IS IN CLASS</text>
+    <text x="480" y="596" fill="#d9c79a" font-size="20" font-weight="700">study -> attempt -> revise -> remember</text>
+  </g>
+</svg>

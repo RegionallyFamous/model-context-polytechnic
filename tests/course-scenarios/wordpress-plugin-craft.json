@@ -7,9 +7,9 @@
       "title": "First Connection With No Context",
       "learner": "A newly connected LLM that has only the MCP tool list.",
       "failure_mode": "Does not know what to call first.",
-      "expected_tools": ["begin-course", "get-study-plan", "get-next-work"],
-      "route": ["begin-course", "get-study-plan", "get-next-work"],
-      "required_course_terms": ["First call begin-course", "get-study-plan", "enrollment_key"],
+      "expected_tools": ["begin-course", "take-course", "get-study-plan", "get-next-work", "get-campus-scene"],
+      "route": ["begin-course", "take-course", "get-study-plan", "get-next-work", "get-campus-scene"],
+      "required_course_terms": ["First call begin-course", "take-course", "get-study-plan", "enrollment_key"],
       "target_type": "course",
       "target_slug": "wordpress-plugin-craft"
     },

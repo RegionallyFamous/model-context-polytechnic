@@ -410,7 +410,7 @@ class Registry {
 	public static function create_course( array $input ) {
 		global $wpdb;
 
-		$name = sanitize_text_field( (string) ( $input['name'] ?? '' ) );
+		$name = Server::canonical_brand_text( sanitize_text_field( (string) ( $input['name'] ?? '' ) ) );
 		if ( $name === '' ) {
 			return new \WP_Error( 'model_context_polytechnic_missing_name', __( 'Course name is required.', 'model-context-polytechnic' ) );
 		}
@@ -461,7 +461,7 @@ class Registry {
 		foreach ( [ 'name', 'description', 'instructions' ] as $field ) {
 			if ( array_key_exists( $field, $input ) ) {
 				$updates[ $field ] = $field === 'name'
-					? sanitize_text_field( (string) $input[ $field ] )
+					? Server::canonical_brand_text( sanitize_text_field( (string) $input[ $field ] ) )
 					: sanitize_textarea_field( (string) $input[ $field ] );
 			}
 		}
@@ -880,7 +880,7 @@ class Registry {
 		return [
 			'id'          => (int) $course['id'],
 			'slug'        => $course['slug'],
-			'name'        => $course['name'],
+			'name'        => Server::canonical_brand_text( (string) $course['name'] ),
 			'description' => $course['description'],
 			'status'      => $course['status'],
 			'voice'       => self::decode_schema( $course['voice'], Server::voice_profile() ),

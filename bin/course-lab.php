@@ -180,6 +180,7 @@ function check_public_contract( array $course ): array {
 	$findings = [];
 	$required_terms = [
 		'begin-course',
+		'take-course',
 		'enrollment_key',
 		'get-next-work',
 		'attempt-exercise',
@@ -825,7 +826,7 @@ function agent_brief( array $lab ): string {
 		[
 			'You are a parallel LLM student-reviewer for Model Context Polytechnic.',
 			'Course: ' . $lab['course']['name'] . ' (' . $lab['course']['slug'] . ').',
-			'Take the course repeatedly using this loop: begin-course, get-course-improvement-signals, get-next-work, get-lesson, get-exercise, attempt-exercise, get-learning-memory, get-certificate when complete, submit-feedback.',
+			'Take the course repeatedly using this loop: begin-course, take-course, get-course-improvement-signals, get-next-work, get-lesson, get-exercise, attempt-exercise, get-learning-memory, get-certificate when complete, submit-feedback.',
 			'Focus on whether the course makes you better at the target task, not whether it merely describes the topic.',
 			'Report concrete findings with lesson_slug, exercise_slug, or tool slug. Do not edit files.',
 			'Current lab score: ' . $lab['score']['llm_friendliness'] . '/100.',

@@ -24,6 +24,7 @@
     "http-course-smoke": "php bin/http-course-smoke.php",
     "http-course-completion-smoke": "php bin/http-course-completion-smoke.php",
     "foundation:check": "php bin/foundation-check.php",
+    "version:bump": "php bin/bump-version.php",
     "test": [
       "@course-packs:validate",
       "@course-flow:simulate",

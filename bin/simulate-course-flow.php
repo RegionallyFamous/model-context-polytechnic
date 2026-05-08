@@ -43,6 +43,8 @@ $summary = [
 	],
 	'begin_course_shape' => [
 		'stable_handles' => [ 'enrollment_key', 'lesson_slug', 'exercise_slug' ],
+		'autopilot_tool' => 'model-context-polytechnic-' . $course['slug'] . '-take-course',
+		'short_label'    => 'take-course',
 		'improvement_tools' => [ 'submit-feedback', 'get-course-improvement-signals' ],
 		'completion_tool' => 'get-certificate',
 		'first_lesson'   => [
@@ -70,10 +72,23 @@ $summary = [
 		'passing_score'    => $first_exercise['passing_score'],
 		'has_output_schema'=> isset( $first_exercise['expected_output_schema'] ),
 		'has_model_answer' => ! empty( $first_exercise['model_answer'] ),
+		'has_autopilot_loop'=> strpos( $course['instructions'], 'take-course' ) !== false,
+		'has_continue_policy'=> strpos( $course['instructions'], 'continue_policy.next_required_tool_call' ) !== false,
+		'has_no_first_lesson_stop_rule'=> strpos( $course['instructions'], 'Do not stop after the first lesson' ) !== false,
 		'has_feedback_loop'=> strpos( $course['instructions'], 'submit-feedback' ) !== false,
 		'has_certificate_loop' => strpos( $course['instructions'], 'get-certificate' ) !== false,
 	],
 ];
+
+if ( empty( $summary['exercise_contract']['has_autopilot_loop'] ) ) {
+	fwrite( STDERR, "Course instructions do not mention take-course.\n" );
+	exit( 1 );
+}
+
+if ( empty( $summary['exercise_contract']['has_continue_policy'] ) || empty( $summary['exercise_contract']['has_no_first_lesson_stop_rule'] ) ) {
+	fwrite( STDERR, "Course instructions do not tell the model to continue after the first lesson with continue_policy.\n" );
+	exit( 1 );
+}
 
 if ( empty( $summary['exercise_contract']['has_feedback_loop'] ) ) {
 	fwrite( STDERR, "Course instructions do not mention submit-feedback.\n" );

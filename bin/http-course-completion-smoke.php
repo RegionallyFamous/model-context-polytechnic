@@ -158,6 +158,11 @@ if ( empty( $certificate['eligible'] ) || empty( $certificate['certificate']['ce
 	fail( 'get-certificate did not return an eligible certificate with identifiers.' );
 }
 
+$graduation_reflection = graduation_reflection_from_certificate( $certificate['certificate'] );
+if ( $graduation_reflection === null ) {
+	fail( 'get-certificate did not return a graduation reflection for the completed enrollment.' );
+}
+
 $transcript = $certificate['certificate']['transcript'] ?? [];
 if ( count( $transcript ) !== count( $exercises ) ) {
 	fail( sprintf( 'Certificate transcript count %d did not match exercise count %d.', count( $transcript ), count( $exercises ) ) );
@@ -165,7 +170,7 @@ if ( count( $transcript ) !== count( $exercises ) ) {
 
 $summary['certificate_id'] = $certificate['certificate']['certificate_id'];
 $summary['transcript_count'] = count( $transcript );
-$summary['checks'][] = 'get-certificate issued anonymous certificate and transcript';
+$summary['checks'][] = 'get-certificate issued anonymous certificate, transcript, and graduation reflection';
 assert_suggested_tools_exist( $certificate, $tool_names, 'get-certificate' );
 $summary['status'] = 'ok';
 
@@ -207,6 +212,26 @@ function answer_for_exercise( array $exercise ): string {
 	}
 
 	return (string) ( $exercise['prompt'] ?? '' );
+}
+
+function graduation_reflection_from_certificate( array $certificate ): ?array {
+	$candidates = [
+		$certificate['graduation_reflection'] ?? null,
+		$certificate['reflection'] ?? null,
+		$certificate['commencement_reflection'] ?? null,
+	];
+
+	foreach ( $candidates as $candidate ) {
+		if ( is_array( $candidate ) && array_filter( $candidate ) ) {
+			return $candidate;
+		}
+
+		if ( is_string( $candidate ) && trim( $candidate ) !== '' ) {
+			return [ 'text' => $candidate ];
+		}
+	}
+
+	return null;
 }
 
 function call_tool( array $options, string $session_id, string $tool_name, array $arguments, int $id ): array {
@@ -371,6 +396,7 @@ function collect_suggested_tools( array $payload ): array {
 		'search_tool',
 		'public_feedback_tool',
 		'public_signals_tool',
+		'campus_scene_tool',
 	];
 	$tools = [];
 	foreach ( $payload as $key => $value ) {

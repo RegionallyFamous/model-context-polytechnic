@@ -164,6 +164,7 @@ function project_text_files( string $root ): array {
 function public_tools(): array {
 	return [
 		'begin-course',
+		'take-course',
 		'get-study-plan',
 		'get-syllabus',
 		'get-lesson',
@@ -172,6 +173,7 @@ function public_tools(): array {
 		'get-next-work',
 		'get-progress',
 		'get-learning-memory',
+		'get-campus-scene',
 		'get-certificate',
 		'submit-feedback',
 		'get-course-improvement-signals',
@@ -536,11 +538,85 @@ function string_list( $value ): array {
 }
 
 function contains_term( string $haystack, string $term ): bool {
-	return strpos( $haystack, normalize_text( $term ) ) !== false;
+	$term = normalize_text( $term );
+	if ( $term === '' ) {
+		return false;
+	}
+
+	if ( strpos( $haystack, $term ) !== false ) {
+		return true;
+	}
+
+	$subject = negated_term_subject( $term );
+	if ( $subject === '' ) {
+		return false;
+	}
+
+	return contains_negated_subject( $haystack, $subject );
 }
 
 function normalize_text( string $text ): string {
-	return function_exists( 'mb_strtolower' ) ? mb_strtolower( $text ) : strtolower( $text );
+	$text = str_replace(
+		[ "\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d" ],
+		[ "'", "'", '"', '"' ],
+		$text
+	);
+	$text = function_exists( 'mb_strtolower' ) ? mb_strtolower( $text ) : strtolower( $text );
+
+	return (string) preg_replace( '/\s+/', ' ', trim( $text ) );
+}
+
+function negated_term_subject( string $term ): string {
+	foreach ( [ 'not ', 'no ', 'without ', 'never ' ] as $prefix ) {
+		if ( strpos( $term, $prefix ) === 0 ) {
+			return trim( substr( $term, strlen( $prefix ) ) );
+		}
+	}
+
+	return '';
+}
+
+function contains_negated_subject( string $haystack, string $subject ): bool {
+	$subject_pattern = phrase_pattern( $subject );
+	if ( $subject_pattern === '' ) {
+		return false;
+	}
+
+	$between = '(?:\s+[a-z0-9_@.#()+-]+){0,6}\s+';
+	$patterns = [
+		'/\b(?:not|no|never|without)\b' . $between . $subject_pattern . '\b/u',
+		'/\b(?:must|should|do|does|can|could|will|would|may|might)\s+not\b' . $between . $subject_pattern . '\b/u',
+		'/' . $subject_pattern . '\b.{0,48}\b(?:out|outside|elsewhere)\b/u',
+	];
+
+	foreach ( $patterns as $pattern ) {
+		if ( preg_match( $pattern, $haystack ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function phrase_pattern( string $phrase ): string {
+	$parts = preg_split( '/\s+/', trim( $phrase ) );
+	if ( ! is_array( $parts ) || empty( $parts ) ) {
+		return '';
+	}
+
+	$parts = array_filter(
+		array_map(
+			static function ( string $part ): string {
+				return preg_quote( $part, '/' );
+			},
+			$parts
+		),
+		static function ( string $part ): bool {
+			return $part !== '';
+		}
+	);
+
+	return implode( '\s+', $parts );
 }
 
 function print_report( array $report ): void {

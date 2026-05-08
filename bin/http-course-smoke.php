@@ -48,11 +48,13 @@ foreach ( array_slice( $argv, 1 ) as $arg ) {
 $tool_prefix = 'model-context-polytechnic-wordpress-plugin-craft-';
 $required_tools = [
 	$tool_prefix . 'begin-course',
+	$tool_prefix . 'take-course',
 	$tool_prefix . 'get-exercise',
 	$tool_prefix . 'attempt-exercise',
 	$tool_prefix . 'get-learning-memory',
 	$tool_prefix . 'get-certificate',
 	$tool_prefix . 'get-next-work',
+	$tool_prefix . 'get-campus-scene',
 	$tool_prefix . 'submit-feedback',
 	$tool_prefix . 'get-course-improvement-signals',
 ];
@@ -131,9 +133,32 @@ if ( $enrollment_key === '' ) {
 	fail( 'begin-course did not return an enrollment_key.' );
 }
 
+assert_activity_indicator_shape( $begin, 'begin-course' );
+
 $summary['enrollment_key_prefix'] = substr( $enrollment_key, 0, 8 );
 $summary['checks'][] = 'begin-course issued anonymous enrollment key';
 assert_suggested_tools_exist( $begin, $tool_names, 'begin-course' );
+
+$take_course = call_tool(
+	$options,
+	$session_id,
+	$tool_prefix . 'take-course',
+	[
+		'enrollment_key' => $enrollment_key,
+		'mode'           => 'module_batch',
+		'batch_size'     => 1,
+	],
+	5
+);
+
+if ( empty( $take_course['materials'] ) || empty( $take_course['autopilot'] ) ) {
+	fail( 'take-course did not return an autopilot course packet.' );
+}
+
+assert_activity_indicator_shape( $take_course, 'take-course' );
+
+$summary['checks'][] = 'take-course returned autopilot materials';
+assert_suggested_tools_exist( $take_course, $tool_names, 'take-course' );
 
 $exercise = call_tool(
 	$options,
@@ -145,7 +170,7 @@ $exercise = call_tool(
 		'enrollment_key'       => $enrollment_key,
 		'include_model_answer' => false,
 	],
-	5
+	6
 );
 
 if ( ( $exercise['exercise']['slug'] ?? '' ) !== 'design-plugin-bootstrap' ) {
@@ -164,7 +189,7 @@ $attempt = call_tool(
 		'enrollment_key' => $enrollment_key,
 		'answer'         => wp_plugin_craft_smoke_answer(),
 	],
-	6
+	7
 );
 
 if ( empty( $attempt['evaluation'] ) || ! array_key_exists( 'passed', $attempt['evaluation'] ) ) {
@@ -183,7 +208,7 @@ $memory = call_tool(
 	[
 		'enrollment_key' => $enrollment_key,
 	],
-	7
+	8
 );
 
 if ( empty( $memory['recent_attempts'] ) ) {
@@ -201,7 +226,7 @@ $certificate = call_tool(
 	[
 		'enrollment_key' => $enrollment_key,
 	],
-	8
+	9
 );
 
 if ( ! array_key_exists( 'eligible', $certificate ) || ! empty( $certificate['eligible'] ) ) {
@@ -224,7 +249,7 @@ $model_answer = call_tool(
 		'include_model_answer' => true,
 		'enrollment_key'       => $enrollment_key,
 	],
-	9
+	10
 );
 
 if ( empty( $model_answer['exercise']['model_answer'] ) ) {
@@ -463,6 +488,7 @@ function collect_suggested_tools( array $payload ): array {
 		'search_tool',
 		'public_feedback_tool',
 		'public_signals_tool',
+		'campus_scene_tool',
 	];
 	$tools = [];
 	foreach ( $payload as $key => $value ) {
@@ -476,6 +502,30 @@ function collect_suggested_tools( array $payload ): array {
 	}
 
 	return array_values( array_unique( $tools ) );
+}
+
+function assert_activity_indicator_shape( array $payload, string $context ): void {
+	$indicator = $payload['activity_indicator'] ?? null;
+	if ( ! is_array( $indicator ) ) {
+		fail( "{$context} did not return an activity_indicator object." );
+	}
+
+	$status_fields = [ 'status', 'accessibility', 'headline', 'narration' ];
+	$has_status = false;
+	foreach ( $status_fields as $field ) {
+		if ( ! empty( $indicator[ $field ] ) ) {
+			$has_status = true;
+			break;
+		}
+	}
+
+	if ( ! $has_status ) {
+		fail( "{$context} activity_indicator did not include semantic status text." );
+	}
+
+	if ( isset( $indicator['progress'] ) && ! is_array( $indicator['progress'] ) ) {
+		fail( "{$context} activity_indicator progress should be structured when present." );
+	}
 }
 
 function wp_plugin_craft_smoke_answer(): string {

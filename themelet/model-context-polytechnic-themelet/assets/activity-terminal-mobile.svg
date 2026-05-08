@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 760" role="img" aria-labelledby="title desc">
+  <title id="title">Model Context Polytechnic mobile activity terminal</title>
+  <desc id="desc">A mobile-friendly terminal poster showing an LLM attending WordPress Plugin Craft.</desc>
+  <defs>
+    <linearGradient id="screen" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#1d2418"/>
+      <stop offset="0.6" stop-color="#15110c"/>
+      <stop offset="1" stop-color="#0f0d09"/>
+    </linearGradient>
+    <pattern id="scan" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="1" fill="#f4d98b" opacity="0.06"/>
+    </pattern>
+  </defs>
+  <rect width="640" height="760" rx="22" fill="#11100c"/>
+  <rect width="640" height="760" rx="22" fill="url(#screen)"/>
+  <rect width="640" height="760" rx="22" fill="url(#scan)"/>
+  <rect x="34" y="34" width="572" height="692" rx="16" fill="none" stroke="#f4d98b" stroke-opacity="0.26"/>
+  <rect x="70" y="82" width="500" height="596" rx="16" fill="#17110c" stroke="#f4d98b" stroke-opacity="0.34"/>
+  <rect x="70" y="82" width="500" height="48" rx="16" fill="#281d10"/>
+  <circle cx="104" cy="106" r="8" fill="#b8822c"/>
+  <circle cx="132" cy="106" r="8" fill="#b8822c" opacity="0.75"/>
+  <circle cx="160" cy="106" r="8" fill="#b8822c" opacity="0.55"/>
+
+  <g text-anchor="middle">
+    <text x="320" y="190" fill="#fff0c8" font-family="Libre Baskerville, Georgia, serif" font-size="34" font-weight="700">MODEL CONTEXT</text>
+    <text x="320" y="234" fill="#fff0c8" font-family="Libre Baskerville, Georgia, serif" font-size="34" font-weight="700">POLYTECHNIC</text>
+    <text x="320" y="286" fill="#f4d98b" font-family="Source Sans 3, Arial, sans-serif" font-size="25" font-weight="800">WordPress Plugin Craft</text>
+    <text x="320" y="330" fill="#fff0c8" font-family="Fira Code, SFMono-Regular, Consolas, monospace" font-size="25" font-weight="700">[#########.........]</text>
+    <text x="320" y="370" fill="#fff0c8" font-family="Fira Code, SFMono-Regular, Consolas, monospace" font-size="25" font-weight="700">14 / 28 PASSED</text>
+    <text x="320" y="422" fill="#d9c79a" font-family="Source Sans 3, Arial, sans-serif" font-size="24" font-weight="800">Workshop Term</text>
+    <text x="320" y="460" fill="#d9c79a" font-family="Source Sans 3, Arial, sans-serif" font-size="22" font-weight="700">study lamps are on</text>
+  </g>
+
+  <g xml:space="preserve" text-anchor="middle" font-family="Fira Code, SFMono-Regular, Consolas, monospace" fill="#fff0c8">
+    <text x="320" y="528" font-size="22" font-weight="700">    ___      ___      ___</text>
+    <text x="320" y="560" font-size="22" font-weight="700">___|___|____|___|____|___|___</text>
+    <text x="320" y="592" font-size="22" font-weight="700">lesson / rubric / pass</text>
+    <text x="320" y="624" font-size="22" font-weight="700">     O        O        O</text>
+  </g>
+
+  <text x="320" y="676" text-anchor="middle" fill="#f4d98b" font-family="Source Sans 3, Arial, sans-serif" font-size="25" font-weight="900">THE MODEL IS IN CLASS</text>
+</svg>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Model Context Polytechnic
  * Description: A public MCP learning and diagnostics server for WordPress.
- * Version: 1.0.0
+ * Version: 1.0.4
  * Requires PHP: 8.1
  * Requires at least: 6.9
  * Author: Nick
@@ -11,7 +11,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'MODEL_CONTEXT_POLYTECHNIC_VERSION', '1.0.0' );
+define( 'MODEL_CONTEXT_POLYTECHNIC_VERSION', '1.0.4' );
 define( 'MODEL_CONTEXT_POLYTECHNIC_FILE', __FILE__ );
 define( 'MODEL_CONTEXT_POLYTECHNIC_DIR', __DIR__ );
 
@@ -35,6 +35,7 @@ require_once __DIR__ . '/includes/class-registry.php';
 require_once __DIR__ . '/includes/class-learning.php';
 require_once __DIR__ . '/includes/class-course-pack.php';
 require_once __DIR__ . '/includes/class-bundled-courses.php';
+require_once __DIR__ . '/includes/class-feedback-cli.php';
 require_once __DIR__ . '/includes/class-rewrite.php';
 
 add_filter( 'mcp_adapter_create_default_server', '__return_false' );
@@ -51,6 +52,7 @@ add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\PublicSession', '
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Registry', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Learning', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\BundledCourses', 'init' ] );
+add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\FeedbackCli', 'init' ] );
 add_action( 'plugins_loaded', [ 'ModelContextPolytechnic\\Mcp\\Rewrite', 'init' ] );
 
 register_activation_hook(

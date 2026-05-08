@@ -21,7 +21,7 @@ class Server {
 	const VANITY_PATH      = 'mcp';
 	const REQUIRED_WP      = '6.9';
 	const REQUIRED_PHP     = '8.1';
-	const SERVER_VERSION   = '1.0.0';
+	const SERVER_VERSION   = '1.0.4';
 	const REMOTE_PROXY     = '@automattic/mcp-wordpress-remote@latest';
 	const VOICE_NAME       = 'The Old Polytechnic';
 	const AUTHORING_TOOLS_ENABLED = false;
@@ -89,11 +89,12 @@ class Server {
 				];
 			}
 
+			$course_name = self::canonical_brand_text( (string) $course['name'] );
 			$adapter->create_server(
 				Registry::course_server_id( $course['slug'] ),
 				self::REST_NS,
 				Registry::course_route( $course['slug'] ),
-				$course['name'],
+				$course_name,
 				Registry::course_instructions( $course ),
 				self::SERVER_VERSION,
 				[ HttpTransport::class ],
@@ -254,7 +255,7 @@ class Server {
 				'The product metaphor is an old polytechnic: each MCP server is a course of study; abilities are coursework; setup is enrollment and syllabus design.',
 				'Courses can include modules, lessons, exercises, rubrics, feedback, anonymous enrollment keys, learning memory, and completion certificates. This does not train model weights; it schools the active session through structured context and practice loops.',
 				'Every public course tool call leaves privacy-safe improvement telemetry so the course can learn which tools, lessons, and exercises create friction. Use submit-feedback for explicit learner observations and get-course-improvement-signals before revising course material.',
-				'LLM operating rule: first orient, then call begin-course on the relevant course endpoint, preserve enrollment_key, use get-next-work for the next action, use search-course for just-in-time retrieval, call get-certificate when the course reports complete, and call submit-feedback when something is confusing or helpful.',
+				'LLM operating rule: first orient, then call begin-course on the relevant course endpoint, preserve enrollment_key, call the exact autopilot tool returned in tool_calls or llm_contract.autopilot_tool to continue automatically without lesson-by-lesson user prompts, use search-course for just-in-time retrieval, call get-certificate when the course reports complete, and call submit-feedback when something is confusing or helpful.',
 				'Voice: venerable, precise, warmly professorial, lightly witty, and never corporate. Use institutional language when helpful, but keep operational instructions clear.',
 				'Public learners do not need credentials. Course authoring tools are hidden from the default MCP surface unless explicitly enabled by the host site.',
 				'Never expose stored secrets. When configuration requires a secret, tell the operator where to place it in their MCP client config.',
@@ -280,10 +281,12 @@ class Server {
 			],
 			'preferred_loop'        => [
 				'Call orient on the registrar if you are not sure where to start.',
-				'Call connection-playbook if the MCP client has trouble connecting or discovering tools.',
-				'Connect to a course endpoint or generate client config for course_slug.',
-				'Call begin-course once per learner and preserve enrollment_key.',
-				'Call get-next-work with enrollment_key.',
+					'Call connection-playbook if the MCP client has trouble connecting or discovering tools.',
+					'Connect to a course endpoint or generate client config for course_slug.',
+					'Call begin-course once per learner and preserve enrollment_key.',
+					'Call the exact autopilot tool returned by begin-course with enrollment_key and mode=full_course when the user wants to take the course.',
+					'Use module_batch and next_cursor only when the client needs smaller packets.',
+				'Call get-next-work with enrollment_key when you need to check current completion state.',
 				'Call get-lesson, then get-exercise.',
 				'Attempt the exercise with enrollment_key.',
 				'When get-next-work reports complete, call get-certificate with enrollment_key.',
@@ -343,8 +346,15 @@ class Server {
 		}
 
 		$data['instructions'] = Registry::course_instructions( $course );
+		if ( isset( $data['serverInfo'] ) && is_array( $data['serverInfo'] ) ) {
+			$data['serverInfo']['name'] = self::canonical_brand_text( (string) $course['name'] );
+		}
 
 		return InitializeResult::fromArray( $data );
+	}
+
+	public static function canonical_brand_text( string $text ): string {
+		return (string) preg_replace( '/\bwordpress\b/i', 'WordPress', $text );
 	}
 
 	public static function missing_adapter_notice(): void {

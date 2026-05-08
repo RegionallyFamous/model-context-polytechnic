@@ -33,13 +33,14 @@ The smoke test performs these MCP JSON-RPC calls:
 3. `tools/list` and verify the public learning tools are exposed.
 4. `resources/list` and verify the syllabus plus public references are exposed.
 5. `tools/call` for `begin-course`.
-6. `tools/call` for `get-exercise`.
-7. `tools/call` for `attempt-exercise`.
-8. `tools/call` for `get-learning-memory`.
-9. `tools/call` for `get-certificate` and confirm an unfinished enrollment gets remaining work.
-10. `tools/call` for `get-exercise` with `include_model_answer=true`.
+6. `tools/call` for the exact MCP-ready `take-course` tool returned by `begin-course` and verify an autopilot material packet plus markdown activity indicator are returned.
+7. `tools/call` for `get-exercise`.
+8. `tools/call` for `attempt-exercise`.
+9. `tools/call` for `get-learning-memory`.
+10. `tools/call` for `get-certificate` and confirm an unfinished enrollment gets remaining work.
+11. `tools/call` for `get-exercise` with `include_model_answer=true`.
 
-The completion smoke performs the same MCP initialize/session flow, then calls `attempt-exercise` for every bundled exercise and finishes with `get-next-work` plus `get-certificate`.
+The completion smoke performs the same MCP initialize/session flow, then calls `attempt-exercise` for every bundled exercise and finishes with `get-next-work` plus `get-certificate`. The live course also exposes an MCP-ready `take-course` tool, which is the LLM autopilot entry point for reading course packets without asking a human to advance lesson by lesson.
 
 The endpoint is POST-based. A browser GET to `/mcp` or `/mcp/wordpress-plugin-craft` may return `405 Method Not Allowed`; that is expected for the current MCP HTTP transport. Use an MCP client or the smoke script to prove the endpoint.
 
