@@ -85,14 +85,19 @@ defined( 'ABSPATH' ) || exit;
 		</section>
 
 		<section class="section admissions" id="admissions" aria-labelledby="admissions-title">
-			<div class="section-heading">
-				<p class="eyebrow">Admissions Office</p>
-				<h2 id="admissions-title">First, connect the model. Then make it attend class.</h2>
-				<p>
-					Model Context Polytechnic lives at <code>https://joinmcpoly.com/mcp/wordpress-plugin-craft</code>.
-					The friendly short labels are useful in course copy, but MCP clients should follow the exact tool
-					names returned by the server.
-				</p>
+			<div class="section-heading admissions-heading">
+				<div>
+					<p class="eyebrow">Admissions Office</p>
+					<h2 id="admissions-title">First, connect the model. Then make it attend class.</h2>
+					<p>
+						Model Context Polytechnic lives at <code>https://joinmcpoly.com/mcp/wordpress-plugin-craft</code>.
+						The friendly short labels are useful in course copy, but MCP clients should follow the exact tool
+						names returned by the server.
+					</p>
+				</div>
+				<figure class="admissions-seal" aria-label="Model Context Polytechnic seal">
+					<img src="<?php echo mcpoly_themelet_asset( 'mcp-logo.png' ); ?>" alt="">
+				</figure>
 			</div>
 
 			<div class="admissions-grid">

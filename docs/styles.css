@@ -511,6 +511,61 @@ h3 {
   max-width: var(--measure-wide);
 }
 
+.admissions-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 20rem);
+  gap: clamp(2rem, 7vw, 6rem);
+  align-items: center;
+  max-width: 100%;
+}
+
+.admissions-seal {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: start;
+  justify-self: center;
+  width: min(20rem, 28vw);
+  min-width: 13rem;
+  aspect-ratio: 1;
+  margin: 0;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 28px rgba(255, 191, 77, 0.18)) drop-shadow(0 24px 42px rgba(0, 0, 0, 0.34));
+  isolation: isolate;
+}
+
+.admissions-seal::before,
+.admissions-seal::after {
+  position: absolute;
+  inset: 7%;
+  z-index: -1;
+  content: "";
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.admissions-seal::before {
+  border: 1px solid rgba(255, 191, 77, 0.36);
+  box-shadow:
+    0 0 0 10px rgba(255, 191, 77, 0.025),
+    0 0 72px rgba(119, 240, 161, 0.12);
+}
+
+.admissions-seal::after {
+  inset: -5%;
+  background:
+    radial-gradient(circle, rgba(255, 191, 77, 0.18), transparent 54%),
+    conic-gradient(from 90deg, rgba(255, 191, 77, 0.18), rgba(119, 240, 161, 0.1), rgba(109, 209, 235, 0.12), rgba(255, 191, 77, 0.18));
+  opacity: 0.7;
+  transform: rotate(-8deg);
+}
+
+.admissions-seal img {
+  width: 100%;
+  height: auto;
+  border-radius: 50%;
+}
+
 .section-heading p:not(.eyebrow),
 .graduation p {
   max-width: var(--measure);
@@ -940,6 +995,7 @@ h3 {
   }
 
   .signal-strip,
+  .admissions-heading,
   .admissions-flow,
   .campus-reel,
   .quality-ledger {
@@ -964,6 +1020,11 @@ h3 {
   .admissions-flow div,
   .admissions-flow div + div {
     padding-inline: 0;
+  }
+
+  .admissions-seal {
+    width: min(17rem, 64vw);
+    margin: 0 auto;
   }
 
   .campus-reel img {
