@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8 - 2026-05-08
+
+- Adds verbose `learning_status.story_script` narration so MCP clients can show the Agent attending school instead of terse status text.
+- Adds top-level `campus_story` responses for enrollment, course packets, exercise attempts, and certificates.
+- Updates course instructions, docs, and smoke checks so story narration stays separate from exact MCP tool calls.
+
 ## 1.0.7 - 2026-05-08
 
 - Replaces visible course status boards with concise `learning_status` metadata.

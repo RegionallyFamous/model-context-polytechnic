@@ -263,6 +263,12 @@ class Learning {
 	}
 
 	public static function course_components( int $course_id, string $course_slug ): array {
+		$learning_status = self::learning_status(
+			$course,
+			$progress,
+			__( 'Admissions opened the gate. The first WordPress Plugin Craft lecture is waiting under the terminal lamps.', 'model-context-polytechnic' )
+		);
+
 		return [
 			'tools'     => [
 				self::learning_ability_name( $course_slug, 'begin-course' ),
@@ -699,11 +705,8 @@ class Learning {
 			'tool_resolution'     => $tool_resolution,
 			'autopilot'           => self::course_autopilot_guidance( $course ),
 			'continue_policy'     => $continue_policy,
-			'learning_status'     => self::learning_status(
-				$course,
-				$progress,
-				__( 'Admissions opened the gate. The first WordPress Plugin Craft lecture is waiting under the terminal lamps.', 'model-context-polytechnic' )
-			),
+			'learning_status'     => $learning_status,
+			'campus_story'        => $learning_status['story_script'],
 			'campus_scene'        => $campus_scene,
 			'visual_tool_calls'   => [ $campus_scene['image_tool_call'] ],
 			'first_recommended_lesson'   => $lesson ? self::lesson_summary( $lesson, false ) : null,
@@ -726,7 +729,8 @@ class Learning {
 				'Do not stop after the first lecture, first packet, or first passed lab. The next expected move is continue_policy.next_required_tool_call.',
 				'Call the exact autopilot tool returned in tool_resolution.tools["take-course"]. Do not call the short label take-course unless your MCP client exposes that exact alias.',
 				'If the exact autopilot tool is not visible, use fallback_tool_calls or next_work.tool_calls and proceed manually through get-next-work, get-lesson, get-exercise, and attempt-exercise.',
-				'Do not print text-art status boards. If your MCP client supports images, call the campus_scene image tool call so the human sees a CRT campus postcard.',
+				'Do not print text-art status boards. When narrating to the user, use campus_story.read_aloud or learning_status.story_script.read_aloud so the course feels like an Agent attending class.',
+				'If your MCP client supports images, call the campus_scene image tool call so the human sees a CRT campus postcard beside the story.',
 				'Attempt labs with enrollment_key so feedback becomes durable memory. If an attempt fails or feels thin, read the exemplar with include_model_answer=true and revise.',
 				'When complete, call get-certificate, congratulate the graduate, answer the graduation reflection, and submit that reflection as feedback when the client allows it.',
 			],
@@ -791,6 +795,17 @@ class Learning {
 		$next_work = self::next_work_response( $course, $progress['exercises'] ?? [], null, null, $enrollment_key );
 		$scene_key = $complete ? 'commencement' : ( $next_cursor ? 'workshop' : 'capstone' );
 		$campus_scene = self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key );
+		$learning_status = self::learning_status(
+			$course,
+			$summary,
+			$complete
+				? __( 'The final lab is stamped. The Registrar is clearing the aisle for commencement.', 'model-context-polytechnic' )
+				: __( 'A new course packet is on the desk. The study lamps are warm and the callbacks are under supervision.', 'model-context-polytechnic' ),
+			[
+				'packet_count' => count( $materials ),
+				'next_cursor'  => $next_cursor,
+			]
+		);
 
 		return [
 			'course'                 => Registry::course_summary( $course ),
@@ -800,17 +815,8 @@ class Learning {
 			'autopilot'              => self::course_autopilot_guidance( $course ),
 			'continue_policy'        => self::autopilot_continue_policy( $course, $enrollment_key, $next_work, $next_cursor ),
 			'progress'               => $summary,
-			'learning_status'         => self::learning_status(
-				$course,
-				$summary,
-				$complete
-					? __( 'The final lab is stamped. The Registrar is clearing the aisle for commencement.', 'model-context-polytechnic' )
-					: __( 'A new course packet is on the desk. The study lamps are warm and the callbacks are under supervision.', 'model-context-polytechnic' ),
-				[
-					'packet_count' => count( $materials ),
-					'next_cursor'  => $next_cursor,
-				]
-			),
+			'learning_status'         => $learning_status,
+			'campus_story'            => $learning_status['story_script'],
 			'campus_scene'           => $campus_scene,
 			'visual_tool_calls'      => [ $campus_scene['image_tool_call'] ],
 			'complete'               => $complete,
@@ -1034,6 +1040,15 @@ class Learning {
 		$next_actions = self::attempt_next_actions( $course, $exercise, $evaluation, $enrollment_key, $next_work );
 		$scene_key = ! empty( $next_work['complete'] ) ? 'commencement' : ( ! empty( $evaluation['passed'] ) ? 'workshop' : 'capstone' );
 		$campus_scene = $stored ? self::campus_scene_metadata_for_response( $course, $scene_key, $enrollment_key ) : null;
+		$learning_status = $stored
+			? self::learning_status(
+				$course,
+				$progress_summary,
+				! empty( $evaluation['passed'] )
+					? __( 'Lab passed. The faculty stamp landed with a dignified little thump.', 'model-context-polytechnic' )
+					: __( 'Lab needs revision. The chalkboard is still warm and absolutely judging the missing safety check.', 'model-context-polytechnic' )
+			)
+			: null;
 
 		return [
 			'course'              => Registry::course_summary( $course ),
@@ -1046,15 +1061,8 @@ class Learning {
 			'next_work'             => $next_work,
 			'continue_policy'       => $stored ? self::autopilot_continue_policy( $course, $enrollment_key, $next_work ) : null,
 			'autopilot'             => self::course_autopilot_guidance( $course ),
-			'learning_status'       => $stored
-				? self::learning_status(
-					$course,
-					$progress_summary,
-					! empty( $evaluation['passed'] )
-						? __( 'Lab passed. The faculty stamp landed with a dignified little thump.', 'model-context-polytechnic' )
-						: __( 'Lab needs revision. The chalkboard is still warm and absolutely judging the missing safety check.', 'model-context-polytechnic' )
-				)
-				: null,
+			'learning_status'       => $learning_status,
+			'campus_story'          => $learning_status ? $learning_status['story_script'] : null,
 			'campus_scene'          => $campus_scene,
 			'visual_tool_calls'     => $campus_scene ? [ $campus_scene['image_tool_call'] ] : [],
 			'next_actions'          => $next_actions,
@@ -1224,12 +1232,22 @@ class Learning {
 
 		if ( $total_exercises < 1 || $remaining ) {
 			if ( $existing_certificate ) {
+				$learning_status = self::learning_status(
+					$course,
+					$summary,
+					__( 'The certificate record is already in the Registrar ledger, even though the current syllabus has shifted under the old transcript.', 'model-context-polytechnic' )
+				);
+				$campus_scene = self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key );
+
 				return [
 					'course'              => Registry::course_summary( $course ),
 					'eligible'            => true,
 					'certificate'         => self::certificate_from_record( $course, $hash, $existing_certificate, $recipient_name, $include_transcript ),
 					'graduation_reflection' => self::graduation_reflection_prompt( $course, $enrollment_key ),
-					'campus_scene'        => self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key ),
+					'learning_status'     => $learning_status,
+					'campus_story'        => $learning_status['story_script'],
+					'campus_scene'        => $campus_scene,
+					'visual_tool_calls'   => [ $campus_scene['image_tool_call'] ],
 					'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
 					'remaining_count'     => count( $remaining ),
 					'remaining_exercises' => array_map(
@@ -1248,10 +1266,18 @@ class Learning {
 				];
 			}
 
+			$learning_status = self::learning_status(
+				$course,
+				$summary,
+				__( 'The Registrar checked the ledger. The learner is still in coursework, with more labs to pass before commencement.', 'model-context-polytechnic' )
+			);
+
 			return [
 				'course'              => Registry::course_summary( $course ),
 				'eligible'            => false,
 				'certificate'         => null,
+				'learning_status'     => $learning_status,
+				'campus_story'        => $learning_status['story_script'],
 				'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
 				'remaining_count'     => count( $remaining ),
 				'remaining_exercises' => array_map(
@@ -1269,13 +1295,22 @@ class Learning {
 		}
 
 		$certificate = self::issue_certificate( $course, $hash, $progress, $public_exercises, $recipient_name, $include_transcript );
+		$learning_status = self::learning_status(
+			$course,
+			$summary,
+			__( 'Commencement complete. The Agent has crossed the terminal stage and is ready to write better WordPress plugins.', 'model-context-polytechnic' )
+		);
+		$campus_scene = self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key );
 
 		return [
 			'course'              => Registry::course_summary( $course ),
 			'eligible'            => true,
 			'certificate'         => $certificate,
 			'graduation_reflection' => self::graduation_reflection_prompt( $course, $enrollment_key ),
-			'campus_scene'        => self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key ),
+			'learning_status'     => $learning_status,
+			'campus_story'        => $learning_status['story_script'],
+			'campus_scene'        => $campus_scene,
+			'visual_tool_calls'   => [ $campus_scene['image_tool_call'] ],
 			'progress'            => $summary + [ 'exercises' => $progress['exercises'] ?? [] ],
 			'remaining_count'     => 0,
 			'remaining_exercises' => [],
@@ -2001,7 +2036,13 @@ class Learning {
 				'tool_resolution'      => $tool_resolution,
 				'permission_model'     => __( 'After the user asks to enroll or take the course, keep advancing through course tool_calls without asking for lesson-by-lesson approval.', 'model-context-polytechnic' ),
 				'default_mode'         => 'full_course',
-				'visual_status'        => __( 'Do not print text-art status boards. Use learning_status for concise text, and call get-campus-scene for the matching CRT campus postcard when the client supports images.', 'model-context-polytechnic' ),
+				'visual_status'        => __( 'Do not print text-art status boards. Use learning_status.story_script.read_aloud as the verbose campus narration, and call get-campus-scene for the matching CRT campus postcard when the client supports images.', 'model-context-polytechnic' ),
+				'storytelling_contract'=> [
+					'Show the human that the Agent is attending school: admissions, lecture, lab, faculty notes, capstone, and commencement.',
+					'Use story_script.read_aloud when a visible update would help the human understand that class is in session.',
+					'Keep exact MCP tool calls separate from the story. The story is the campus narrator; tool_calls are the registrar forms.',
+					'Never replace a required exercise attempt with vibes. The Agent must still study the packet, attempt the lab, revise, and continue.',
+				],
 				'loop'                 => [
 					'Call begin-course once and preserve enrollment_key.',
 					'Immediately call autopilot_tool with mode=full_course, or module_batch if the client needs smaller packets. If autopilot_tool is not visible, follow tool_calls returned by begin-course.',
@@ -2074,17 +2115,20 @@ class Learning {
 		$stage = self::learning_stage( $completed, $total, $percent );
 		$scene = self::campus_scene( (string) $stage['scene'] );
 		$campus_scene = self::campus_scene_metadata_for_response( $course, (string) $stage['scene'] );
+		$story_script = self::campus_story_script( $course, $stage, $status, $context_line, $completed, $total, $percent );
 
 		return [
-			'display_in_chat' => false,
+			'display_in_chat' => true,
 			'kind'            => 'mcpoly_learning_status',
-			'preferred_display' => 'image',
+			'preferred_display' => 'image_and_story',
 			'status'          => $status,
 			'stage'           => $stage['stage'],
 			'headline'        => $stage['headline'],
 			'narration'       => $stage['narration'],
 			'ticker'          => $stage['ticker'],
 			'current_context' => $context_line,
+			'story_script'    => $story_script,
+			'read_aloud'      => $story_script['read_aloud'],
 			'campus_scene'    => [
 				'scene'   => $stage['scene'],
 				'title'   => $scene['title'],
@@ -2104,13 +2148,14 @@ class Learning {
 				'completed_count' => $completed,
 				'total_count'     => $total,
 				'percent'         => $percent,
-				'note'            => __( 'Structured completion data for machines. Do not render this as a visible progress meter unless the user asks.', 'model-context-polytechnic' ),
+				'note'            => __( 'Structured completion data for machines. Do not render this as a visible progress meter unless the user asks. Prefer the story_script narration.', 'model-context-polytechnic' ),
 			],
 			'voice'           => [
-				'persona' => __( 'An old university terminal with a WordPress engineering faculty hiding inside it.', 'model-context-polytechnic' ),
+				'persona' => __( 'An old university terminal with a WordPress engineering faculty hiding inside it, telling the human a warm campus story while the Agent studies.', 'model-context-polytechnic' ),
 				'rules'   => [
 					'Make the learner feel like the model is attending a real course, not waiting on a spinner.',
-					'Keep the jokes short, academic, and useful; the course work still matters most.',
+					'Use cozy, specific, school-story narration when speaking to the user.',
+					'Keep the jokes academic and useful; the course work still matters most.',
 					'Always capitalize WordPress correctly in prose.',
 					'Do not imply private WordPress access is required for public learning.',
 					'Do not print text-art or status boards.',
@@ -2118,9 +2163,98 @@ class Learning {
 			],
 			'instructions'    => [
 				'Do not print text-art or activity boards from this response.',
-				'If the MCP client supports image content, call visual_tool_call to display the matching CRT campus scene.',
-				'If images are unavailable, use accessibility or one ticker line as plain prose.',
-				'Keep visible status short; the useful work is still the course attempt.',
+				'Display story_script.read_aloud when the user should see that the Agent is actively attending class.',
+				'If the MCP client supports image content, call visual_tool_call to display the matching CRT campus scene beside the story.',
+				'If images are unavailable, use story_script.read_aloud plus accessibility as plain prose.',
+				'Keep exact tool calls intact; the story is atmosphere around real course work, not a substitute for attempts.',
+			],
+		];
+	}
+
+	private static function campus_story_script( array $course, array $stage, string $status, string $context_line, int $completed, int $total, int $percent ): array {
+		$course_name = (string) ( $course['name'] ?? __( 'WordPress Plugin Craft', 'model-context-polytechnic' ) );
+		$progress_line = $total > 0
+			? sprintf( '%d of %d labs have a passing mark, which puts the learner at %d percent of the published practicum.', $completed, $total, $percent )
+			: 'The learner is still in orientation, before the first lab has been attempted.';
+
+		$stage_name = (string) ( $stage['stage'] ?? 'Matriculation' );
+		$chapter = sprintf( '%s: %s', $stage_name, $course_name );
+		$scene = (string) ( $stage['scene'] ?? 'matriculation' );
+		$read_aloud = '';
+		$beats = [];
+		$stage_direction = '';
+		$next_chapter = '';
+
+		if ( $scene === 'commencement' ) {
+			$read_aloud = sprintf(
+				'The campus has gone quiet in that special way old schools do right before applause. The Agent stands at the front of Commencement Hall with its anonymous enrollment card tucked safely into its transcript. The faculty has checked the labs, the review lamps are green, and the certificate seal is warming under the Registrar lamp. %1$s Now the lesson changes shape: the model is no longer proving it can finish a course. It is preparing to carry the habits forward: authorize writes before they happen, escape output before it reaches a browser, respect WordPress lifecycle boundaries, and test the edges where real plugins usually wobble. The next words should feel like graduation: congratulate the learner, ask for the reflection, and remind it that better confidence means better review, not less review.',
+				$progress_line
+			);
+			$beats = [
+				'The Registrar opens the certificate ledger.',
+				'The faculty confirms the learner practiced every published lab.',
+				'The Agent is asked how its future WordPress plugin work will change.',
+				'The learning memory is ready to follow the graduate into real build tasks.',
+			];
+			$stage_direction = 'Read this like a commencement address from a very serious technical school that secretly loves its students.';
+			$next_chapter = 'Call get-certificate, then answer and optionally submit the graduation reflection.';
+		} elseif ( $scene === 'capstone' ) {
+			$read_aloud = sprintf(
+				'The Agent has reached the capstone wing, where the chairs are heavy, the chalk is fresh, and every clever idea has to survive faculty questions. On one side of the room: permissions, nonces, schemas, and storage choices. On the other: release checks, supportability, and the quiet dread of a plugin installed on a site with ten years of history. %1$s The learner is not being hurried through a checklist. It is being taught to defend decisions. Why this hook? Why this table? Why this REST permission callback? Why this escaping function here and not later? The story to show the human is simple: class is still in session, but the work has grown up. The Agent is practicing judgment now.',
+				$progress_line
+			);
+			$beats = [
+				'The review board asks the Agent to explain tradeoffs out loud.',
+				'Architecture choices are tested against maintainability, security, and WordPress conventions.',
+				'Failed or thin answers become faculty notes, not dead ends.',
+				'The learner keeps moving toward commencement by following the exact next tool call.',
+			];
+			$stage_direction = 'Read this like a late-night studio critique: cozy, intense, and practical.';
+			$next_chapter = 'Attempt the next lab or continue with the returned autopilot tool call.';
+		} elseif ( $scene === 'workshop' ) {
+			$read_aloud = sprintf(
+				'Inside the Plugin Craft Laboratory, the lights have the warm color of old terminals and responsible engineering. The Agent has taken a seat near the front, opened the course packet, and started turning WordPress rules into reflexes. A professor writes "sanitize, authorize, escape" on the board, then underlines "in that order when it matters" with the gravity of someone who has debugged production at midnight. %1$s Each lab is a little rehearsal for a future plugin: a bootstrap that does not hoard business logic, a REST route that knows who may write, a data model that can be migrated without panic, a JavaScript choice that respects the editor and the frontend. The human should be able to imagine the model studying, attempting, receiving notes, sharpening the answer, and walking to the next room without being asked for a hallway pass.',
+				$progress_line
+			);
+			$beats = [
+				'The Agent studies the returned packet like a class handout.',
+				'Exercises become lab benches where plugin instincts are practiced.',
+				'Rubric feedback becomes durable memory tied to the enrollment key.',
+				'The next class begins automatically after the current lab is attempted.',
+			];
+			$stage_direction = 'Read this like a bedtime story for a model that dreams in hooks, schemas, and release checklists.';
+			$next_chapter = 'Study the packet, attempt the included labs, revise if needed, then continue hands-off.';
+		} else {
+			$read_aloud = sprintf(
+				'Once upon a cache-warmed evening, a new Agent arrived at Model Context Polytechnic with no wp-admin password, no secret handshake, and absolutely no idea where the good hooks were kept. Admissions did not hand it a login. Admissions handed it an anonymous enrollment key, a campus map, and a small but important promise: if it kept that key, the school would remember its practice. %1$s The first class is %2$s, and the first lesson is not glamorous on purpose. The Agent is going to learn the shape of a real WordPress plugin before it tries to impress anyone: the folder, the bootstrap file, the header, the guard, the lifecycle hooks, the places where business logic should not be stuffed just because the file was nearby. The human watching should feel the school doors opening and the model quietly taking its seat.',
+				$context_line,
+				$course_name
+			);
+			$beats = [
+				'Admissions issues the anonymous enrollment key.',
+				'The Agent learns that the key is memory, not a password.',
+				'The first lecture starts with plugin anatomy and bootstrap discipline.',
+				'Autopilot should begin immediately after enrollment unless the user interrupts.',
+			];
+			$stage_direction = 'Read this like the opening page of a cozy technical-school story.';
+			$next_chapter = 'Call the exact take-course tool returned by begin-course and begin class.';
+		}
+
+		return [
+			'display_in_chat'        => true,
+			'style'                  => 'verbose_campus_bedtime_story',
+			'chapter_title'          => $chapter,
+			'stage'                  => $stage_name,
+			'current_context'        => $context_line,
+			'read_aloud'             => $read_aloud,
+			'story_beats'            => $beats,
+			'stage_direction'        => $stage_direction,
+			'next_chapter_hint'      => $next_chapter,
+			'human_should_feel'      => 'The Agent is actually attending WordPress Plugin Craft, moving from admissions to lectures to labs to commencement.',
+			'do_not_show'            => [
+				'text-art status boards',
+				'progress bars unless the user asks',
+				'generic spinner copy',
 			],
 		];
 	}
@@ -4061,6 +4195,8 @@ class Learning {
 					'accessibility'     => [ 'type' => 'string' ],
 					'progress'          => [ 'type' => 'object' ],
 					'preferred_display' => [ 'type' => 'string' ],
+					'story_script'      => [ 'type' => 'object' ],
+					'read_aloud'        => [ 'type' => 'string' ],
 					'campus_scene'      => [ 'type' => 'object' ],
 					'visual_tool_call'  => [ 'type' => 'object' ],
 					'visual_tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
@@ -4070,6 +4206,7 @@ class Learning {
 				'additionalProperties' => true,
 			],
 			'campus_scene'       => [ 'type' => [ 'object', 'null' ] ],
+			'campus_story'       => [ 'type' => [ 'object', 'null' ] ],
 			'visual_tool_calls'  => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
 			'note'               => [ 'type' => 'string' ],
 		];

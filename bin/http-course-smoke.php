@@ -532,6 +532,15 @@ function assert_learning_status_shape( array $payload, string $context ): void {
 	if ( isset( $status['progress'] ) && ! is_array( $status['progress'] ) ) {
 		fail( "{$context} learning_status progress should be structured when present." );
 	}
+
+	if ( empty( $status['story_script'] ) || ! is_array( $status['story_script'] ) ) {
+		fail( "{$context} learning_status did not include a story_script object." );
+	}
+
+	$read_aloud = (string) ( $status['story_script']['read_aloud'] ?? '' );
+	if ( strlen( $read_aloud ) < 240 ) {
+		fail( "{$context} learning_status story_script.read_aloud was not descriptive enough." );
+	}
 }
 
 function wp_plugin_craft_smoke_answer(): string {

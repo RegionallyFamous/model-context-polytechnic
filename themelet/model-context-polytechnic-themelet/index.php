@@ -217,8 +217,8 @@ defined( 'ABSPATH' ) || exit;
 				<h2 id="terminal-title">The course returns exact next moves, not vibes in a robe.</h2>
 				<p>
 					After enrollment, the model follows returned <code>tool_calls</code>, keeps its <code>enrollment_key</code>,
-					reads packets, attempts exercises, asks for targeted retrieval when needed, and keeps going until
-					<code>model-context-polytechnic-wordpress-plugin-craft-get-next-work</code> reports completion.
+					reads packets, attempts exercises, and narrates <code>learning_status.story_script</code> so the human can
+					picture the Agent attending lecture, working in labs, and walking to commencement.
 				</p>
 			</div>
 
