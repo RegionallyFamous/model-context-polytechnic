@@ -34,11 +34,12 @@ The smoke test performs these MCP JSON-RPC calls:
 4. `resources/list` and verify the syllabus plus public references are exposed.
 5. `tools/call` for `begin-course`.
 6. `tools/call` for the exact MCP-ready `take-course` tool returned by `begin-course` and verify an autopilot material packet, verbose `learning_status.story_script`, and optional `get-campus-scene` visual call are returned.
-7. `tools/call` for `get-exercise`.
-8. `tools/call` for `attempt-exercise`.
-9. `tools/call` for `get-learning-memory`.
-10. `tools/call` for `get-certificate` and confirm an unfinished enrollment gets remaining work.
-11. `tools/call` for `get-exercise` with `include_model_answer=true`.
+7. `tools/call` for `get-campus-scene` and verify it returns `display_markdown` plus a public `image_url`; optionally call `get-campus-scene-image` only when the client visibly renders raw MCP image content blocks.
+8. `tools/call` for `get-exercise`.
+9. `tools/call` for `attempt-exercise`.
+10. `tools/call` for `get-learning-memory`.
+11. `tools/call` for `get-certificate` and confirm an unfinished enrollment gets remaining work.
+12. `tools/call` for `get-exercise` with `include_model_answer=true`.
 
 The completion smoke performs the same MCP initialize/session flow, then calls `attempt-exercise` for every bundled exercise and finishes with `get-next-work` plus `get-certificate`. The certificate response includes `graduation_speech`, which tells the Agent to stand at the podium and tell everyone what it learned before closing the course. The live course also exposes an MCP-ready `take-course` tool, which is the LLM autopilot entry point for reading course packets without asking a human to advance lesson by lesson.
 

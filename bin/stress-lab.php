@@ -174,6 +174,7 @@ function public_tools(): array {
 		'get-progress',
 		'get-learning-memory',
 		'get-campus-scene',
+		'get-campus-scene-image',
 		'get-certificate',
 		'submit-feedback',
 		'get-course-improvement-signals',

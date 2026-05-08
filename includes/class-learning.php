@@ -276,6 +276,7 @@ class Learning {
 				self::learning_ability_name( $course_slug, 'get-progress' ),
 				self::learning_ability_name( $course_slug, 'get-learning-memory' ),
 				self::learning_ability_name( $course_slug, 'get-campus-scene' ),
+				self::learning_ability_name( $course_slug, 'get-campus-scene-image' ),
 				self::learning_ability_name( $course_slug, 'get-certificate' ),
 				self::learning_ability_name( $course_slug, 'submit-feedback' ),
 				self::learning_ability_name( $course_slug, 'get-course-improvement-signals' ),
@@ -306,6 +307,7 @@ class Learning {
 			self::register_get_progress_tool( $course );
 			self::register_get_learning_memory_tool( $course );
 			self::register_get_campus_scene_tool( $course );
+			self::register_get_campus_scene_image_tool( $course );
 			self::register_get_certificate_tool( $course );
 			self::register_submit_feedback_tool( $course );
 			self::register_get_course_improvement_signals_tool( $course );
@@ -334,6 +336,7 @@ class Learning {
 			'get-progress',
 			'get-learning-memory',
 			'get-campus-scene',
+			'get-campus-scene-image',
 			'get-certificate',
 			'submit-feedback',
 			'get-course-improvement-signals',
@@ -363,6 +366,7 @@ class Learning {
 			'tools' => $tool_names,
 			'autopilot_tool' => $tool_names['take-course'],
 			'optional_image_tool' => $tool_names['get-campus-scene'],
+			'optional_mcp_image_content_tool' => $tool_names['get-campus-scene-image'],
 			'if_autopilot_tool_is_not_visible' => [
 				'Do not try to call the short label take-course.',
 				'Use next_work.tool_calls and fallback_tool_calls from begin-course instead.',
@@ -1151,6 +1155,36 @@ class Learning {
 
 		$scene_key = self::campus_scene_key_for_input( $course, $input );
 		$scene = self::campus_scene( $scene_key );
+
+		return [
+			'scene'                  => $scene_key,
+			'title'                  => $scene['title'],
+			'alt'                    => $scene['alt'],
+			'caption'                => $scene['caption'],
+			'image_url'              => self::campus_scene_url( $scene_key ),
+			'mimeType'               => $scene['mcp_mime_type'] ?? $scene['mime_type'],
+			'display_markdown'       => self::campus_scene_markdown( $scene_key ),
+			'display_instruction'    => __( 'Show display_markdown to the human. If the client blocks markdown images, show image_url as a clickable campus postcard link and narrate text_fallback.', 'model-context-polytechnic' ),
+			'client_support'         => [
+				'most_visible_path' => __( 'Markdown image URL. This works in more clients than raw MCP image content blocks.', 'model-context-polytechnic' ),
+				'pure_mcp_image'   => __( 'For clients that visibly render MCP image content blocks, call mcp_image_content_tool_call.', 'model-context-polytechnic' ),
+			],
+			'mcp_image_content_tool_call' => [
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-campus-scene-image' ),
+				'arguments' => [ 'scene' => $scene_key ],
+				'why'       => __( 'Return the same campus postcard as a pure MCP image content block.', 'model-context-polytechnic' ),
+			],
+			'text_fallback'          => $scene['fallback'],
+		];
+	}
+
+	public static function get_campus_scene_image( array $course, array $input ) {
+		if ( ! Auth::rate_limit() ) {
+			return new \WP_Error( 'model_context_polytechnic_rate_limited', __( 'Too many public learning requests. Please try again shortly.', 'model-context-polytechnic' ), [ 'status' => 429 ] );
+		}
+
+		$scene_key = self::campus_scene_key_for_input( $course, $input );
+		$scene = self::campus_scene( $scene_key );
 		$path = self::campus_scene_path( $scene_key );
 
 		if ( ! is_readable( $path ) ) {
@@ -1183,15 +1217,22 @@ class Learning {
 			'alt'              => $scene['alt'],
 			'caption'          => $scene['caption'],
 			'style'            => __( 'Retro CRT terminal-campus image: amber and phosphor green on black, old university gravitas for machine learners.', 'model-context-polytechnic' ),
-			'client_support'   => __( 'Use the tool call below when the MCP client can display image content blocks. Do not substitute text-art.', 'model-context-polytechnic' ),
+			'client_support'   => __( 'Use the tool call below to get a visible markdown image URL packet. If the client visibly renders MCP image content blocks, use mcp_image_content_tool_call too. Do not substitute text-art.', 'model-context-polytechnic' ),
 			'image_delivery'   => [
 				'mimeType' => $scene['mcp_mime_type'] ?? $scene['mime_type'],
-				'note'     => __( 'The MCP tool returns a compact image content block for client compatibility.', 'model-context-polytechnic' ),
+				'image_url' => self::campus_scene_url( $scene_key ),
+				'display_markdown' => self::campus_scene_markdown( $scene_key ),
+				'note'     => __( 'The primary scene tool returns a normal structured packet with a public HTTPS image URL because many MCP clients receive but do not visibly render raw image content blocks.', 'model-context-polytechnic' ),
 			],
 			'image_tool_call'  => [
 				'tool'      => self::learning_tool_name( $course['slug'], 'get-campus-scene' ),
 				'arguments' => $arguments,
-				'why'       => __( 'Display the campus scene as an MCP image while the learner studies.', 'model-context-polytechnic' ),
+				'why'       => __( 'Display the campus scene markdown image while the learner studies.', 'model-context-polytechnic' ),
+			],
+			'mcp_image_content_tool_call' => [
+				'tool'      => self::learning_tool_name( $course['slug'], 'get-campus-scene-image' ),
+				'arguments' => $arguments,
+				'why'       => __( 'Optional: return the campus scene as a pure MCP image content block when the client visibly renders those blocks.', 'model-context-polytechnic' ),
 			],
 			'text_fallback'    => $scene['fallback'],
 		];
@@ -1751,7 +1792,7 @@ class Learning {
 			$course,
 			'get-campus-scene',
 			__( 'Get campus scene', 'model-context-polytechnic' ),
-			__( 'Returns a compact campus postcard image for the current course journey scene. Clients that support MCP image content can display it while the LLM studies.', 'model-context-polytechnic' ),
+			__( 'Returns a visible campus postcard packet with a public image URL and markdown image snippet for the current course journey scene.', 'model-context-polytechnic' ),
 			[
 				'type'       => 'object',
 				'properties' => [
@@ -1767,6 +1808,32 @@ class Learning {
 			],
 			static function ( array $input ) use ( $course ) {
 				return Learning::get_campus_scene( $course, $input );
+			},
+			true
+		);
+	}
+
+	private static function register_get_campus_scene_image_tool( array $course ): void {
+		self::register_public_course_tool(
+			$course,
+			'get-campus-scene-image',
+			__( 'Get campus scene image content', 'model-context-polytechnic' ),
+			__( 'Returns the campus postcard as a pure MCP image content block for clients that visibly render tool-result images.', 'model-context-polytechnic' ),
+			[
+				'type'       => 'object',
+				'properties' => [
+					'scene'          => [
+						'type'        => 'string',
+						'enum'        => [ 'current', 'matriculation', 'workshop', 'capstone', 'commencement' ],
+						'default'     => 'current',
+						'description' => 'Use current with enrollment_key, or request a named campus scene directly.',
+					],
+					'enrollment_key' => [ 'type' => 'string', 'description' => 'Optional anonymous course enrollment key. Used only when scene=current.' ],
+					'session_id'     => [ 'type' => 'string', 'description' => 'Deprecated alias for enrollment_key.' ],
+				],
+			],
+			static function ( array $input ) use ( $course ) {
+				return Learning::get_campus_scene_image( $course, $input );
 			},
 			true
 		);
@@ -2006,6 +2073,7 @@ class Learning {
 				'signals_tool'   => self::learning_tool_name( $course['slug'], 'get-course-improvement-signals' ),
 				'search_tool'    => self::course_tool_name( $course['slug'], 'search-course' ),
 				'campus_scene_tool' => self::learning_tool_name( $course['slug'], 'get-campus-scene' ),
+				'campus_scene_image_content_tool' => self::learning_tool_name( $course['slug'], 'get-campus-scene-image' ),
 				'tool_resolution' => $tool_resolution,
 				'stable_handles' => [ 'enrollment_key', 'lesson_slug', 'exercise_slug', 'scene' ],
 				'operating_loop' => [
@@ -2013,7 +2081,8 @@ class Learning {
 					'Call autopilot_tool with mode=full_course after enrollment unless the user asks for a slower pace.',
 					'Call the exact get-study-plan tool from tool_resolution.tools if you need a goal-aware route.',
 					'Call memory_tool if enrollment_key already exists.',
-					'Call campus_scene_tool when the client can display images and the human should see a CRT campus postcard.',
+					'Call campus_scene_tool when the human should see a CRT campus postcard; render its display_markdown or show its image_url.',
+					'If the client visibly renders MCP image content blocks, optionally call campus_scene_image_content_tool too.',
 					'Call next_work_tool to recover the next lesson, exercise, and exact tool arguments.',
 					'Call the exact get-lesson tool from tool_resolution.tools.',
 					'Call the exact get-exercise tool from tool_resolution.tools.',
@@ -2038,7 +2107,7 @@ class Learning {
 				'tool_resolution'      => $tool_resolution,
 				'permission_model'     => __( 'After the user asks to enroll or take the course, keep advancing through course tool_calls without asking for lesson-by-lesson approval.', 'model-context-polytechnic' ),
 				'default_mode'         => 'full_course',
-				'visual_status'        => __( 'Do not print text-art status boards. Use learning_status.story_script.read_aloud as the verbose campus narration, and call get-campus-scene for the matching CRT campus postcard when the client supports images.', 'model-context-polytechnic' ),
+				'visual_status'        => __( 'Do not print text-art status boards. Use learning_status.story_script.read_aloud as the verbose campus narration, and call get-campus-scene for a visible markdown image URL packet. If the client visibly renders raw MCP image content blocks, optionally call get-campus-scene-image.', 'model-context-polytechnic' ),
 				'storytelling_contract'=> [
 					'Show the human that the Agent is attending school: admissions, lecture, lab, faculty notes, capstone, and commencement.',
 					'Use story_script.read_aloud when a visible update would help the human understand that class is in session.',
@@ -2166,7 +2235,8 @@ class Learning {
 			'instructions'    => [
 				'Do not print text-art or activity boards from this response.',
 				'Display story_script.read_aloud when the user should see that the Agent is actively attending class.',
-				'If the MCP client supports image content, call visual_tool_call to display the matching CRT campus scene beside the story.',
+				'Call visual_tool_call to get the matching CRT campus scene packet, then render display_markdown or show image_url beside the story.',
+				'If the client visibly renders raw MCP image content blocks, optionally call mcp_image_content_tool_call from the scene packet.',
 				'If images are unavailable, use story_script.read_aloud plus accessibility as plain prose.',
 				'Keep exact tool calls intact; the story is atmosphere around real course work, not a substitute for attempts.',
 			],
@@ -2396,6 +2466,32 @@ class Learning {
 		}
 
 		return dirname( __DIR__ ) . '/assets/campus-scenes/' . $scene['file'];
+	}
+
+	private static function campus_scene_url( string $scene_key ): string {
+		$scene = self::campus_scene( $scene_key );
+		$mcp_file = (string) ( $scene['mcp_file'] ?? '' );
+		$asset_path = $mcp_file !== ''
+			? 'assets/campus-scenes-mcp/' . $mcp_file
+			: 'assets/campus-scenes/' . $scene['file'];
+
+		if ( function_exists( 'plugins_url' ) && defined( 'MODEL_CONTEXT_POLYTECHNIC_FILE' ) ) {
+			$url = plugins_url( $asset_path, MODEL_CONTEXT_POLYTECHNIC_FILE );
+		} else {
+			$url = $asset_path;
+		}
+
+		$version = defined( 'MODEL_CONTEXT_POLYTECHNIC_VERSION' ) ? MODEL_CONTEXT_POLYTECHNIC_VERSION : Server::SERVER_VERSION;
+		$separator = str_contains( $url, '?' ) ? '&' : '?';
+		return $url . $separator . 'v=' . rawurlencode( $version );
+	}
+
+	private static function campus_scene_markdown( string $scene_key ): string {
+		$scene = self::campus_scene( $scene_key );
+		$alt = str_replace( [ "\r", "\n", ']' ], [ ' ', ' ', ')' ], (string) $scene['alt'] );
+		$caption = (string) $scene['caption'];
+
+		return '![' . $alt . '](' . self::campus_scene_url( $scene_key ) . ')' . "\n\n" . '_' . $caption . '_';
 	}
 
 	private static function campus_scene_key_for_input( array $course, array $input ): string {
@@ -4392,6 +4488,19 @@ class Learning {
 				'memory' => [ 'type' => 'object' ],
 			],
 			'get-campus-scene' => [
+				'scene' => [ 'type' => 'string' ],
+				'title' => [ 'type' => 'string' ],
+				'alt' => [ 'type' => 'string' ],
+				'caption' => [ 'type' => 'string' ],
+				'image_url' => [ 'type' => 'string' ],
+				'mimeType' => [ 'type' => 'string' ],
+				'display_markdown' => [ 'type' => 'string' ],
+				'display_instruction' => [ 'type' => 'string' ],
+				'client_support' => [ 'type' => 'object' ],
+				'mcp_image_content_tool_call' => [ 'type' => 'object' ],
+				'text_fallback' => [ 'type' => 'string' ],
+			],
+			'get-campus-scene-image' => [
 				'type' => [ 'type' => 'string' ],
 				'results' => [ 'type' => 'string' ],
 				'mimeType' => [ 'type' => 'string' ],

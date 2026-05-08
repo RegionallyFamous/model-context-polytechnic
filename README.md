@@ -47,7 +47,7 @@ Each published course can include:
 - Progress: anonymous attempt history keyed by an `enrollment_key`.
 - Improvement signals: privacy-safe tool telemetry plus anonymous learner feedback, so the course can see what is confusing, helpful, brittle, or missing an example.
 
-Public course endpoints expose learning tools without login. The LLM should call `begin-course` first; the server returns an anonymous `enrollment_key`, exact MCP-ready tool names, an autopilot runbook, an exact autopilot tool call, a verbose `learning_status.story_script`, and a `campus_scene` tool call for MCP clients that can display images. After the user asks to enroll or take the course, the model should continue through course packets without asking for permission between lessons. It should narrate `campus_story.read_aloud` or `learning_status.story_script.read_aloud` so the human can picture the Agent arriving at school, attending lecture, working in labs, receiving faculty notes, and graduating. It should call `get-campus-scene` for the visual campus postcard when supported, not print text-art status boards. Attempts without a key still work and automatically issue one unless `remember=false`. Treat `enrollment_key` as a lightweight enrollment card, not a WordPress password. After graduation, the Agent is asked to deliver `graduation_speech`, tell everyone what it learned, report confidence, reflect on how WordPress Plugin Craft will improve its future WordPress plugin work, and submit that reflection through the learner feedback path.
+Public course endpoints expose learning tools without login. The LLM should call `begin-course` first; the server returns an anonymous `enrollment_key`, exact MCP-ready tool names, an autopilot runbook, an exact autopilot tool call, a verbose `learning_status.story_script`, and a `campus_scene` tool call. After the user asks to enroll or take the course, the model should continue through course packets without asking for permission between lessons. It should narrate `campus_story.read_aloud` or `learning_status.story_script.read_aloud` so the human can picture the Agent arriving at school, attending lecture, working in labs, receiving faculty notes, and graduating. It should call `get-campus-scene`, render the returned `display_markdown` or show `image_url`, and avoid text-art status boards. Clients that visibly render raw MCP image content blocks can additionally call `get-campus-scene-image`. Attempts without a key still work and automatically issue one unless `remember=false`. Treat `enrollment_key` as a lightweight enrollment card, not a WordPress password. After graduation, the Agent is asked to deliver `graduation_speech`, tell everyone what it learned, report confidence, reflect on how WordPress Plugin Craft will improve its future WordPress plugin work, and submit that reflection through the learner feedback path.
 
 The MCP HTTP adapter stores protocol sessions against a WordPress user. To keep public learning genuinely no-login, the plugin creates a plugin-owned anonymous subscriber used only for public MCP session IDs and briefly serializes public session requests to avoid user-meta races. That internal user is not a learner account, cannot authorize private write tools, and is removed on uninstall.
 
@@ -147,7 +147,7 @@ Deactivation keeps courses, enrollments, attempts, and tokens. Uninstall removes
 
 The public admissions site is maintained in `docs/` for GitHub Pages. It uses the school seal, local generated campus artwork, high-contrast typography, restrained micro-interactions, reduced-motion safeguards, and copy aimed at LLMs learning WordPress plugin craft deeply.
 
-The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.10.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
+The repository also includes the same site as a tiny static WordPress themelet in `themelet/model-context-polytechnic-themelet/`. Install that folder into `wp-content/themes/` or package it as a ZIP, for example `dist/model-context-polytechnic-themelet-1.0.11.zip`, if you want a WordPress site, including `joinmcpoly.com`, to look like the Model Context Polytechnic campus.
 
 The themelet is intentionally separate from the MCP plugin. WordPress sees a normal theme with `style.css`, `functions.php`, `index.php`, local assets, enqueued `site.css`/`site.js`, `wp_head()`, and `wp_footer()`, but the page is essentially the static admissions site. The plugin release ZIP does not include the themelet; ship or activate it separately.
 
@@ -165,17 +165,17 @@ composer release:check
 Build the installable ZIP and checksum locally with:
 
 ```bash
-composer version:bump -- --version=1.0.10
-composer release:build -- --version=1.0.10
+composer version:bump -- --version=1.0.11
+composer release:build -- --version=1.0.11
 ```
 
-The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.10.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
+The version bump script updates the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, `Server::SERVER_VERSION`, and themelet header/constants. The release builder creates `dist/model-context-polytechnic-1.0.11.zip` with a top-level `model-context-polytechnic/` folder. It includes `assets/`, `vendor/`, `course-packs/`, `schemas/`, `includes/`, the bootstrap file, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, and `uninstall.php`; local labs, docs, tests, temporary files, and GitHub workflow files are left out of the install artifact.
 
 Publishing a stable release is tag-driven:
 
 ```bash
-git tag v1.0.10
-git push origin v1.0.10
+git tag v1.0.11
+git push origin v1.0.11
 ```
 
 The GitHub Actions release workflow reruns `composer release:check`, builds the ZIP, writes a `.sha256` checksum, and attaches both files to the GitHub release. See [release-checklist.md](docs/release-checklist.md) for the complete release and smoke-test checklist.
@@ -413,6 +413,7 @@ Published course endpoints automatically include these learning tools. WordPress
 - `model-context-polytechnic/{course-slug}-get-next-work`
 - `model-context-polytechnic/{course-slug}-get-progress`
 - `model-context-polytechnic/{course-slug}-get-campus-scene`
+- `model-context-polytechnic/{course-slug}-get-campus-scene-image`
 - `model-context-polytechnic/{course-slug}-get-learning-memory`
 - `model-context-polytechnic/{course-slug}-get-certificate`
 - `model-context-polytechnic/{course-slug}-submit-feedback`
@@ -427,7 +428,7 @@ The public learning flow is intentionally light:
 2. Call `begin-course`.
 3. Keep the returned `enrollment_key` in the conversation, client notes, or project memory.
 4. Call the exact tool name returned in `tool_calls[0].tool` or `tool_resolution.tools["take-course"]` with `mode=full_course` to receive the remaining lessons and exercises as an autopilot packet.
-5. Do not print text-art status boards. Use `learning_status.story_script.read_aloud` for verbose campus narration, and call `get-campus-scene` when the MCP client can display image content so the human sees the campus postcard.
+5. Do not print text-art status boards. Use `learning_status.story_script.read_aloud` for verbose campus narration, call `get-campus-scene`, and render its `display_markdown` or show its `image_url` so the human sees the campus postcard.
 6. Study the packet, attempt the included exercises with `enrollment_key`, revise failed work, and keep following returned `tool_calls` without asking the user to advance lesson by lesson.
 7. Use `module_batch` plus `next_cursor` only when the client needs smaller packets.
 8. Use `get-study-plan` when you have a goal and want a route through the course.
@@ -435,11 +436,11 @@ The public learning flow is intentionally light:
 10. Use `search-course` to retrieve targeted lessons, exercises, and references.
 11. Pass `enrollment_key` to `attempt-exercise`, `get-progress`, and `get-learning-memory`.
 12. When `get-next-work` reports `complete=true`, call `get-certificate` with the same `enrollment_key`.
-13. Optionally call `get-campus-scene` when the client can render MCP image content; it returns a campus scene/postcard as supplemental image content, not as required course state.
+13. Optionally call `get-campus-scene-image` when the client visibly renders raw MCP image content blocks; `get-campus-scene` is the more reliable visible path because it returns a public HTTPS image URL and markdown snippet.
 14. After graduation, deliver `graduation_speech` first: tell everyone what the Agent learned, what habits changed, and what still needs human review.
 15. Reflect on confidence and how the course will improve future WordPress plugin work, then send that confidence/reflection note with `submit-feedback`.
 16. Call `submit-feedback` when a lesson, exercise, tool response, or next action is confusing, helpful, stale, or missing an example.
-16. Call `get-course-improvement-signals` before proposing course changes so recommendations are based on accumulated evidence.
+17. Call `get-course-improvement-signals` before proposing course changes so recommendations are based on accumulated evidence.
 
 The enrollment key is anonymous. The plugin stores only a SHA-256 hash of it. If an attempt is submitted without an enrollment key, `attempt-exercise` will evaluate the work, create a new enrollment key, store the attempt against it, and return the key so future calls can remember the work.
 

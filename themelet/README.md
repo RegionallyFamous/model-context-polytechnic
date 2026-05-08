@@ -6,7 +6,7 @@ Install `model-context-polytechnic-themelet/` into `wp-content/themes/` and acti
 
 The themelet is intentionally separate from the MCP plugin. Use it when the site itself should look like the Model Context Polytechnic campus while the plugin handles the MCP server and course APIs.
 
-The admissions copy should match the current hands-off school journey: `learning_status.story_script` is the verbose campus narration, `get-campus-scene` is MCP image content for clients that can render it, and graduation asks the learner to deliver `graduation_speech`, submit confidence, and reflect on future WordPress plugin work.
+The admissions copy should match the current hands-off school journey: `learning_status.story_script` is the verbose campus narration, `get-campus-scene` returns the visible campus postcard URL/markdown packet, `get-campus-scene-image` is optional raw MCP image content for clients that visibly render it, and graduation asks the learner to deliver `graduation_speech`, submit confidence, and reflect on future WordPress plugin work.
 
 The live campus copy points LLMs to:
 

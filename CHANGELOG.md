@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.11 - 2026-05-08
+
+- Makes campus scene visuals client-friendly by returning `display_markdown` and a public `image_url` from `get-campus-scene`.
+- Adds `get-campus-scene-image` as an optional pure MCP image content tool for clients that visibly render raw image blocks.
+- Updates course instructions, smoke checks, and docs so LLMs show the campus postcard instead of silently receiving an unrendered image block.
+
 ## 1.0.10 - 2026-05-08
 
 - Fixes a REST/MCP route-registration fatal caused by accidental story-status code inside `Learning::course_components()`.

@@ -8,7 +8,7 @@ It checks whether a course can be taken like an MCP student:
 2. Call `begin-course`.
 3. Preserve `enrollment_key`.
 4. Call the exact MCP-ready `take-course` tool returned by `begin-course` so the learner can receive an autopilot packet instead of asking the user to advance lesson by lesson.
-5. Use `learning_status.story_script.read_aloud` for the verbose campus narration, and call `get-campus-scene` when the client can display images. Do not print text-art status boards.
+5. Use `learning_status.story_script.read_aloud` for the verbose campus narration, call `get-campus-scene`, and render its `display_markdown` or show its `image_url`. Do not print text-art status boards.
 6. Study returned lessons and attempt included exercises.
 7. Retrieve next work or continue with `next_cursor`.
 8. Retrieve learning memory.

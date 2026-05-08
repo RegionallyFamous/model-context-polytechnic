@@ -15,8 +15,8 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm the plugin header, `MODEL_CONTEXT_POLYTECHNIC_VERSION`, and `Server::SERVER_VERSION` match the release tag.
 - Confirm the bundled course loads with the expected lesson and exercise counts.
 - Confirm `README.md` names the public endpoint and public learner flow.
-- Confirm docs frame the learner flow as a hands-off school journey with verbose `learning_status.story_script` narration and `get-campus-scene`, not visible text-art status boards.
-- Confirm docs mention `get-campus-scene` as optional MCP image content.
+- Confirm docs frame the learner flow as a hands-off school journey with verbose `learning_status.story_script` narration and visible `get-campus-scene` markdown image packets, not visible text-art status boards.
+- Confirm docs mention `get-campus-scene-image` as optional raw MCP image content for clients that visibly render image blocks.
 - Confirm graduation language asks the Agent to deliver `graduation_speech`, state what it learned, report confidence, and submit reflection feedback.
 - Confirm exemplar `model_answer` content is present for first-work and tradeoff-heavy exercises without being returned by default.
 - Confirm the protected `get-feedback-digest` tool returns 401 without an operator bearer token and returns private raw feedback only with one.
@@ -39,7 +39,8 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Preserve the returned `enrollment_key`.
 - Call the exact MCP-ready `take-course` tool returned by `begin-course` with `mode=module_batch` and confirm it returns an autopilot packet, verbose `learning_status.story_script`, campus scene metadata, and valid follow-up `tool_calls`.
 - Confirm the learner flow can proceed hands-off through returned `tool_calls` without using a visible progress widget as the main framing device.
-- Call `get-campus-scene` and confirm clients that support MCP image content receive it as optional campus postcard content.
+- Call `get-campus-scene` and confirm it returns `display_markdown` plus `image_url`.
+- Call `get-campus-scene-image` and confirm clients that visibly render MCP image content receive an optional campus postcard image block.
 - Call `get-study-plan`.
 - Call `get-next-work`.
 - Call `get-lesson`.
@@ -75,6 +76,6 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Include `vendor/` in distributable ZIPs after Composer install.
 - Include `assets/`, `course-packs/`, `schemas/`, `includes/`, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, the bootstrap file, and `uninstall.php`.
 - Exclude local labs, docs, tests, logs, Git metadata, temporary files, workflow files, and generated ZIPs.
-- Publish by pushing a version tag such as `v1.0.10`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
+- Publish by pushing a version tag such as `v1.0.11`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
 - Deactivation must keep data.
 - Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.

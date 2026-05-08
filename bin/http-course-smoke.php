@@ -55,6 +55,7 @@ $required_tools = [
 	$tool_prefix . 'get-certificate',
 	$tool_prefix . 'get-next-work',
 	$tool_prefix . 'get-campus-scene',
+	$tool_prefix . 'get-campus-scene-image',
 	$tool_prefix . 'submit-feedback',
 	$tool_prefix . 'get-course-improvement-signals',
 ];
@@ -160,6 +161,23 @@ assert_learning_status_shape( $take_course, 'take-course' );
 $summary['checks'][] = 'take-course returned autopilot materials';
 assert_suggested_tools_exist( $take_course, $tool_names, 'take-course' );
 
+$campus_scene = call_tool(
+	$options,
+	$session_id,
+	$tool_prefix . 'get-campus-scene',
+	[
+		'scene'          => 'matriculation',
+		'enrollment_key' => $enrollment_key,
+	],
+	6
+);
+
+if ( empty( $campus_scene['display_markdown'] ) || empty( $campus_scene['image_url'] ) ) {
+	fail( 'get-campus-scene did not return display_markdown and image_url.' );
+}
+
+$summary['checks'][] = 'get-campus-scene returned a visible markdown image packet';
+
 $exercise = call_tool(
 	$options,
 	$session_id,
@@ -170,7 +188,7 @@ $exercise = call_tool(
 		'enrollment_key'       => $enrollment_key,
 		'include_model_answer' => false,
 	],
-	6
+	7
 );
 
 if ( ( $exercise['exercise']['slug'] ?? '' ) !== 'design-plugin-bootstrap' ) {
@@ -189,7 +207,7 @@ $attempt = call_tool(
 		'enrollment_key' => $enrollment_key,
 		'answer'         => wp_plugin_craft_smoke_answer(),
 	],
-	7
+	8
 );
 
 if ( empty( $attempt['evaluation'] ) || ! array_key_exists( 'passed', $attempt['evaluation'] ) ) {
@@ -208,7 +226,7 @@ $memory = call_tool(
 	[
 		'enrollment_key' => $enrollment_key,
 	],
-	8
+	9
 );
 
 if ( empty( $memory['recent_attempts'] ) ) {
@@ -226,7 +244,7 @@ $certificate = call_tool(
 	[
 		'enrollment_key' => $enrollment_key,
 	],
-	9
+	10
 );
 
 if ( ! array_key_exists( 'eligible', $certificate ) || ! empty( $certificate['eligible'] ) ) {
@@ -249,7 +267,7 @@ $model_answer = call_tool(
 		'include_model_answer' => true,
 		'enrollment_key'       => $enrollment_key,
 	],
-	10
+	11
 );
 
 if ( empty( $model_answer['exercise']['model_answer'] ) ) {
