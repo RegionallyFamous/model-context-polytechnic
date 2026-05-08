@@ -279,6 +279,7 @@ class Learning {
 				self::learning_ability_name( $course_slug, 'get-certificate' ),
 				self::learning_ability_name( $course_slug, 'submit-feedback' ),
 				self::learning_ability_name( $course_slug, 'get-course-improvement-signals' ),
+				self::learning_ability_name( $course_slug, 'get-feedback-digest' ),
 			],
 			'resources' => [
 				self::learning_resource_name( $course_slug, 'syllabus' ),
@@ -308,6 +309,7 @@ class Learning {
 			self::register_get_certificate_tool( $course );
 			self::register_submit_feedback_tool( $course );
 			self::register_get_course_improvement_signals_tool( $course );
+			self::register_get_feedback_digest_tool( $course );
 		}
 	}
 
@@ -335,6 +337,7 @@ class Learning {
 			'get-certificate',
 			'submit-feedback',
 			'get-course-improvement-signals',
+			'get-feedback-digest',
 		];
 		$names = [];
 		foreach ( $tool_slugs as $tool_slug ) {
@@ -1402,6 +1405,53 @@ class Learning {
 		];
 	}
 
+	public static function feedback_digest( array $course, array $input = [] ): array {
+		$window_days = isset( $input['window_days'] ) && is_numeric( $input['window_days'] )
+			? max( 1, min( 365, (int) $input['window_days'] ) )
+			: 30;
+		$limit = isset( $input['limit'] ) && is_numeric( $input['limit'] )
+			? max( 1, min( 100, (int) $input['limit'] ) )
+			: 20;
+		$target_type = self::sanitize_target_type( (string) ( $input['target_type'] ?? '' ) );
+		$target_slug = self::sanitize_slug( (string) ( $input['target_slug'] ?? '' ) );
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $window_days * DAY_IN_SECONDS ) );
+		$signals = [
+			'window_days'           => $window_days,
+			'target_filter'         => [
+				'target_type' => $target_type,
+				'target_slug' => $target_slug,
+			],
+			'tool_usage'            => self::tool_usage_summary( (int) $course['id'], $cutoff, 12, $target_type, $target_slug ),
+			'feedback_by_type'      => self::feedback_type_summary( (int) $course['id'], $cutoff, 12, $target_type, $target_slug ),
+			'confusing_targets'     => self::feedback_target_summary( (int) $course['id'], $cutoff, [ 'confusing', 'missing_example', 'bug' ], 12 ),
+			'helpful_targets'       => self::feedback_target_summary( (int) $course['id'], $cutoff, [ 'helpful' ], 12 ),
+			'reflection_targets'    => self::feedback_target_summary( (int) $course['id'], $cutoff, [ 'reflection' ], 12 ),
+			'exercise_outcomes'     => self::exercise_outcome_summary( (int) $course['id'], $cutoff, 12 ),
+		];
+		$signals['recommendations'] = self::improvement_recommendations( $course, $signals );
+
+		return [
+			'course'       => Registry::course_summary( $course ),
+			'private'      => true,
+			'auth'         => [
+				'accepted' => true,
+				'mode'     => __( 'Authorization: Bearer operator token', 'model-context-polytechnic' ),
+			],
+			'digest'       => [
+				'window_days' => $window_days,
+				'cutoff_utc'  => $cutoff,
+				'recent_raw_feedback' => self::feedback_digest_rows( (int) $course['id'], $cutoff, $limit, $target_type, $target_slug ),
+				'signals'     => $signals,
+			],
+			'how_to_use'    => [
+				'Review repeated confusing targets before changing course content.',
+				'Use graduation reflections to see whether learners believe the course changed their future WordPress plugin work.',
+				'Do not auto-apply one raw comment. Treat private feedback as evidence for a maintainer-reviewed course-pack patch.',
+			],
+			'note'         => __( 'Private registrar drawer opened. This digest includes raw learner feedback and should not be exposed through public course responses.', 'model-context-polytechnic' ),
+		];
+	}
+
 	private static function register_syllabus_resource( array $course ): void {
 		wp_register_ability(
 			self::learning_resource_name( $course['slug'], 'syllabus' ),
@@ -1773,7 +1823,33 @@ class Learning {
 		);
 	}
 
-	private static function register_public_course_tool( array $course, string $slug, string $label, string $description, array $input_schema, callable $callback, bool $read_only ): void {
+	private static function register_get_feedback_digest_tool( array $course ): void {
+		self::register_public_course_tool(
+			$course,
+			'get-feedback-digest',
+			__( 'Get private feedback digest', 'model-context-polytechnic' ),
+			__( 'Returns private raw learner feedback, graduation reflections, aggregate signals, and recommendations. Requires an operator bearer token.', 'model-context-polytechnic' ),
+			[
+				'type'       => 'object',
+				'properties' => [
+					'window_days' => [ 'type' => 'integer', 'default' => 30, 'minimum' => 1, 'maximum' => 365 ],
+					'limit'       => [ 'type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 100 ],
+					'target_type' => [
+						'type' => 'string',
+						'enum' => [ 'course', 'lesson', 'exercise', 'tool', 'resource', 'prompt', 'memory', 'general' ],
+					],
+					'target_slug' => [ 'type' => 'string' ],
+				],
+			],
+			static function ( array $input ) use ( $course ) {
+				return Learning::feedback_digest( $course, $input );
+			},
+			true,
+			[ Auth::class, 'require_operator_access' ]
+		);
+	}
+
+	private static function register_public_course_tool( array $course, string $slug, string $label, string $description, array $input_schema, callable $callback, bool $read_only, $permission_callback = '__return_true' ): void {
 		wp_register_ability(
 			self::learning_ability_name( $course['slug'], $slug ),
 			[
@@ -1782,7 +1858,7 @@ class Learning {
 				'category'            => Server::CATEGORY,
 				'input_schema'        => $input_schema,
 				'output_schema'       => self::public_course_tool_output_schema( $slug ),
-				'permission_callback' => '__return_true',
+				'permission_callback' => $permission_callback,
 				'execute_callback'    => static function ( array $input = [] ) use ( $course, $slug, $callback ) {
 					return Learning::execute_public_course_tool( $course, $slug, $input, $callback );
 				},
@@ -3414,6 +3490,53 @@ class Learning {
 		);
 	}
 
+	private static function feedback_digest_rows( int $course_id, string $cutoff, int $limit, string $target_type = '', string $target_slug = '' ): array {
+		global $wpdb;
+		$table = $wpdb->prefix . self::FEEDBACK_TABLE;
+		$where = 'course_id = %d AND created_at >= %s';
+		$args = [ $course_id, $cutoff ];
+
+		if ( $target_type !== '' ) {
+			$where .= ' AND target_type = %s';
+			$args[] = $target_type;
+		}
+
+		if ( $target_slug !== '' ) {
+			$where .= ' AND target_slug = %s';
+			$args[] = $target_slug;
+		}
+
+		$args[] = $limit;
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT id, feedback_type, target_type, COALESCE(target_slug, '') AS target_slug, rating, comment, suggested_fix, context, created_at
+				FROM $table
+				WHERE $where
+				ORDER BY created_at DESC, id DESC
+				LIMIT %d",
+				$args
+			),
+			ARRAY_A
+		) ?: [];
+
+		return array_map(
+			static function ( array $row ): array {
+				return [
+					'id'            => (int) $row['id'],
+					'feedback_type' => (string) $row['feedback_type'],
+					'target_type'   => (string) $row['target_type'],
+					'target_slug'   => (string) $row['target_slug'],
+					'rating'        => is_null( $row['rating'] ) ? null : (int) $row['rating'],
+					'comment'       => (string) $row['comment'],
+					'suggested_fix' => (string) $row['suggested_fix'],
+					'context'       => self::decode_json_value( (string) $row['context'], (string) $row['context'] ),
+					'created_at'    => (string) $row['created_at'],
+				];
+			},
+			$rows
+		);
+	}
+
 	private static function exercise_outcome_summary( int $course_id, string $cutoff, int $limit ): array {
 		global $wpdb;
 		$attempts = $wpdb->prefix . self::ATTEMPTS_TABLE;
@@ -4162,6 +4285,12 @@ class Learning {
 				'signals' => [ 'type' => 'object' ],
 				'privacy' => [ 'type' => 'object' ],
 				'tool_calls' => [ 'type' => 'array', 'items' => [ 'type' => 'object' ] ],
+			],
+			'get-feedback-digest' => [
+				'private' => [ 'type' => 'boolean' ],
+				'auth' => [ 'type' => 'object' ],
+				'digest' => [ 'type' => 'object' ],
+				'how_to_use' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
 			],
 		];
 

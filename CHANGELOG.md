@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 - 2026-05-08
+
+- Adds a protected MCP `get-feedback-digest` course tool so operator clients can review private raw learner feedback without SSH or WP-CLI.
+- Adds `MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN` and `MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN_HASH` support for simple bearer-token feedback access.
+- Updates feedback docs and release checks around the public learner boundary and private operator digest flow.
+
 ## 1.0.4 - 2026-05-08
 
 - Adds optional MCP image content through `get-campus-scene` with CRT campus scenes for matriculation, workshop, capstone, and commencement.

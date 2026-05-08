@@ -1,11 +1,12 @@
 # Codex Feedback Loop
 
-Model Context Polytechnic has two feedback surfaces:
+Model Context Polytechnic has three feedback surfaces:
 
 1. Public course learners call `submit-feedback`.
-2. The site owner reads raw feedback privately with WP-CLI.
+2. Public maintainers call `get-course-improvement-signals` for aggregate counts and recommendations.
+3. Trusted operators call `get-feedback-digest` with a bearer token to read private raw feedback and graduation reflections.
 
-Public MCP clients can also call `get-course-improvement-signals`, but that returns aggregate counts and recommendations only. Raw comments stay out of the public MCP surface.
+Public learners never need a WordPress account, password, token, or setup. The operator token is only for the private feedback office drawer.
 
 ## Public Aggregate Signals
 
@@ -23,52 +24,58 @@ model-context-polytechnic-wordpress-plugin-craft-get-course-improvement-signals
 
 This is safe to expose publicly because it returns summaries, not raw comments.
 
-## Private Raw Feedback Inbox
+## Private Feedback Digest Without WP-CLI
 
-On the WordPress server, use WP-CLI:
+Add a long operator secret to `wp-config.php`:
 
-```bash
-wp model-context-polytechnic feedback list --course=wordpress-plugin-craft
+```php
+define( 'MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN', 'replace-with-a-long-random-operator-secret' );
 ```
 
-For Codex-friendly JSON:
+For a stricter setup, store only a hash:
 
-```bash
-wp model-context-polytechnic feedback list \
-  --course=wordpress-plugin-craft \
-  --since=30d \
-  --limit=100 \
-  --format=json
+```php
+define( 'MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN_HASH', 'sha256-hash-of-the-operator-secret' );
 ```
 
-For a compact maintainer brief:
+Connect the operator MCP client to the same course endpoint, but include the bearer header:
 
-```bash
-wp model-context-polytechnic feedback digest \
-  --course=wordpress-plugin-craft \
-  --since=30d \
-  --limit=20
+```json
+{
+  "mcpServers": {
+    "mcpoly-feedback": {
+      "url": "https://joinmcpoly.com/mcp/wordpress-plugin-craft",
+      "headers": {
+        "Authorization": "Bearer replace-with-a-long-random-operator-secret"
+      }
+    }
+  }
+}
 ```
 
-For aggregate counts:
+Then ask Codex to call:
 
-```bash
-wp model-context-polytechnic feedback summary \
-  --course=wordpress-plugin-craft \
-  --since=30d
+```text
+model-context-polytechnic-wordpress-plugin-craft-get-feedback-digest
 ```
 
-## Letting Codex Talk To The WordPress Install
+Useful input:
 
-There are two sane modes:
-
-- Public mode: connect Codex to `https://joinmcpoly.com/mcp/wordpress-plugin-craft` and let it call public course tools, including aggregate improvement signals.
-- Operator mode: give Codex terminal access to run WP-CLI over SSH, then ask it to review the private feedback digest and propose course-pack changes.
-
-Example SSH pattern:
-
-```bash
-ssh user@joinmcpoly.com 'cd /path/to/wordpress && wp model-context-polytechnic feedback digest --course=wordpress-plugin-craft --since=30d --limit=20'
+```json
+{
+  "window_days": 30,
+  "limit": 20
+}
 ```
 
-Do not put raw feedback comments on the public MCP endpoint. The public course should improve from aggregate signals; raw notes are for the maintainer review loop.
+The digest includes recent raw feedback comments, graduation reflections, aggregate signals, exercise outcome patterns, and maintainer-facing recommendations. Treat it as evidence for a reviewed course-pack patch, not as automatic instructions to rewrite the course.
+
+## Host Notes
+
+Some hosts strip `Authorization` before WordPress sees it. If the digest tool returns 401 even with the right secret, confirm the header reaches PHP. Apache installs often need an environment forwarding rule such as:
+
+```apache
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+```
+
+WP-CLI feedback commands still exist for server administrators, but they are no longer the required Codex workflow. The clean loop is: public learners submit feedback, public signals show patterns, and the protected MCP digest lets an operator LLM inspect the raw notes when you explicitly connect it with the bearer token.

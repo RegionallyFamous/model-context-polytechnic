@@ -55,9 +55,8 @@ class Auth {
 	}
 
 	public static function check_bearer( $args = null ): bool {
-		$header = self::authorization_header();
-
-		if ( ! preg_match( '/Bearer\s+(.+)/i', $header, $matches ) ) {
+		$token = self::bearer_token();
+		if ( $token === '' ) {
 			return false;
 		}
 
@@ -65,9 +64,46 @@ class Auth {
 			return false;
 		}
 
+		return self::check_stored_token( $token );
+	}
+
+	public static function check_operator_bearer( $args = null ): bool {
+		$token = self::bearer_token();
+		if ( $token === '' ) {
+			return false;
+		}
+
+		if ( ! self::rate_limit() ) {
+			return false;
+		}
+
+		if ( self::check_operator_token( $token ) ) {
+			$GLOBALS['model_context_polytechnic_operator_token'] = (object) [
+				'id'   => 0,
+				'plan' => 'operator',
+			];
+			return true;
+		}
+
+		return self::check_stored_token( $token );
+	}
+
+	public static function require_operator_access( $args = null ) {
+		if ( self::check_operator_bearer( $args ) ) {
+			return true;
+		}
+
+		return new \WP_Error(
+			'model_context_polytechnic_operator_auth_required',
+			__( 'Operator bearer token required for private feedback digest access.', 'model-context-polytechnic' ),
+			[ 'status' => 401 ]
+		);
+	}
+
+	private static function check_stored_token( string $token ): bool {
 		global $wpdb;
 		$table = $wpdb->prefix . self::TABLE;
-		$hash  = hash( 'sha256', trim( $matches[1] ) );
+		$hash  = hash( 'sha256', trim( $token ) );
 		$row   = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT id, plan, revoked FROM $table WHERE token_hash = %s",
@@ -148,6 +184,45 @@ class Auth {
 		}
 
 		return '';
+	}
+
+	private static function bearer_token(): string {
+		$header = self::authorization_header();
+		if ( ! preg_match( '/Bearer\s+(.+)/i', $header, $matches ) ) {
+			return '';
+		}
+
+		return trim( (string) $matches[1] );
+	}
+
+	private static function check_operator_token( string $token ): bool {
+		$hashes = [];
+
+		if ( defined( 'MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN_HASH' ) ) {
+			$hashes[] = (string) MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN_HASH;
+		}
+
+		if ( defined( 'MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN' ) ) {
+			$constant_token = trim( (string) MODEL_CONTEXT_POLYTECHNIC_OPERATOR_TOKEN );
+			if ( $constant_token !== '' ) {
+				$hashes[] = hash( 'sha256', $constant_token );
+			}
+		}
+
+		$hashes = apply_filters( 'model_context_polytechnic_operator_token_hashes', $hashes );
+		if ( ! is_array( $hashes ) ) {
+			return false;
+		}
+
+		$given_hash = hash( 'sha256', trim( $token ) );
+		foreach ( $hashes as $hash ) {
+			$hash = trim( (string) $hash );
+			if ( $hash !== '' && hash_equals( $hash, $given_hash ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static function mint_token( string $email = '', string $label = '', string $plan = 'free' ): string {
