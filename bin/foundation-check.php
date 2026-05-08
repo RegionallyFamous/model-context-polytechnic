@@ -1,8 +1,21 @@
 #!/usr/bin/env php
 <?php
 require_once dirname( __DIR__ ) . '/includes/class-course-pack.php';
+require_once dirname( __DIR__ ) . '/includes/class-server.php';
+require_once dirname( __DIR__ ) . '/includes/class-learning.php';
 
 use ModelContextPolytechnic\Mcp\CoursePack;
+use ModelContextPolytechnic\Mcp\Learning;
+
+if ( ! function_exists( 'sanitize_title' ) ) {
+	function sanitize_title( string $title ): string {
+		$title = strtolower( $title );
+		$title = preg_replace( '/[^a-z0-9_-]+/', '-', $title );
+		$title = trim( (string) $title, '-' );
+
+		return $title !== '' ? $title : 'untitled';
+	}
+}
 
 $root   = dirname( __DIR__ );
 $failed = false;
@@ -127,6 +140,20 @@ if ( ! $audit['valid'] ) {
 	}
 
 	$print( 'ok', sprintf( 'Course packs valid: %d pack(s), %d lesson(s), %d exercise(s).', (int) $audit['pack_count'], $lesson_count, $exercise_count ) );
+}
+
+try {
+	$components = Learning::course_components( 1, 'wordpress-plugin-craft' );
+	$required   = 'model-context-polytechnic/wordpress-plugin-craft-take-course';
+	if ( ! isset( $components['tools'] ) || ! in_array( $required, $components['tools'], true ) ) {
+		$failed = true;
+		$print( 'fail', 'Learning course component smoke did not include the take-course tool.' );
+	} else {
+		$print( 'ok', 'Learning course component smoke passed.' );
+	}
+} catch ( Throwable $e ) {
+	$failed = true;
+	$print( 'fail', 'Learning course component smoke failed: ' . $e->getMessage() );
 }
 
 if ( ! is_readable( $root . '/vendor/autoload_packages.php' ) ) {

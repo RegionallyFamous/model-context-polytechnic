@@ -5,7 +5,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-const MCPOLY_THEMELET_VERSION = '1.0.9';
+const MCPOLY_THEMELET_VERSION = '1.0.10';
 
 add_action( 'after_setup_theme', 'mcpoly_themelet_setup' );
 add_action( 'wp_enqueue_scripts', 'mcpoly_themelet_enqueue_assets' );

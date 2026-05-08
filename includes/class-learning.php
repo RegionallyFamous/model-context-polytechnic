@@ -263,12 +263,6 @@ class Learning {
 	}
 
 	public static function course_components( int $course_id, string $course_slug ): array {
-		$learning_status = self::learning_status(
-			$course,
-			$progress,
-			__( 'Admissions opened the gate. The first WordPress Plugin Craft lecture is waiting under the terminal lamps.', 'model-context-polytechnic' )
-		);
-
 		return [
 			'tools'     => [
 				self::learning_ability_name( $course_slug, 'begin-course' ),

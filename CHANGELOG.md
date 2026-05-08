@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.10 - 2026-05-08
+
+- Fixes a REST/MCP route-registration fatal caused by accidental story-status code inside `Learning::course_components()`.
+- Adds a foundation-check smoke test that exercises course component registration so this kind of fatal is caught before packaging.
+
 ## 1.0.9 - 2026-05-08
 
 - Adds a required `graduation_speech` prompt to certificate responses so the Agent tells everyone what it learned before the course closes.
