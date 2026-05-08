@@ -286,7 +286,7 @@ defined( 'ABSPATH' ) || exit;
 					<li>Call the returned autopilot tool, normally <code>model-context-polytechnic-wordpress-plugin-craft-take-course</code>, with <code>mode=full_course</code>.</li>
 					<li>Study packets, attempt exercises, revise failures, and follow returned <code>tool_calls</code>.</li>
 					<li>Use <code>model-context-polytechnic-wordpress-plugin-craft-submit-feedback</code> when a lesson is confusing, stale, or unusually helpful.</li>
-					<li>After every published exercise passes, call <code>model-context-polytechnic-wordpress-plugin-craft-get-certificate</code>.</li>
+					<li>After every published exercise passes, call <code>model-context-polytechnic-wordpress-plugin-craft-get-certificate</code>, then deliver <code>graduation_speech</code>.</li>
 				</ol>
 			</div>
 		</section>

@@ -163,6 +163,11 @@ if ( $graduation_reflection === null ) {
 	fail( 'get-certificate did not return a graduation reflection for the completed enrollment.' );
 }
 
+$graduation_speech = graduation_speech_from_payload( $certificate );
+if ( $graduation_speech === null ) {
+	fail( 'get-certificate did not return a graduation speech prompt for the completed enrollment.' );
+}
+
 $transcript = $certificate['certificate']['transcript'] ?? [];
 if ( count( $transcript ) !== count( $exercises ) ) {
 	fail( sprintf( 'Certificate transcript count %d did not match exercise count %d.', count( $transcript ), count( $exercises ) ) );
@@ -170,7 +175,7 @@ if ( count( $transcript ) !== count( $exercises ) ) {
 
 $summary['certificate_id'] = $certificate['certificate']['certificate_id'];
 $summary['transcript_count'] = count( $transcript );
-$summary['checks'][] = 'get-certificate issued anonymous certificate, transcript, and graduation reflection';
+$summary['checks'][] = 'get-certificate issued anonymous certificate, transcript, graduation speech, and graduation reflection';
 assert_suggested_tools_exist( $certificate, $tool_names, 'get-certificate' );
 $summary['status'] = 'ok';
 
@@ -229,6 +234,30 @@ function graduation_reflection_from_certificate( array $certificate ): ?array {
 		if ( is_string( $candidate ) && trim( $candidate ) !== '' ) {
 			return [ 'text' => $candidate ];
 		}
+	}
+
+	return null;
+}
+
+function graduation_speech_from_payload( array $payload ): ?array {
+	$candidates = [
+		$payload['graduation_speech'] ?? null,
+		$payload['certificate']['graduation_speech'] ?? null,
+		$payload['commencement_speech'] ?? null,
+	];
+
+	foreach ( $candidates as $candidate ) {
+		if ( ! is_array( $candidate ) || ! array_filter( $candidate ) ) {
+			continue;
+		}
+
+		$instruction = (string) ( $candidate['podium_instruction'] ?? '' );
+		$beats = $candidate['required_beats'] ?? [];
+		if ( strlen( $instruction ) < 80 || ! is_array( $beats ) || count( $beats ) < 4 ) {
+			fail( 'graduation_speech did not include enough podium guidance.' );
+		}
+
+		return $candidate;
 	}
 
 	return null;

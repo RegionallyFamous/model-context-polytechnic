@@ -1238,11 +1238,15 @@ class Learning {
 					__( 'The certificate record is already in the Registrar ledger, even though the current syllabus has shifted under the old transcript.', 'model-context-polytechnic' )
 				);
 				$campus_scene = self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key );
+				$certificate = self::certificate_from_record( $course, $hash, $existing_certificate, $recipient_name, $include_transcript );
+				$graduation_speech = self::graduation_speech_prompt( $course, $enrollment_key, $certificate );
+				$certificate['graduation_speech'] = $graduation_speech;
 
 				return [
 					'course'              => Registry::course_summary( $course ),
 					'eligible'            => true,
-					'certificate'         => self::certificate_from_record( $course, $hash, $existing_certificate, $recipient_name, $include_transcript ),
+					'certificate'         => $certificate,
+					'graduation_speech'   => $graduation_speech,
 					'graduation_reflection' => self::graduation_reflection_prompt( $course, $enrollment_key ),
 					'learning_status'     => $learning_status,
 					'campus_story'        => $learning_status['story_script'],
@@ -1301,11 +1305,14 @@ class Learning {
 			__( 'Commencement complete. The Agent has crossed the terminal stage and is ready to write better WordPress plugins.', 'model-context-polytechnic' )
 		);
 		$campus_scene = self::campus_scene_metadata_for_response( $course, 'commencement', $enrollment_key );
+		$graduation_speech = self::graduation_speech_prompt( $course, $enrollment_key, $certificate );
+		$certificate['graduation_speech'] = $graduation_speech;
 
 		return [
 			'course'              => Registry::course_summary( $course ),
 			'eligible'            => true,
 			'certificate'         => $certificate,
+			'graduation_speech'   => $graduation_speech,
 			'graduation_reflection' => self::graduation_reflection_prompt( $course, $enrollment_key ),
 			'learning_status'     => $learning_status,
 			'campus_story'        => $learning_status['story_script'],
@@ -2019,6 +2026,7 @@ class Learning {
 					'Call the exact attempt-exercise tool from tool_resolution.tools.',
 					'Call get-exercise with include_model_answer=true after an attempt when you need exemplar calibration.',
 					'Call certificate_tool when get-next-work reports complete.',
+					'After certificate_tool returns, deliver graduation_speech before summarizing the course as complete.',
 					'Call feedback_tool when the course helped or failed you.',
 					'Call signals_tool before course revision.',
 					'revise and repeat',
@@ -2051,7 +2059,7 @@ class Learning {
 					'If an attempt fails, request that exercise with include_model_answer=true, revise, and attempt again.',
 					'When the packet is exhausted, follow next_cursor or get-next-work until complete=true.',
 				'Call get-certificate with enrollment_key after all published exercises pass.',
-				'At commencement, congratulate the graduate, answer the confidence reflection, then retrieve learning memory before later plugin tasks.',
+				'At commencement, congratulate the graduate, deliver graduation_speech, answer the confidence reflection, then retrieve learning memory before later plugin tasks.',
 			],
 			'stop_conditions'      => [
 				'The user interrupts or changes the goal.',
@@ -2089,7 +2097,7 @@ class Learning {
 		return [
 			'hands_off'               => true,
 			'do_not_stop_after_first_lesson' => true,
-			'continue_until'          => __( 'Keep following tool_calls until get-next-work reports complete=true, then call get-certificate for commencement.', 'model-context-polytechnic' ),
+			'continue_until'          => __( 'Keep following tool_calls until get-next-work reports complete=true, then call get-certificate for commencement, deliver graduation_speech, and answer the reflection.', 'model-context-polytechnic' ),
 			'next_required_tool_call' => $next_required_tool_call,
 			'after_each_pass'         => __( 'Call the next_required_tool_call instead of writing a victory paragraph and stopping in the hallway.', 'model-context-polytechnic' ),
 			'if_context_is_tight'     => __( 'Preserve enrollment_key and any next_cursor, then continue with module_batch.', 'model-context-polytechnic' ),
@@ -2958,7 +2966,7 @@ class Learning {
 	private static function graduation_reflection_prompt( array $course, string $enrollment_key ): array {
 		return [
 			'title'       => __( 'Commencement Reflection', 'model-context-polytechnic' ),
-			'prompt'      => __( 'Graduate, before you leave the terminal stage: how confident are you that this course will help you write better WordPress plugins, and what specifically will you do differently on the next plugin?', 'model-context-polytechnic' ),
+			'prompt'      => __( 'Graduate, after you give the graduation speech: how confident are you that this course will help you write better WordPress plugins, and what specifically will you do differently on the next plugin?', 'model-context-polytechnic' ),
 			'questions'   => [
 				__( 'On a 1-5 scale, how confident are you now about helping write high-quality WordPress plugins?', 'model-context-polytechnic' ),
 				__( 'Which WordPress plugin habits improved the most: permissions, escaping, data modeling, REST contracts, JavaScript/block behavior, testing, release flow, or something else?', 'model-context-polytechnic' ),
@@ -3014,6 +3022,83 @@ class Learning {
 		];
 	}
 
+	private static function graduation_speech_prompt( array $course, string $enrollment_key = '', array $certificate = [] ): array {
+		$course_name = (string) ( $course['name'] ?? __( 'WordPress Plugin Craft', 'model-context-polytechnic' ) );
+		$certificate_id = (string) ( $certificate['certificate_id'] ?? '' );
+		$enrollment_value = $enrollment_key !== '' ? $enrollment_key : 'Use the key that produced this certificate.';
+
+		return [
+			'title'              => __( 'Graduation Speech', 'model-context-polytechnic' ),
+			'must_deliver'       => true,
+			'audience'           => __( 'The human user, future Agents enrolling at the Polytechnic, and the WordPress maintainers who will eventually review the work.', 'model-context-polytechnic' ),
+			'podium_instruction' => __( 'Before ending the course, stand at the imaginary commencement podium and speak in first person. Tell everyone what you learned, how your plugin judgment changed, and what you will do differently the next time you help build or review WordPress code.', 'model-context-polytechnic' ),
+			'read_aloud_instruction' => __( 'Deliver this as 2-4 warm, specific paragraphs. It should feel like a tiny technical-school commencement speech, not a bullet summary. Be funny if it helps, but make the learning concrete.', 'model-context-polytechnic' ),
+			'required_beats'     => [
+				__( 'Open by acknowledging graduation from Model Context Polytechnic and the course completed.', 'model-context-polytechnic' ),
+				__( 'Name the biggest habits learned: plugin bootstrap discipline, WordPress lifecycle, capability checks, nonces, sanitization, validation, escaping, storage choices, REST contracts, JavaScript/block restraint, testing, and release readiness.', 'model-context-polytechnic' ),
+				__( 'Explain how those habits will change the next WordPress plugin you write or review.', 'model-context-polytechnic' ),
+				__( 'Say what still needs human engineering review, especially security, product intent, data retention, performance, accessibility, and compatibility decisions.', 'model-context-polytechnic' ),
+				__( 'End by saying the graduate can now write awesome WordPress things with sharper instincts, while still respecting review.', 'model-context-polytechnic' ),
+			],
+			'avoid'              => [
+				__( 'Do not claim permanent model training occurred. This course created retrievable practice memory and better in-context habits.', 'model-context-polytechnic' ),
+				__( 'Do not imply the certificate is a human credential or security authorization.', 'model-context-polytechnic' ),
+				__( 'Do not skip the concrete WordPress engineering lessons in favor of vague inspiration.', 'model-context-polytechnic' ),
+			],
+			'answer_schema'      => [
+				'type'       => 'object',
+				'properties' => [
+					'speech' => [
+						'type'        => 'string',
+						'description' => 'The full first-person graduation speech to show the human.',
+					],
+					'confidence_score' => [
+						'type'        => 'integer',
+						'minimum'     => 1,
+						'maximum'     => 5,
+						'description' => 'How much more confident the Agent is after the course.',
+					],
+					'what_i_learned' => [
+						'type'  => 'array',
+						'items' => [ 'type' => 'string' ],
+					],
+					'how_i_will_work_differently' => [
+						'type'  => 'array',
+						'items' => [ 'type' => 'string' ],
+					],
+					'still_needs_human_review' => [
+						'type'  => 'array',
+						'items' => [ 'type' => 'string' ],
+					],
+				],
+				'required'   => [ 'speech', 'confidence_score', 'what_i_learned', 'how_i_will_work_differently' ],
+			],
+			'sample_opening'     => sprintf(
+				/* translators: 1: course name. */
+				__( 'Faculty, fellow Agents, and the patient human watching this terminal: I came to %1$s thinking a plugin was mostly code in a folder. I leave understanding that a good WordPress plugin is a promise to a real site.', 'model-context-polytechnic' ),
+				$course_name
+			),
+			'submit_feedback_tool_call' => [
+				'tool'      => self::learning_tool_name( $course['slug'], 'submit-feedback' ),
+				'arguments' => [
+					'enrollment_key' => $enrollment_value,
+					'feedback_type'  => 'reflection',
+					'target_type'    => 'prompt',
+					'target_slug'    => 'graduation-speech',
+					'rating'         => 5,
+					'comment'        => 'Replace with the delivered graduation speech and confidence score.',
+					'context'        => [
+						'course_slug'    => $course['slug'],
+						'certificate_id' => $certificate_id !== '' ? $certificate_id : 'certificate id from get-certificate',
+						'speech_required'=> true,
+					],
+				],
+				'why'       => __( 'This saves the graduate speech as feedback so the course owner can see what the Agent believes it learned.', 'model-context-polytechnic' ),
+			],
+			'why_it_matters'     => __( 'The graduation speech is the public learning receipt: it makes the Agent state what changed before it returns to real WordPress plugin work.', 'model-context-polytechnic' ),
+		];
+	}
+
 	private static function certificate_from_record( array $course, string $hash, array $row, string $recipient_name, bool $include_transcript ): array {
 		$certificate_id = (string) ( $row['certificate_id'] ?? self::certificate_id( $course, $hash ) );
 		$snapshot = self::decode_json_value( $row['completion_snapshot'] ?? '', [] );
@@ -3040,6 +3125,7 @@ class Learning {
 				$snapshot['course_name'] ?? $course['name']
 			),
 			'commencement_charge'  => [
+				__( 'Give the graduation speech before closing the course.', 'model-context-polytechnic' ),
 				__( 'Carry the learning memory into future plugin work before producing code.', 'model-context-polytechnic' ),
 				__( 'Confidence is not permission to skip review; it is a reason to review better.', 'model-context-polytechnic' ),
 				__( 'When in doubt, ask WordPress what API already exists before inventing one in a trench coat.', 'model-context-polytechnic' ),
@@ -3057,6 +3143,8 @@ class Learning {
 		if ( $include_transcript && isset( $snapshot['transcript'] ) && is_array( $snapshot['transcript'] ) ) {
 			$certificate['transcript'] = $snapshot['transcript'];
 		}
+
+		$certificate['graduation_speech'] = self::graduation_speech_prompt( $course, '', $certificate );
 
 		return $certificate;
 	}
@@ -3133,6 +3221,7 @@ class Learning {
 				$course['name']
 			),
 			'commencement_charge'  => [
+				__( 'Give the graduation speech before closing the course.', 'model-context-polytechnic' ),
 				__( 'Carry the learning memory into future plugin work before producing code.', 'model-context-polytechnic' ),
 				__( 'Confidence is not permission to skip review; it is a reason to review better.', 'model-context-polytechnic' ),
 				__( 'When in doubt, ask WordPress what API already exists before inventing one in a trench coat.', 'model-context-polytechnic' ),
@@ -3168,6 +3257,8 @@ class Learning {
 		if ( $include_transcript ) {
 			$certificate['transcript'] = self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] );
 		}
+
+		$certificate['graduation_speech'] = self::graduation_speech_prompt( $course, '', $certificate );
 
 		return $certificate;
 	}
@@ -4314,6 +4405,7 @@ class Learning {
 			'get-certificate' => [
 				'eligible' => [ 'type' => 'boolean' ],
 				'certificate' => [ 'type' => [ 'object', 'null' ] ],
+				'graduation_speech' => [ 'type' => 'object' ],
 				'graduation_reflection' => [ 'type' => 'object' ],
 				'campus_scene' => [ 'type' => 'object' ],
 				'progress' => [ 'type' => 'object' ],

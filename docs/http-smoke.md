@@ -8,7 +8,7 @@ Run it after activating the plugin and flushing permalinks:
 composer http-course-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
 ```
 
-For a full graduation rehearsal, run the completion smoke. It attempts every bundled exercise over MCP HTTP with the model answers, confirms `get-next-work` reports `complete=true`, and verifies `get-certificate` returns a certificate ID, verification code, and transcript:
+For a full graduation rehearsal, run the completion smoke. It attempts every bundled exercise over MCP HTTP with the model answers, confirms `get-next-work` reports `complete=true`, and verifies `get-certificate` returns a certificate ID, verification code, transcript, and `graduation_speech`:
 
 ```bash
 composer http-course-completion-smoke -- --url=https://joinmcpoly.com/mcp/wordpress-plugin-craft
@@ -40,7 +40,7 @@ The smoke test performs these MCP JSON-RPC calls:
 10. `tools/call` for `get-certificate` and confirm an unfinished enrollment gets remaining work.
 11. `tools/call` for `get-exercise` with `include_model_answer=true`.
 
-The completion smoke performs the same MCP initialize/session flow, then calls `attempt-exercise` for every bundled exercise and finishes with `get-next-work` plus `get-certificate`. The live course also exposes an MCP-ready `take-course` tool, which is the LLM autopilot entry point for reading course packets without asking a human to advance lesson by lesson.
+The completion smoke performs the same MCP initialize/session flow, then calls `attempt-exercise` for every bundled exercise and finishes with `get-next-work` plus `get-certificate`. The certificate response includes `graduation_speech`, which tells the Agent to stand at the podium and tell everyone what it learned before closing the course. The live course also exposes an MCP-ready `take-course` tool, which is the LLM autopilot entry point for reading course packets without asking a human to advance lesson by lesson.
 
 The endpoint is POST-based. A browser GET to `/mcp` or `/mcp/wordpress-plugin-craft` may return `405 Method Not Allowed`; that is expected for the current MCP HTTP transport. Use an MCP client or the smoke script to prove the endpoint.
 

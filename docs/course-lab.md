@@ -13,8 +13,9 @@ It checks whether a course can be taken like an MCP student:
 7. Retrieve next work or continue with `next_cursor`.
 8. Retrieve learning memory.
 9. When all exercises pass, retrieve the certificate.
-10. Submit feedback.
-11. Inspect improvement signals before proposing edits.
+10. Deliver `graduation_speech` so the Agent tells everyone what it learned.
+11. Submit feedback.
+12. Inspect improvement signals before proposing edits.
 
 For exercises with exemplars, the intended loop is attempt first, review rubric feedback, then call `get-exercise` with `include_model_answer=true` if the learner needs calibration.
 

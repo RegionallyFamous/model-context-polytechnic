@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.9 - 2026-05-08
+
+- Adds a required `graduation_speech` prompt to certificate responses so the Agent tells everyone what it learned before the course closes.
+- Embeds the speech prompt in the certificate object and top-level `get-certificate` response.
+- Updates course instructions, docs, themelet copy, and completion smoke checks around the commencement speech.
+
 ## 1.0.8 - 2026-05-08
 
 - Adds verbose `learning_status.story_script` narration so MCP clients can show the Agent attending school instead of terse status text.
