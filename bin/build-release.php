@@ -15,6 +15,7 @@ if ( ! preg_match( '/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/', $version ) ) {
 }
 
 assert_project_version( $root, $version );
+assert_themelet_version( $root, $version );
 
 if ( ! extension_loaded( 'zip' ) || ! class_exists( ZipArchive::class ) ) {
 	fail( 'PHP zip extension is required to build a release.' );
@@ -87,6 +88,26 @@ remove_path( $build_root );
 echo '[ok] Built ' . $zip_path . PHP_EOL;
 echo '[ok] SHA256 ' . $hash . PHP_EOL;
 
+$themelet_slug = 'model-context-polytechnic-themelet';
+$themelet_dir  = $root . '/themelet/' . $themelet_slug;
+$themelet_zip  = $dist_dir . '/' . $themelet_slug . '-' . $version . '.zip';
+$themelet_sha  = $themelet_zip . '.sha256';
+
+if ( ! is_readable( $themelet_dir . '/style.css' ) || ! is_readable( $themelet_dir . '/index.php' ) ) {
+	fail( 'Themelet source is missing style.css or index.php.' );
+}
+
+write_zip_from_directory( $themelet_dir, $themelet_slug, $themelet_zip );
+$themelet_hash = hash_file( 'sha256', $themelet_zip );
+if ( ! is_string( $themelet_hash ) ) {
+	fail( 'Could not hash themelet ZIP.' );
+}
+
+file_put_contents( $themelet_sha, $themelet_hash . '  ' . basename( $themelet_zip ) . PHP_EOL );
+
+echo '[ok] Built ' . $themelet_zip . PHP_EOL;
+echo '[ok] SHA256 ' . $themelet_hash . PHP_EOL;
+
 function parse_version_arg( array $argv ): string {
 	foreach ( array_slice( $argv, 1 ) as $index => $arg ) {
 		if ( str_starts_with( $arg, '--version=' ) ) {
@@ -118,6 +139,22 @@ function assert_project_version( string $root, string $expected ): void {
 		'plugin header' => match_version( '/^\s*\*\s*Version:\s*([^\s]+)/m', $main, 'plugin header version' ),
 		'plugin constant' => match_version( "/define\\(\\s*'MODEL_CONTEXT_POLYTECHNIC_VERSION'\\s*,\\s*'([^']+)'\\s*\\)/", $main, 'plugin version constant' ),
 		'server constant' => match_version( "/const\\s+SERVER_VERSION\\s*=\\s*'([^']+)'/", $server, 'server version constant' ),
+	];
+
+	foreach ( $versions as $label => $version ) {
+		if ( $version !== $expected ) {
+			fail( "{$label} is {$version}, expected {$expected}." );
+		}
+	}
+}
+
+function assert_themelet_version( string $root, string $expected ): void {
+	$style    = (string) file_get_contents( $root . '/themelet/model-context-polytechnic-themelet/style.css' );
+	$function = (string) file_get_contents( $root . '/themelet/model-context-polytechnic-themelet/functions.php' );
+
+	$versions = [
+		'themelet header' => match_version( '/^\s*Version:\s*([^\s]+)/m', $style, 'themelet header version' ),
+		'themelet constant' => match_version( "/const\s+MCPOLY_THEMELET_VERSION\s*=\s*'([^']+)'/", $function, 'themelet version constant' ),
 	];
 
 	foreach ( $versions as $label => $version ) {
@@ -192,6 +229,31 @@ function collect_files( string $directory ): array {
 
 	sort( $files, SORT_STRING );
 	return $files;
+}
+
+function write_zip_from_directory( string $source_dir, string $top_level, string $zip_path ): void {
+	if ( file_exists( $zip_path ) ) {
+		unlink( $zip_path );
+	}
+	if ( file_exists( $zip_path . '.sha256' ) ) {
+		unlink( $zip_path . '.sha256' );
+	}
+
+	$zip = new ZipArchive();
+	if ( $zip->open( $zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE ) !== true ) {
+		fail( "Could not create {$zip_path}." );
+	}
+
+	foreach ( collect_files( $source_dir ) as $file ) {
+		if ( basename( $file ) === '.DS_Store' ) {
+			continue;
+		}
+
+		$local_name = $top_level . '/' . normalize_path( substr( $file, strlen( $source_dir ) + 1 ) );
+		$zip->addFile( $file, $local_name );
+	}
+
+	$zip->close();
 }
 
 function remove_path( string $path ): void {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.15 - 2026-05-08
+
+- Adds WordPress themelet favicons, Apple touch icon, web app manifest, and a 1200x630 Open Graph share image.
+- Adds canonical URL, sitemap link, indexable robots metadata, Open Graph tags, Twitter card tags, and JSON-LD for the school, website, course, and MCP server.
+- Adds a robots.txt sitemap hint from the themelet and makes `joinmcpoly.com` the canonical public website.
+- Disables the old GitHub Pages deployment so the WordPress themelet is the public admissions surface.
+
 ## 1.0.14 - 2026-05-08
 
 - Normalizes progress fields so `completion_percent` is always 0-100 and `completion_ratio` is always 0-1.

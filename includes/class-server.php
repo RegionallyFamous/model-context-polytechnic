@@ -21,7 +21,7 @@ class Server {
 	const VANITY_PATH      = 'mcp';
 	const REQUIRED_WP      = '6.9';
 	const REQUIRED_PHP     = '8.1';
-	const SERVER_VERSION   = '1.0.14';
+	const SERVER_VERSION   = '1.0.15';
 	const REMOTE_PROXY     = '@automattic/mcp-wordpress-remote@latest';
 	const VOICE_NAME       = 'The Old Polytechnic';
 	const AUTHORING_TOOLS_ENABLED = false;

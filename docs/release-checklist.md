@@ -30,6 +30,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Confirm the README and feedback docs describe the no-WP-CLI operator-token flow.
 - Confirm no real tokens, enrollment keys, Authorization headers, or local site URLs are committed.
 - Confirm every shown public URL uses `joinmcpoly.com`.
+- Confirm the WordPress themelet emits favicon links, canonical URL, Open Graph/Twitter card tags, JSON-LD, and a sitemap hint.
 
 ## WordPress Smoke Test
 
@@ -86,11 +87,12 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 ## Packaging Notes
 
 - Bump versions first with `composer version:bump -- --version=x.y.z`.
-- Build the installable artifact with `composer release:build -- --version=x.y.z`.
+- Build the installable plugin and themelet artifacts with `composer release:build -- --version=x.y.z`.
 - Confirm the ZIP contains one top-level `model-context-polytechnic/` folder.
+- Confirm the themelet ZIP contains one top-level `model-context-polytechnic-themelet/` folder.
 - Include `vendor/` in distributable ZIPs after Composer install.
 - Include `assets/`, `course-packs/`, `schemas/`, `includes/`, `README.md`, `CHANGELOG.md`, `composer.json`, `composer.lock`, the bootstrap file, and `uninstall.php`.
 - Exclude local labs, docs, tests, logs, Git metadata, temporary files, workflow files, and generated ZIPs.
-- Publish by pushing a version tag such as `v1.0.14`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
+- Publish by pushing a version tag such as `v1.0.15`; the GitHub release workflow rebuilds the ZIP and checksum from the tag.
 - Deactivation must keep data.
 - Uninstall is the explicit data removal path, including removal of the plugin-owned anonymous public session user.
