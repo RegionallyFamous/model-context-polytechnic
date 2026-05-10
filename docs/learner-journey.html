@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A playful visual learner journey viewer for Model Context Polytechnic course progress.">
+  <meta name="theme-color" content="#07120e">
+  <title>Learner Journey Viewer | Model Context Polytechnic</title>
+  <link rel="preload" as="image" href="assets/learner-journey-campus.png">
+  <link rel="stylesheet" href="learner-journey.css">
+</head>
+<body>
+  <a class="skip-link" href="#journey-status">Skip to learner status</a>
+
+  <main class="journey-app">
+    <section class="map-shell" aria-label="Interactive Model Context Polytechnic learner journey map">
+      <img class="campus-map" src="assets/learner-journey-campus.png" alt="A 16-bit Model Context Polytechnic campus map with a learner path from freshman enrollment to graduation.">
+
+      <div class="map-hud">
+        <p class="eyebrow">Learner Journey Viewer</p>
+        <h1>Watch the Agent go to school.</h1>
+        <p>
+          Demo mode shows the shape of a course run. Paste an enrollment key to load real progress from
+          the public MCP registrar when this page can reach the course endpoint.
+        </p>
+      </div>
+
+      <button class="path-stop" style="left: 18%; top: 72%;" data-stop="freshman" data-state="passed" aria-label="Freshman Gate">01</button>
+      <button class="path-stop" style="left: 39%; top: 58%;" data-stop="workshop" data-state="passed" aria-label="Workshop Hall">02</button>
+      <button class="path-stop" style="left: 58%; top: 46%;" data-stop="architecture" data-state="active" aria-label="Architecture Quad">03</button>
+      <button class="path-stop" style="left: 76%; top: 30%;" data-stop="graduation" data-state="locked" aria-label="Graduation Tower">04</button>
+
+      <div class="avatar" aria-live="polite" aria-label="Current learner position">
+        <span id="avatar-sprite" aria-hidden="true">A</span>
+      </div>
+    </section>
+
+    <aside class="sidebar" id="journey-status" aria-label="Learner journey status">
+      <section class="panel rank-card">
+        <div class="portrait" id="portrait" aria-hidden="true">01</div>
+        <div>
+          <div class="panel-label"><span>Current Rank</span><span id="level">LV 03</span></div>
+          <h2 id="rank-title">Architecture Apprentice</h2>
+          <p id="rank-copy">Bootstrap and lifecycle labs passed. Now learning how to keep hooks at the boundary and code out of collision town.</p>
+          <div class="meter" aria-label="Course completion">
+            <span id="meter-fill"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel stop-card">
+        <div class="panel-label"><span>Selected Campus Stop</span><span id="stop-state">Active</span></div>
+        <h2 id="stop-title">Architecture Quad</h2>
+        <p id="stop-copy">The current class: namespaces, prefixes, collision avoidance, hooks, init, bootstrap, classes, boundary design, and tests.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-label"><span>Live Registrar</span><span id="registrar-state">Demo</span></div>
+        <form class="registrar-form" id="progress-form">
+          <label for="endpoint">MCP endpoint</label>
+          <input id="endpoint" name="endpoint" type="url" value="https://joinmcpoly.com/mcp/wordpress-plugin-craft">
+
+          <label for="enrollment-key">Enrollment key</label>
+          <input id="enrollment-key" name="enrollment-key" type="text" autocomplete="off" placeholder="mcpoly_enr_...">
+
+          <button type="submit">Load Progress</button>
+        </form>
+        <p class="hint">
+          The key is an anonymous course card, not a WordPress password. If browser CORS blocks a public endpoint,
+          the demo viewer still works and the MCP client can supply progress later.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-label"><span>Badges</span><span id="badge-count">2 / 28 labs</span></div>
+        <div class="badges" id="badges"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-label"><span>Quest Log</span><span id="motion-state">Ready</span></div>
+        <div class="quest-list" id="quest-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-label"><span>Controls</span><span>Journey</span></div>
+        <div class="controls">
+          <button type="button" id="play-journey">Play Journey</button>
+          <button type="button" id="pause-journey">Pause</button>
+          <button type="button" id="next-step">Next Step</button>
+          <button type="button" id="reset-journey">Reset</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="learner-journey.js" defer></script>
+</body>
+</html>
