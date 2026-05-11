@@ -59,7 +59,7 @@ Model Context Polytechnic is a WordPress plugin and a course-pack distribution. 
 - Call `attempt-exercise`.
 - Call `get-learning-memory`.
 - Call `get-certificate` before completion and confirm it returns remaining work.
-- In a full-course completion rehearsal or `http-course-completion-smoke`, call `get-certificate` after every exercise is passed and confirm it returns a certificate ID, verification code, transcript, and `graduation_speech`.
+- In a full-course completion rehearsal or `http-course-completion-smoke`, call `get-certificate` after every exercise is passed and confirm it returns a certificate ID, verification code, transcript, `graduation_speech`, and `certificate.diploma` with template URL, fields, SVG markup, and SVG data URI.
 - Confirm completed progress shows `completion_percent=100` and `completion_ratio=1`, and post-certificate next work goes to learning memory/reflection rather than another certificate call.
 - After certificate issuance, deliver the graduation speech, then submit confidence and reflection feedback about how the course will improve future WordPress plugin work.
 - Call `submit-feedback`.

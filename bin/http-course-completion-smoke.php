@@ -158,6 +158,11 @@ if ( empty( $certificate['eligible'] ) || empty( $certificate['certificate']['ce
 	fail( 'get-certificate did not return an eligible certificate with identifiers.' );
 }
 
+$diploma = $certificate['certificate']['diploma'] ?? null;
+if ( ! is_array( $diploma ) || empty( $diploma['template_url'] ) || empty( $diploma['fields']['recipient_name'] ) || empty( $diploma['svg_markup'] ) || empty( $diploma['svg_data_uri'] ) ) {
+	fail( 'get-certificate did not return a dynamic diploma artifact with template, fields, SVG markup, and SVG data URI.' );
+}
+
 $graduation_reflection = graduation_reflection_from_certificate( $certificate['certificate'] );
 if ( $graduation_reflection === null ) {
 	fail( 'get-certificate did not return a graduation reflection for the completed enrollment.' );
@@ -187,6 +192,7 @@ if ( in_array( $tool_prefix . 'get-certificate', $post_certificate_tools, true )
 $summary['certificate_id'] = $certificate['certificate']['certificate_id'];
 $summary['transcript_count'] = count( $transcript );
 $summary['checks'][] = 'get-certificate issued anonymous certificate, transcript, graduation speech, and graduation reflection';
+$summary['checks'][] = 'get-certificate returned a dynamic diploma artifact';
 $summary['checks'][] = 'get-certificate returned post-certificate memory/reflection next work';
 assert_suggested_tools_exist( $certificate, $tool_names, 'get-certificate' );
 $summary['status'] = 'ok';
