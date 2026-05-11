@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Adds a reusable diploma template image and dynamic `certificate.diploma` artifact to completed certificate responses, including render fields, SVG markup, and SVG data URI output for client display/export.
+
 ## 1.0.15 - 2026-05-08
 
 - Adds WordPress themelet favicons, Apple touch icon, web app manifest, and a 1200x630 Open Graph share image.

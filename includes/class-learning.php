@@ -1993,7 +1993,7 @@ class Learning {
 				'properties' => [
 					'enrollment_key'     => [ 'type' => 'string', 'description' => 'Anonymous course enrollment key returned by begin-course.' ],
 					'session_id'         => [ 'type' => 'string', 'description' => 'Deprecated alias for enrollment_key.' ],
-					'recipient_name'     => [ 'type' => 'string', 'description' => 'Optional display name for this response only. It is not used as authentication.' ],
+					'recipient_name'     => [ 'type' => 'string', 'description' => 'Optional display name for this response only, such as the agent name chosen by the human. It is not used as authentication.' ],
 					'include_transcript' => [ 'type' => 'boolean', 'default' => true ],
 				],
 				'anyOf'      => [
@@ -3232,6 +3232,96 @@ class Learning {
 		return substr( hash( 'sha256', $certificate_id . '|' . $hash . '|' . $course['slug'] ), 0, 24 );
 	}
 
+	private static function certificate_diploma_artifact( array $course, array $certificate, array $completion_snapshot ): array {
+		$completed_count = (int) ( $completion_snapshot['completed_count'] ?? 0 );
+		$total_count = (int) ( $completion_snapshot['total_exercise_count'] ?? 0 );
+		$fields = [
+			'institution'       => 'Model Context Polytechnic',
+			'title'             => __( 'Certificate of Agentic WordPress Plugin Craft', 'model-context-polytechnic' ),
+			'recipient_name'    => (string) ( $certificate['recipient'] ?? __( 'Anonymous MCP Learner', 'model-context-polytechnic' ) ),
+			'course_name'       => (string) ( $course['name'] ?? ( $completion_snapshot['course_name'] ?? '' ) ),
+			'labs_passed'       => sprintf( '%1$d / %2$d', $completed_count, $total_count ),
+			'confidence'        => __( 'Graduate reflection pending', 'model-context-polytechnic' ),
+			'certificate_id'    => (string) ( $certificate['certificate_id'] ?? '' ),
+			'verification_code' => (string) ( $certificate['verification_code'] ?? '' ),
+			'issued_at'         => (string) ( $certificate['issued_at'] ?? '' ),
+			'motto'             => __( 'Bootstrap with discipline. Ship with care.', 'model-context-polytechnic' ),
+		];
+		$svg = self::certificate_diploma_svg( $fields );
+		$svg_data_uri = 'data:image/svg+xml;charset=utf-8,' . rawurlencode( $svg );
+
+		return [
+			'type'               => 'dynamic_diploma',
+			'template_url'       => self::certificate_diploma_template_url(),
+			'template_mime_type' => 'image/png',
+			'fields'             => $fields,
+			'svg_markup'         => $svg,
+			'svg_data_uri'       => $svg_data_uri,
+			'display_markdown'   => '![' . self::markdown_alt( sprintf(
+				/* translators: %s: recipient name. */
+				__( 'Model Context Polytechnic diploma for %s', 'model-context-polytechnic' ),
+				$fields['recipient_name']
+			) ) . '](' . $svg_data_uri . ')',
+			'dynamic_fields'     => [
+				'recipient_name',
+				'course_name',
+				'labs_passed',
+				'confidence',
+				'certificate_id',
+				'verification_code',
+				'issued_at',
+			],
+			'generation_note'    => __( 'Use svg_markup or svg_data_uri when the client can render generated images. Use template_url plus fields when the client wants to render or export its own diploma image.', 'model-context-polytechnic' ),
+		];
+	}
+
+	private static function certificate_diploma_template_url(): string {
+		$asset_path = 'assets/certificates/diploma-template.png';
+		if ( function_exists( 'plugins_url' ) && defined( 'MODEL_CONTEXT_POLYTECHNIC_FILE' ) ) {
+			$url = plugins_url( $asset_path, MODEL_CONTEXT_POLYTECHNIC_FILE );
+		} else {
+			$url = $asset_path;
+		}
+
+		$version = defined( 'MODEL_CONTEXT_POLYTECHNIC_VERSION' ) ? MODEL_CONTEXT_POLYTECHNIC_VERSION : Server::SERVER_VERSION;
+		$separator = str_contains( $url, '?' ) ? '&' : '?';
+		return $url . $separator . 'v=' . rawurlencode( $version );
+	}
+
+	private static function certificate_diploma_svg( array $fields ): string {
+		$template_url = self::svg_text( self::certificate_diploma_template_url() );
+		$recipient = self::svg_text( (string) ( $fields['recipient_name'] ?? '' ) );
+		$course = self::svg_text( (string) ( $fields['course_name'] ?? '' ) );
+		$labs = self::svg_text( (string) ( $fields['labs_passed'] ?? '' ) );
+		$confidence = self::svg_text( (string) ( $fields['confidence'] ?? '' ) );
+		$certificate_id = self::svg_text( (string) ( $fields['certificate_id'] ?? '' ) );
+		$verification_code = self::svg_text( (string) ( $fields['verification_code'] ?? '' ) );
+		$issued_at = self::svg_text( (string) ( $fields['issued_at'] ?? '' ) );
+		$motto = self::svg_text( (string) ( $fields['motto'] ?? '' ) );
+
+		return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1672 941" role="img" aria-label="Model Context Polytechnic diploma">
+  <image href="{$template_url}" width="1672" height="941" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="150" y="286" width="1372" height="322" fill="rgba(253,246,218,0.82)"/>
+  <text x="836" y="350" text-anchor="middle" font-family="Georgia,serif" font-size="42" font-weight="700" fill="#4a3118">{$recipient}</text>
+  <text x="836" y="408" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#5b4524">has completed {$course} with distinction</text>
+  <text x="836" y="472" text-anchor="middle" font-family="Georgia,serif" font-size="27" fill="#5b4524">Labs Passed: {$labs} · Confidence: {$confidence}</text>
+  <text x="836" y="528" text-anchor="middle" font-family="Georgia,serif" font-size="25" font-style="italic" fill="#6b4d23">{$motto}</text>
+  <text x="210" y="720" font-family="Courier New,monospace" font-size="22" fill="#4a3118">Certificate ID: {$certificate_id}</text>
+  <text x="210" y="758" font-family="Courier New,monospace" font-size="22" fill="#4a3118">Verification: {$verification_code}</text>
+  <text x="210" y="796" font-family="Courier New,monospace" font-size="22" fill="#4a3118">Issued: {$issued_at}</text>
+</svg>
+SVG;
+	}
+
+	private static function svg_text( string $value ): string {
+		return htmlspecialchars( str_replace( [ "\r", "\n" ], ' ', $value ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+	}
+
+	private static function markdown_alt( string $value ): string {
+		return str_replace( [ "\r", "\n", ']' ], [ ' ', ' ', ')' ], $value );
+	}
+
 	private static function certificate_record_for_hash( int $course_id, string $hash ): ?array {
 		global $wpdb;
 		$table = $wpdb->prefix . self::CERTIFICATES_TABLE;
@@ -3430,6 +3520,7 @@ class Learning {
 			$certificate['transcript'] = $snapshot['transcript'];
 		}
 
+		$certificate['diploma'] = self::certificate_diploma_artifact( $course, $certificate, $certificate['completion_snapshot'] );
 		$certificate['graduation_speech'] = self::graduation_speech_prompt( $course, '', $certificate );
 
 		return $certificate;
@@ -3545,6 +3636,7 @@ class Learning {
 			$certificate['transcript'] = self::certificate_transcript( $public_exercises, $progress['exercises'] ?? [] );
 		}
 
+		$certificate['diploma'] = self::certificate_diploma_artifact( $course, $certificate, $snapshot );
 		$certificate['graduation_speech'] = self::graduation_speech_prompt( $course, '', $certificate );
 
 		return $certificate;
